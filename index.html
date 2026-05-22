@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GGE Rankings</title>
+<style>
+:root{--c-canvas:#0d1117;--c-surface:#161b22;--c-border:#30363d;--c-border2:#21262d;--c-text:#c9d1d9;--c-muted:#8b949e;--c-bright:#e6edf3;--c-blue:#58a6ff;--c-green:#3fb950;--c-red:#f85149;--c-yellow:#d29922;--r:6px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--c-canvas);color:var(--c-text);font-family:var(--font);font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--c-canvas)}::-webkit-scrollbar-thumb{background:var(--c-border);border-radius:3px}
+.header{background:var(--c-surface);border-bottom:1px solid var(--c-border);padding:0 16px;display:flex;align-items:center;gap:14px;height:52px;position:sticky;top:0;z-index:50}
+.logo{font-weight:600;font-size:15px;color:var(--c-bright);white-space:nowrap}
+.nav{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:5px 12px;border-radius:var(--r);font-size:13px;color:var(--c-muted);cursor:pointer;white-space:nowrap;transition:all .15s;border:none;background:transparent;font-family:var(--font)}
+.nav-btn:hover{color:var(--c-text);background:rgba(177,186,196,.08)}.nav-btn.on{color:var(--c-bright);background:rgba(177,186,196,.12);font-weight:500}
+.header-right{display:flex;gap:8px;margin-left:auto;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--c-text);background:#21262d;border:1px solid var(--c-border);border-radius:var(--r);cursor:pointer;transition:all .15s;font-family:var(--font);white-space:nowrap;text-decoration:none}
+.btn:hover{background:#30363d;border-color:rgba(139,148,158,.4)}.btn.primary{background:var(--c-blue);color:#fff;border-color:rgba(88,166,255,.4)}.btn.primary:hover{background:#388bfd}
+.fav-n{background:var(--c-blue);color:#fff;font-size:10px;font-weight:600;padding:1px 5px;border-radius:10px;min-width:18px;text-align:center}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:9px 16px;background:var(--c-canvas);border-bottom:1px solid var(--c-border)}
+.tlbl{font-size:11px;color:var(--c-muted);font-weight:500;white-space:nowrap}
+select,input{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r);color:var(--c-text);font-size:13px;padding:5px 8px;height:32px;outline:none;font-family:var(--font)}
+select{padding-right:22px;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b949e'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center}
+select:focus,input:focus{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(88,166,255,.1)}
+.sw{position:relative}.sw input{padding-left:28px;min-width:160px}.sw::before{content:'🔍';position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;opacity:.5}
+.seg{display:flex;border:1px solid var(--c-border);border-radius:var(--r);overflow:hidden}
+.seg-b{padding:5px 11px;font-size:12px;color:var(--c-muted);cursor:pointer;background:var(--c-surface);border:none;font-family:var(--font);height:32px;white-space:nowrap;transition:all .15s}
+.seg-b:hover{color:var(--c-text);background:#30363d}.seg-b.on{color:var(--c-bright);background:#30363d;font-weight:500}.seg-b+.seg-b{border-left:1px solid var(--c-border)}
+.cats{display:flex;flex-wrap:wrap;gap:6px;padding:8px 16px;border-bottom:1px solid var(--c-border)}
+.cat{padding:3px 10px;font-size:12px;color:var(--c-muted);background:var(--c-surface);border:1px solid var(--c-border);border-radius:20px;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font)}
+.cat:hover{color:var(--c-text)}.cat.on{color:var(--c-blue);border-color:var(--c-blue);background:rgba(88,166,255,.1)}
+.sbar{display:flex;align-items:center;gap:8px;padding:5px 16px;font-size:12px;color:var(--c-muted);border-bottom:1px solid var(--c-border)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sbar.live .dot{background:var(--c-green)}.sbar.err .dot{background:var(--c-red)}.sbar.spin .dot{background:var(--c-yellow);animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sbar .r{margin-left:auto;display:flex;gap:14px}.sbar .r b{color:var(--c-text);font-weight:500}
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:480px}
+thead th{padding:8px 12px;text-align:left;background:var(--c-surface);font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border);white-space:nowrap}
+th.r,td.r{text-align:right}
+tr.dr{border-bottom:1px solid var(--c-border2);cursor:pointer;transition:background .1s}
+tr.dr:hover{background:rgba(177,186,196,.05)}tr.dr.fav{background:rgba(88,166,255,.03)}tr.dr.exp{background:rgba(177,186,196,.07)}
+tr.xr{border-bottom:1px solid var(--c-border);background:var(--c-surface)}tr.xr td{padding:0}
+td{padding:8px 12px;font-size:13px;vertical-align:middle}
+.rk{width:40px;text-align:center;font-size:12px;font-weight:600;color:var(--c-muted)}
+.rk1{color:#f0c030;font-size:15px}.rk2{color:#b0b8c8;font-size:14px}.rk3{color:#c07828;font-size:13px}
+.sb{background:none;border:none;cursor:pointer;font-size:13px;color:var(--c-muted);padding:2px;line-height:1;font-family:var(--font)}.sb:hover{transform:scale(1.2)}.sb.on{color:var(--c-yellow)}
+.pn{font-weight:500;color:var(--c-bright)}
+.badge{display:inline-flex;align-items:center;padding:1px 5px;font-size:10px;border-radius:4px;font-weight:500;margin-left:4px;vertical-align:middle;border:1px solid}
+.b-al{background:rgba(88,166,255,.1);border-color:rgba(88,166,255,.3);color:var(--c-blue)}
+.b-fav{background:rgba(210,153,34,.1);border-color:rgba(210,153,34,.3);color:var(--c-yellow)}
+.b-ban{background:rgba(248,81,73,.1);border-color:rgba(248,81,73,.3);color:var(--c-red)}
+.b-prot{background:rgba(63,185,80,.1);border-color:rgba(63,185,80,.3);color:var(--c-green)}
+.sc{display:flex;align-items:center;gap:7px;justify-content:flex-end}
+.sbar2{width:56px;height:4px;background:var(--c-border);border-radius:2px;flex-shrink:0}
+.sbf{height:100%;background:var(--c-blue);border-radius:2px}
+.sv{font-size:12px;color:var(--c-muted);min-width:62px;text-align:right;font-variant-numeric:tabular-nums}
+.tl{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--c-blue);text-decoration:none;padding:3px 7px;border:1px solid var(--c-border);border-radius:var(--r);transition:all .15s;white-space:nowrap}
+.tl:hover{background:rgba(88,166,255,.08);border-color:rgba(88,166,255,.4)}
+/* Detail panel */
+.dp{padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+.ds{display:flex;flex-wrap:wrap;gap:7px;flex:1}
+.db{background:var(--c-canvas);border:1px solid var(--c-border);border-radius:var(--r);padding:8px 12px;min-width:88px;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
+.db:hover{border-color:var(--c-blue);background:rgba(88,166,255,.06)}
+.db-v{font-size:15px;font-weight:600;color:var(--c-bright)}
+.db-l{font-size:10px;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.db-hint{font-size:9px;color:var(--c-blue);margin-top:1px;opacity:.8}
+.db-plain{cursor:default}.db-plain:hover{border-color:var(--c-border);background:var(--c-canvas)}
+.da{display:flex;flex-direction:column;gap:5px;align-self:center}
+/* Pagination */
+.pg{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px;padding:14px 16px;border-top:1px solid var(--c-border)}
+.pgb{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;padding:0 7px;font-size:13px;color:var(--c-text);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r);cursor:pointer;transition:all .15s;font-family:var(--font)}
+.pgb:hover:not(:disabled){background:#30363d;border-color:rgba(139,148,158,.4)}.pgb.cur{background:var(--c-blue);color:#fff;border-color:var(--c-blue);font-weight:600}.pgb:disabled{opacity:.35;cursor:default}
+.pgi{font-size:12px;color:var(--c-muted);padding:0 6px}
+/* States */
+.st{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;gap:12px}
+.si{font-size:36px;opacity:.22}.sm{font-size:14px;color:var(--c-text);font-weight:500}.ss{font-size:12px;color:var(--c-muted);text-align:center;max-width:360px;line-height:1.6}
+.spin{width:32px;height:32px;border:2px solid var(--c-border);border-top-color:var(--c-blue);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* Favorites */
+.fp{padding:18px 16px}
+.fph{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--c-border)}
+.fpt{font-size:15px;font-weight:600;color:var(--c-bright)}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.fc{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r);padding:14px;transition:border-color .15s}.fc:hover{border-color:rgba(139,148,158,.5)}
+.fch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.fcn{font-weight:600;font-size:13px;color:var(--c-bright)}.fcm{font-size:11px;color:var(--c-muted);margin-top:2px}
+.fcd{background:none;border:none;cursor:pointer;color:var(--c-muted);font-size:18px;line-height:1;padding:0;transition:color .15s;font-family:var(--font)}.fcd:hover{color:var(--c-red)}
+.frr{display:flex;flex-direction:column;gap:3px}
+.fr{display:flex;align-items:center;gap:5px;padding:3px 7px;border-radius:4px;background:var(--c-canvas);font-size:12px}
+.fr .fl{flex:1;color:var(--c-muted)}.fr .fp2{font-weight:600;color:var(--c-text);min-width:32px;text-align:right}.fr .fp2.g{color:var(--c-yellow)}.fr .fs{font-size:10px;color:var(--c-muted);min-width:58px;text-align:right}
+.fe{grid-column:1/-1;text-align:center;padding:40px;color:var(--c-muted);font-size:13px}
+/* Modal */
+.mb{position:fixed;inset:0;background:rgba(1,4,9,.75);z-index:100;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}.mb.h{display:none}
+.mo{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r);padding:24px;width:360px;max-width:95vw;box-shadow:0 8px 32px rgba(1,4,9,.5)}
+.mo h3{font-size:15px;font-weight:600;color:var(--c-bright);margin-bottom:14px}
+.mo label{display:block;font-size:12px;font-weight:600;color:var(--c-text);margin:10px 0 3px}
+.mo input,.mo select{width:100%;height:32px}
+.me{color:var(--c-red);font-size:12px;margin-top:5px;display:none}
+.ma{display:flex;gap:7px;margin-top:16px}.ma .btn{flex:1;justify-content:center;height:32px}
+/* Toast */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r);padding:9px 14px;font-size:13px;color:var(--c-text);z-index:200;transform:translateY(60px);opacity:0;transition:all .25s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+@media(max-width:600px){.header{padding:0 11px;gap:10px}.toolbar,.cats,.sbar,.pg,.fp{padding-left:11px;padding-right:11px}.sbar .r{display:none}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">🏰 GGE Rankings</div>
+  <nav class="nav">
+    <button class="nav-btn on" data-p="ranking">⚔️ Ranking</button>
+    <button class="nav-btn" data-p="favorites">⭐ Ulubieni</button>
+  </nav>
+  <div class="header-right">
+    <button class="btn" id="favBtn">⭐ <span class="fav-n" id="favCnt">0</span></button>
+    <button class="btn primary" id="addBtn">+ Śledź</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <span class="tlbl">Gra</span>
+  <select id="gameSelect"><option value="gge">GGE</option><option value="e4k">E4K</option></select>
+  <span class="tlbl">Serwer</span>
+  <select id="serverSelect" style="min-width:190px"><option>Ładowanie...</option></select>
+  <span class="tlbl">Ranking</span>
+  <select id="eventSelect" style="min-width:190px"><option>Ładowanie...</option></select>
+  <div class="seg" id="typeSeg">
+    <button class="seg-b on" data-v="player">👤 Gracze</button>
+    <button class="seg-b" data-v="alliance">🛡 Sojusze</button>
+  </div>
+  <div class="sw"><input type="text" id="searchInput" placeholder="Rank lub nick..."></div>
+  <button class="btn" id="goSearch">↵</button>
+  <button class="btn" id="refreshBtn">↺</button>
+</div>
+
+<div class="cats" id="catBar" style="display:none"></div>
+<div class="sbar spin" id="sBar"><div class="dot"></div><span id="sMsg">Ładowanie...</span><div class="r"><span>Razem: <b id="sTotal">—</b></span><span>Strona: <b id="sPage">—</b></span></div></div>
+<div id="mainView"></div>
+<div class="pg" id="pgBar" style="display:none"></div>
+<div id="favView" style="display:none" class="fp">
+  <div class="fph"><div class="fpt">⭐ Obserwowani gracze</div><button class="btn" id="clearFavBtn">🗑 Wyczyść</button></div>
+  <div class="fg" id="favGrid"></div>
+</div>
+
+<div class="mb h" id="mBackdrop">
+  <div class="mo">
+    <h3>⭐ Śledź gracza</h3>
+    <label>Nick gracza</label><input type="text" id="mName" placeholder="Wpisz nick...">
+    <label>Gra</label><select id="mGame"><option value="gge">GGE</option><option value="e4k">E4K</option></select>
+    <label>Serwer</label><select id="mServer"></select>
+    <div class="me" id="mErr"></div>
+    <div class="ma"><button class="btn" id="mCancel">Anuluj</button><button class="btn primary" id="mOk">⭐ Śledź</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Direct API calls (no backend needed for GitHub Pages) ──
+const GGE_API = 'https://empire-api.fly.dev';
+const EVENTS_URL = game => `https://raw.githubusercontent.com/danadum/ggs-assets/main/${game}/events.json`;
+const TEXTS_URL  = lang => `https://translations-api-test.public.ggs-ep.com/12/${lang}`;
+const XML_BASE   = 'https://media.goodgamestudios.com/games-config/network';
+
+const PAGE_SIZE = 10;
+
+// ── Stat → ranking key mapping (for clickable stats) ──
+const STAT_RANKING = {
+  honor:  {key:'honorPoints',    mode:'player'},
+  might:  {key:'playerMight',    mode:'player'},
+  level:  {key:'legendLevel',    mode:'player'},
+};
+
+// ── Server fallback ──
+const FALLBACK = {
+  gge: {
+    'EmpireEx':   {nk:'generic_server_de1'}, 'EmpireEx_2': {nk:'generic_server_de2'},
+    'EmpireEx_3': {nk:'generic_server_de3'}, 'EmpireEx_4': {nk:'generic_server_en1'},
+    'EmpireEx_5': {nk:'generic_server_en2'}, 'EmpireEx_6': {nk:'generic_server_en3'},
+    'EmpireEx_7': {nk:'generic_server_pl1'}, 'EmpireEx_8': {nk:'generic_server_pl2'},
+    'EmpireEx_9': {nk:'generic_server_fr1'}, 'EmpireEx_10':{nk:'generic_server_fr2'},
+    'EmpireEx_11':{nk:'generic_server_ru1'}, 'EmpireEx_12':{nk:'generic_server_ru2'},
+    'EmpireEx_13':{nk:'generic_server_tr1'}, 'EmpireEx_14':{nk:'generic_server_pt1'},
+    'EmpireEx_15':{nk:'generic_server_it1'}, 'EmpireEx_16':{nk:'generic_server_es1'},
+    'EmpireEx_17':{nk:'generic_server_nl1'}, 'EmpireEx_18':{nk:'generic_server_cz1'},
+    'EmpireEx_19':{nk:'generic_server_hu1'}, 'EmpireEx_20':{nk:'generic_server_ro1'},
+    'EmpireEx_21':{nk:'generic_server_us1'},
+  },
+  e4k: {
+    'EmpirefourkingdomsExGG_2':{nk:''}, 'EmpirefourkingdomsExGG_3':{nk:''},
+    'EmpirefourkingdomsExGG_4':{nk:''},
+  }
+};
+const LANG_INFO = {
+  de:{f:'🇩🇪',a:'DE',n:'Deutsch'}, en:{f:'🇬🇧',a:'EN',n:'English'},
+  pl:{f:'🇵🇱',a:'PL',n:'Polski'},  fr:{f:'🇫🇷',a:'FR',n:'Français'},
+  ru:{f:'🇷🇺',a:'RU',n:'Русский'}, tr:{f:'🇹🇷',a:'TR',n:'Türkçe'},
+  pt:{f:'🇵🇹',a:'PT',n:'Português'},it:{f:'🇮🇹',a:'IT',n:'Italiano'},
+  es:{f:'🇪🇸',a:'ES',n:'Español'}, nl:{f:'🇳🇱',a:'NL',n:'Nederlands'},
+  cz:{f:'🇨🇿',a:'CZ',n:'Čeština'}, hu:{f:'🇭🇺',a:'HU',n:'Magyar'},
+  ro:{f:'🇷🇴',a:'RO',n:'Română'}, us:{f:'🇺🇸',a:'US',n:'English (US)'},
+};
+const EV_LABELS = {
+  honorPoints:'Honor', playerMight:'Siła (Might)', legendLevel:'Poziom legendy',
+  allianceHonor:'Honor sojuszu', allianceMight:'Siła sojuszu',
+  dominionPoints:'Dominium', cargo_points:'Karawan',
+  event_title_71:'Turniej 71', event_title_72:'Turniej 72',
+  event_title_80:'Wydarzenie 80', event_title_85:'Wydarzenie 85',
+  event_title_89:'Wydarzenie 89', event_title_113:'Wydarzenie 113',
+  event_title_127:'Wydarzenie 127', event_title_128:'Wydarzenie 128',
+  event_title_130:'Wydarzenie 130', event_title_131:'Wydarzenie 131',
+  event_title_134:'Wydarzenie 134', event_title_601:'Liga',
+  event_title_3:'Frakcje', event_title_60:'Wyd. 60 (poziom)',
+  event_title_97:'Wydarzenie 97',
+  dialog_redAlienInvasion_message_header:'Inwazja Obcych',
+  dialog_BeggingKnights_nobilityPoints:'Żebracy',
+  dialog_longPointsEvent_seasonalPoints:'Sezonowy',
+  eventBuilding_DonationEvent:'Donacje',
+};
+
+// ── State ──
+const S = {
+  page:'ranking', game:localStorage.getItem('game')||'gge',
+  server:localStorage.getItem('server')||'',
+  eventKey:'', catIdx:0, allianceMode:false,
+  curPage:1, totalRows:0,
+  rows:[], expandedRank:null, loading:false, reqId:0,
+  servers:{}, events:{}, texts:{},
+  favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
+};
+
+// ── Utils ──
+const $=id=>document.getElementById(id);
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(x)?String(n):x.toLocaleString('pl-PL')}
+function isFav(n,g,s){return S.favs.some(f=>f.name===n&&f.game===g&&f.server===s)}
+function saveFavs(){localStorage.setItem('gge_favs_v7',JSON.stringify(S.favs))}
+let _tt;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2600)}
+function setSt(cls,msg){const b=$('sBar');b.className='sbar '+cls;$('sMsg').textContent=msg}
+function timeout(p,ms){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))])}
+
+// ── API ──
+const CACHE = new Map();
+function cGet(k,ttl){const e=CACHE.get(k);return(e&&Date.now()<e.x)?e.v:null}
+function cSet(k,v,ttl){CACHE.set(k,{v,x:Date.now()+ttl})}
+
+async function ggeGet(url){
+  const hit=cGet(url,60000);if(hit)return hit;
+  const r=await fetch(url);
+  if(!r.ok)return null;
+  const d=await r.json();
+  cSet(url,d,60000);return d;
+}
+
+function ggeUrl(server,lt,sv,lid){
+  let p=`"LT":${lt},"SV":"${sv}"`;
+  if(lid)p=`"LT":${lt},"LID":${lid},"SV":"${sv}"`;
+  return`${GGE_API}/${server}/hgh/${p.replace(/"/g,'%22')}`;
+}
+function ggeGlobalUrl(server,lt,rank,lid){
+  let p=`"LT":${lt},"R":${rank}`;if(lid)p=`"LT":${lt},"LID":${lid},"R":${rank}`;
+  return`${GGE_API}/${server}/llsp/${p.replace(/"/g,'%22')}`;
+}
+
+// ── Server names ──
+function parseNK(nk){const m=(nk||'').match(/generic_server_([a-z]+)(\d+)/i);return m?{l:m[1].toLowerCase(),n:+m[2]}:null}
+function getNK(h){return S.servers[h]?.nk||FALLBACK[S.game]?.[h]?.nk||''}
+function sname(h){
+  const nk=getNK(h); const p=parseNK(nk);
+  if(!p){
+    if(h.startsWith('Empirefourkingdoms'))return`📱 E4K ${h.match(/_(\d+)$/)?.[1]||''}`;
+    return`Serwer ${h.match(/_(\d+)$/)?.[1]||'?'}`;
+  }
+  const li=LANG_INFO[p.l]||{f:'',a:p.l.toUpperCase(),n:p.l.toUpperCase()};
+  const tr=S.texts[nk]||li.n;
+  const cnt=Object.values(FALLBACK[S.game]||{}).filter(v=>parseNK(v.nk)?.l===p.l).length;
+  return`${li.f} ${li.a} ${tr}${cnt>1?' ('+p.n+')':''}`;
+}
+function ssort(h){
+  const p=parseNK(getNK(h));if(!p)return 9999;
+  const li=LANG_INFO[p.l]||{n:p.l};
+  return li.n.localeCompare('zzz')*-1+p.n*0.01;
+}
+function sortSrv(keys){
+  return[...keys].sort((a,b)=>{
+    const pa=parseNK(getNK(a)),pb=parseNK(getNK(b));
+    if(!pa&&!pb)return a.localeCompare(b);if(!pa)return 1;if(!pb)return -1;
+    const la=LANG_INFO[pa.l]?.n||pa.l, lb=LANG_INFO[pb.l]?.n||pb.l;
+    const c=la.localeCompare(lb);return c!==0?c:pa.n-pb.n;
+  });
+}
+function trackerURL(name,server){
+  const clean=sname(server).replace(/^..\s/,'').replace(/\s*\(\d+\)$/,'');
+  return`https://gge-tracker.com/players?search=${encodeURIComponent(name)}&server=${encodeURIComponent(clean)}`;
+}
+
+// ── Events ──
+function evname(k){return S.texts[k]||EV_LABELS[k]||k.replace(/_/g,' ')}
+function catname(c){
+  if(!c)return'';const v=c.value;
+  if(v!=null&&v!==''){
+    if(c.name==='level_placeholder')return`Lv ${v}`;
+    if(c.name==='legendaryLevel_placeholder')return`✦ ${v}`;
+    if(c.name==='dialog_ci_filter01_all')return'Wszyscy';
+    const t=S.texts[c.name];return t?t.replace(/%s|\{[^}]*\}/gi,v).trim():String(v);
+  }
+  if(c.name==='dialog_ci_filter01_all')return'Wszyscy';
+  if(c.name?.includes('blueList'))return'🔵 Niebiescy';
+  if(c.name?.includes('redList'))return'🔴 Czerwoni';
+  return S.texts[c.name]||c.name||'';
+}
+function evList(){return S.events[S.allianceMode?'alliance':'player']||{}}
+function curEv(){return evList()[S.eventKey]||{}}
+function curCat(){const c=curEv().categories;if(!c?.length)return{};return c[Math.min(S.catIdx,c.length-1)]||{}}
+function curLT(){return curCat().eventid??curEv().id}
+function isGlobal(){return!!curEv().global}
+
+// ── Parse ──
+function parseRows(data){
+  if(!data||data.return_code!==0)return{rows:[],total:0};
+  const c=data.content||{};const L=c.L||[];const total=c.LR||c.T||L.length;
+  const rows=L.map(entry=>{
+    if(!Array.isArray(entry))return null;
+    const rank=entry[0],score=entry[1],obj=entry[2]||{};
+    const isArr=Array.isArray(obj);
+    let name,oid,al,alTag,alId,members,honor,might,castles,level,banned,prot;
+    if(isArr){const strs=obj.filter(x=>typeof x==='string'&&x.length>0);const nums=obj.filter(x=>typeof x==='number'&&x>=0);name=strs[0]||'—';members=nums.find(n=>n<5000)??null;}
+    else{
+      name=obj.N||'—'; oid=obj.OID||null; al=obj.AN||null; alTag=obj.AT||null; alId=obj.AID||null;
+      members=obj.MC??obj.NM??null; honor=obj.H??null; might=obj.MP??null;
+      castles=obj.CF??null; level=obj.L??null;
+      banned=obj.BAN===true||obj.banned===true||false;
+      prot=(obj.PF!=null&&obj.PF>0)||obj.PC===true||false;
+    }
+    return{rank,score,name,oid,al,alTag,alId,members,honor,might,castles,level,banned,prot,raw:obj};
+  }).filter(Boolean);
+  return{rows,total};
+}
+
+// ── Load data ──
+async function loadTexts(){
+  try{const r=await timeout(fetch(TEXTS_URL('pl')),4000);if(r.ok){const d=await r.json();if(d)S.texts=d;}}catch{}
+}
+async function loadEvents(){
+  try{
+    const r=await timeout(fetch(EVENTS_URL(S.game)),6000);
+    if(r.ok){const d=await r.json();if(d)S.events=d;}
+  }catch{}
+  if(!S.events.player){
+    S.events={
+      player:{honorPoints:{id:5,categories:[{id:1,name:'level_placeholder',value:'1-19'},{id:2,name:'level_placeholder',value:'20-29'},{id:3,name:'level_placeholder',value:'30-39'},{id:4,name:'level_placeholder',value:'40-59'},{id:5,name:'level_placeholder',value:'50-69'},{id:6,name:'level_placeholder',value:'70'}]},
+               playerMight:{id:6,categories:[{id:1,name:'level_placeholder',value:'1-19'},{id:2,name:'level_placeholder',value:'20-29'},{id:3,name:'level_placeholder',value:'30-39'},{id:4,name:'level_placeholder',value:'40-59'},{id:5,name:'level_placeholder',value:'50-69'},{id:6,name:'level_placeholder',value:'70'}]}},
+      alliance:{allianceHonor:{id:10,categories:[{id:1,name:'dialog_ci_filter01_all'}]},allianceMight:{id:11,categories:[{id:1,name:'dialog_ci_filter01_all'}]}},
+      player_to_alliance:[['honorPoints','allianceHonor'],['playerMight','allianceMight']]
+    };
+  }
+  validateEv(); buildEventSel();
+}
+async function loadServers(){
+  const gameId=S.game==='e4k'?'16':'12';
+  const xmlList=S.game==='e4k'?['72','77']:['1','5','11','26','34','39','64','65','68'];
+  const found={};
+  try{
+    const fetches=xmlList.map(n=>timeout(fetch(`${XML_BASE}/${gameId}/live/${n}.xml`).then(r=>r.ok?r.text():null).catch(()=>null),4000).catch(()=>null));
+    const results=await Promise.all(fetches);
+    const parser=new DOMParser();
+    for(const xml of results){
+      if(!xml)continue;
+      try{const doc=parser.parseFromString(xml,'text/xml');for(const inst of doc.getElementsByTagName('instance')){const ch=inst.children;if(ch.length<7)continue;const h=ch[2]?.textContent?.trim(),id=ch[4]?.textContent?.trim(),nk=ch[6]?.textContent?.trim();if(h&&h.startsWith('Empire')&&!found[h])found[h]={header:h,id:id||'',nk:nk||''};}}catch{}
+    }
+  }catch{}
+  // Merge: fallback fills missing nk
+  const fb=FALLBACK[S.game]||{};
+  const merged={};
+  new Set([...Object.keys(fb),...Object.keys(found)]).forEach(h=>{
+    const f=fb[h]||{},x=found[h]||{};
+    merged[h]={header:h,id:x.id||f.id||'',nk:x.nk||f.nk||''};
+  });
+  S.servers=merged;
+  buildServerSel();
+}
+function validateEv(){const l=evList();if(!(S.eventKey in l))S.eventKey=Object.keys(l)[0]||''}
+
+// ── Ranking fetch ──
+async function fetchRanking(sv){
+  const lt=curLT();if(!lt||!S.server)return null;
+  const lid=curCat().id||'';
+  try{
+    const url=isGlobal()?ggeGlobalUrl(S.server,lt,sv,lid):ggeUrl(S.server,lt,sv,lid);
+    const data=await timeout(ggeGet(url),10000);
+    return data;
+  }catch(e){console.warn('fetchRanking:',e.message);return null;}
+}
+
+async function loadRanking(sv='1'){
+  const rid=++S.reqId;S.loading=true;S.expandedRank=null;
+  setSt('spin','Pobieranie...');showSpin();
+  if(!S.server||!curLT()){S.loading=false;setSt('err','Wybierz serwer lub ranking');showSt('⚙️','Wybierz serwer z listy','');return;}
+  const data=await fetchRanking(sv);
+  if(rid!==S.reqId)return;
+  S.loading=false;
+  if(!data){setSt('err','Błąd API');showSt('🔌','Błąd połączenia z API','Sprawdź połączenie z internetem i spróbuj ponownie.');return;}
+  const{rows,total}=parseRows(data);
+  S.rows=rows;S.totalRows=total;
+  if(!rows.length){setSt('live','Brak danych');showSt('📭','Brak danych dla tego rankingu','Ten event może nie być aktywny na wybranym serwerze.');return;}
+  const totalPgs=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  $('sTotal').textContent=fmtN(total);$('sPage').textContent=`${S.curPage} / ${totalPgs}`;
+  setSt('live',`Dane LIVE · ${new Date().toLocaleTimeString('pl-PL')}`);
+  localStorage.setItem('game',S.game);if(S.server)localStorage.setItem('server',S.server);
+  renderTable(); renderPg();
+}
+
+async function goPage(page){
+  S.curPage=page;
+  const sv=String((page-1)*PAGE_SIZE+1);
+  await loadRanking(sv);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+window.goPage=goPage;
+
+// ── Render ──
+function showSpin(){$('mainView').innerHTML=`<div class="st"><div class="spin"></div><div class="sm">Pobieranie danych...</div></div>`;$('pgBar').style.display='none'}
+function showSt(icon,msg,sub){$('mainView').innerHTML=`<div class="st"><div class="si">${icon}</div><div class="sm">${esc(msg)}</div>${sub?`<div class="ss">${esc(sub)}</div>`:''}</div>`;$('pgBar').style.display='none'}
+
+function renderTable(){
+  const isAl=S.allianceMode;const max=S.rows[0]?.score||1;
+  let h=`<div class="twrap"><table><thead><tr>
+    <th style="width:40px;text-align:center">#</th><th style="width:26px"></th>
+    <th>${isAl?'Sojusz':'Gracz'}</th>
+    <th class="r">${isAl?'Członkowie':'Sojusz'}</th>
+    <th class="r" style="min-width:150px">Wynik</th>
+    <th style="width:75px"></th>
+  </tr></thead><tbody>`;
+
+  S.rows.forEach(r=>{
+    const fv=isFav(r.name,S.game,S.server);
+    const pct=Math.min(100,Math.round(((r.score||0)/max)*100));
+    const badge=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':r.rank;
+    const rkCls=r.rank<=3?'rk'+r.rank:'';
+    const url=trackerURL(r.name,S.server);
+    const exp=S.expandedRank===r.rank;
+    const bans=r.banned?'<span class="badge b-ban">🚫 Ban</span>':'';
+    const pr=r.prot?'<span class="badge b-prot">🛡 Ochrona</span>':'';
+    const fvb=fv?'<span class="badge b-fav">★</span>':'';
+
+    const alCell=isAl
+      ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
+      :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<span class="badge b-al">${esc(r.alTag||r.al.slice(0,5))}</span>`:'—'}</td>`;
+
+    h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}" data-rk="${r.rank}">
+      <td class="rk ${rkCls}">${badge}</td>
+      <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}">${fv?'⭐':'☆'}</button></td>
+      <td><span class="pn">${esc(r.name)}</span>${fvb}${bans}${pr}</td>
+      ${alCell}
+      <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
+      <td><a class="tl" href="${url}" target="_blank" rel="noopener">↗ Tracker</a></td>
+    </tr>
+    <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
+      <td colspan="6"><div class="dp" id="dp_${r.rank}"></div></td>
+    </tr>`;
+  });
+  h+='</tbody></table></div>';
+  $('mainView').innerHTML=h;
+
+  $('mainView').querySelectorAll('.dr').forEach(tr=>{
+    const rk=+tr.dataset.rk;
+    tr.querySelector('.sb').addEventListener('click',e=>{e.stopPropagation();const n=e.currentTarget.dataset.n;toggleFav(n,S.game,S.server,tr)});
+    tr.addEventListener('click',()=>toggleDetail(rk));
+  });
+}
+
+function toggleDetail(rank){
+  const r=S.rows.find(x=>x.rank===rank);if(!r)return;
+  const xtr=document.querySelector(`.xr[data-for="${rank}"]`);
+  const dtr=document.querySelector(`.dr[data-rk="${rank}"]`);
+  if(!xtr)return;
+  if(S.expandedRank===rank){
+    xtr.style.display='none';dtr?.classList.remove('exp');S.expandedRank=null;return;
+  }
+  if(S.expandedRank!=null){
+    const px=document.querySelector(`.xr[data-for="${S.expandedRank}"]`);if(px)px.style.display='none';
+    document.querySelector(`.dr[data-rk="${S.expandedRank}"]`)?.classList.remove('exp');
+  }
+  S.expandedRank=rank;xtr.style.display='';dtr?.classList.add('exp');
+  const panel=$(`dp_${rank}`);if(!panel)return;
+
+  const url=trackerURL(r.name,S.server);
+  const fv=isFav(r.name,S.game,S.server);
+
+  // Build stat blocks — each clickable if it has a linked ranking
+  const stats=[];
+  if(r.honor!=null) stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player'});
+  if(r.might!=null) stats.push({v:fmtN(r.might),l:'Siła (Might)',link:'playerMight',mode:'player'});
+  if(r.castles!=null)stats.push({v:fmtN(r.castles),l:'Zamki',link:null});
+  if(r.level!=null)  stats.push({v:r.level,l:'Poziom',link:'legendLevel',mode:'player'});
+  if(r.score!=null)  stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:null});
+  if(r.al)           stats.push({v:esc(r.al),l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
+  if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:null});
+
+  const statHtml=stats.map(st=>{
+    if(st.link){
+      // Clickable: navigates to that ranking
+      return`<div class="db" title="Otwórz ranking: ${evname(st.link)}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}">
+        <div class="db-v">${st.v}</div>
+        <div class="db-l">${st.l}</div>
+        <div class="db-hint">→ ${evname(st.link)}</div>
+      </div>`;
+    }
+    return`<div class="db db-plain"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div></div>`;
+  }).join('');
+
+  panel.innerHTML=`
+    <div class="ds">${statHtml||'<span style="color:var(--c-muted);font-size:12px">Brak szczegółowych danych</span>'}</div>
+    <div class="da">
+      <a class="btn" href="${url}" target="_blank" rel="noopener">↗ GGE Tracker</a>
+      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?'⭐ Obserwowany':'☆ Obserwuj'}</button>
+    </div>`;
+
+  // Attach click handlers for stat links
+  panel.querySelectorAll('.db[data-link]').forEach(el=>{
+    el.addEventListener('click',async()=>{
+      const linkKey=el.dataset.link, linkMode=el.dataset.mode, searchVal=el.dataset.search;
+      const isAl=linkMode==='alliance';
+      // Switch mode if needed
+      if(isAl!==S.allianceMode){
+        S.allianceMode=isAl;
+        const pair=S.events.player_to_alliance?.find(e=>e[+!isAl]===S.eventKey);
+        if(pair)S.eventKey=pair[+isAl];
+        updateTypeSeg();buildEventSel();
+      }
+      // Switch event
+      if(evList()[linkKey]){S.eventKey=linkKey;buildEventSel();}
+      S.catIdx=0;S.curPage=1;S.expandedRank=null;
+      if(searchVal){$('searchInput').value=searchVal;await loadRanking(searchVal);}
+      else{$('searchInput').value='';await loadRanking('1');}
+    });
+  });
+
+  $(`dfav_${rank}`)?.addEventListener('click',e=>{
+    e.stopPropagation();toggleFav(r.name,S.game,S.server,null);
+    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,S.game,S.server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now);}
+  });
+}
+
+function renderPg(){
+  const pg=$('pgBar');const total=Math.max(1,Math.ceil(S.totalRows/PAGE_SIZE));
+  if(total<=1){pg.style.display='none';return;}
+  pg.style.display='flex';
+  const cur=S.curPage;
+  let h=`<button class="pgb" onclick="goPage(1)" ${cur===1?'disabled':''}>«</button>`;
+  h+=`<button class="pgb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''}>‹</button>`;
+  const s=Math.max(1,cur-2),e=Math.min(total,cur+2);
+  if(s>1)h+=`<span class="pgi">…</span>`;
+  for(let i=s;i<=e;i++)h+=`<button class="pgb${i===cur?' cur':''}" onclick="goPage(${i})">${i}</button>`;
+  if(e<total)h+=`<span class="pgi">…</span>`;
+  h+=`<button class="pgb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''}>›</button>`;
+  h+=`<button class="pgb" onclick="goPage(${total})" ${cur===total?'disabled':''}>»</button>`;
+  h+=`<span class="pgi">Str. ${cur} z ${total} · ${fmtN(S.totalRows)} graczy</span>`;
+  pg.innerHTML=h;
+}
+
+// ── Selects ──
+function buildServerSel(){
+  const sel=$('serverSelect');
+  const keys=Object.keys(S.servers);if(!keys.length){sel.innerHTML='<option>Brak</option>';return;}
+  const seen=new Set();
+  const uniq=keys.filter(h=>{const n=sname(h);if(seen.has(n))return false;seen.add(n);return true;});
+  const sorted=sortSrv(uniq);
+  sel.innerHTML=sorted.map(h=>`<option value="${h}">${sname(h)}</option>`).join('');
+  if(!S.server||!sorted.includes(S.server)){
+    const pl=sorted.find(k=>parseNK(getNK(k))?.l==='pl'&&parseNK(getNK(k))?.n===1);
+    S.server=pl||sorted[0];
+  }
+  sel.value=S.server;
+  buildMSrv();
+}
+function buildEventSel(){
+  const sel=$('eventSelect');const list=evList();const keys=Object.keys(list);
+  if(!keys.length){sel.innerHTML='<option>Brak</option>';return;}
+  sel.innerHTML=keys.map(k=>`<option value="${k}">${evname(k)}</option>`).join('');
+  if(!(S.eventKey in list))S.eventKey=keys[0];
+  sel.value=S.eventKey;buildCats();
+}
+function buildCats(){
+  const cb=$('catBar');const cats=curEv().categories;
+  if(!cats?.length||cats.length<=1){cb.style.display='none';return;}
+  cb.style.display='flex';
+  cb.innerHTML=cats.map((c,i)=>{const n=catname(c);return n?`<button class="cat${i===S.catIdx?' on':''}" data-i="${i}">${n}</button>`:''}).join('');
+  cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;buildCats();await loadRanking();}));
+}
+function buildMSrv(){
+  const sel=$('mServer');const keys=Object.keys(S.servers);
+  const seen=new Set();const uniq=keys.filter(h=>{const n=sname(h);if(seen.has(n))return false;seen.add(n);return true;});
+  sel.innerHTML=sortSrv(uniq).map(h=>`<option value="${h}">${sname(h)}</option>`).join('');
+  if(S.server)sel.value=S.server;
+}
+function updateTypeSeg(){$('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.classList.toggle('on',b.dataset.v===(S.allianceMode?'alliance':'player')))}
+
+// ── Favorites ──
+function updFavCnt(){const n=S.favs.length;$('favCnt').textContent=n;$('favBtn').classList.toggle('primary',n>0)}
+function toggleFav(name,game,server,tr){
+  if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast('Usunięto z obserwowanych');}
+  else{S.favs.push({name,game,server});toast(`Obserwujesz ${name} ⭐`);}
+  saveFavs();updFavCnt();
+  document.querySelectorAll(`.sb[data-n="${esc(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.textContent=isFav(name,game,server)?'⭐':'☆';});
+  if(tr)tr.classList.toggle('fav',isFav(name,game,server));
+}
+function renderFavPage(){
+  const grid=$('favGrid');
+  if(!S.favs.length){grid.innerHTML='<div class="fe">Brak obserwowanych graczy.<br>Kliknij ☆ przy dowolnym graczu.</div>';return;}
+  grid.innerHTML='';
+  S.favs.forEach(fav=>{
+    const card=document.createElement('div');card.className='fc';
+    const url=trackerURL(fav.name,fav.server);
+    card.innerHTML=`<div class="fch"><div><div class="fcn">⭐ ${esc(fav.name)}</div><div class="fcm">${fav.game.toUpperCase()} · ${esc(sname(fav.server))}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}">×</button></div><div class="frr" id="fr_${esc(fav.name).replace(/\W/g,'_')}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div><br><a class="btn" href="${url}" target="_blank" rel="noopener" style="font-size:11px">↗ Profil GGE Tracker</a>`;
+    card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast('Usunięto');});
+    grid.appendChild(card);
+    loadFavRanks(fav,card);
+  });
+}
+async function loadFavRanks(fav,card){
+  const cid='fr_'+fav.name.replace(/\W/g,'_');const el=card.querySelector('#'+CSS.escape(cid));if(!el)return;
+  const evs=S.events?.player||{};const res=[];
+  for(const[key,ev]of Object.entries(evs)){
+    if(!ev.id)continue;
+    try{
+      const url=ggeUrl(fav.server,ev.id,fav.name,'');
+      const d=await ggeGet(url);
+      if(d?.return_code==0&&d.content?.L?.length){const f=d.content.L.find(p=>Array.isArray(p)&&(p[2]?.N||'').toLowerCase()===fav.name.toLowerCase());if(f)res.push({key,rank:f[0],score:f[1]});}
+    }catch{}
+  }
+  if(!el.isConnected)return;
+  el.innerHTML=res.length?res.map(r=>`<div class="fr"><span class="fl">${esc(evname(r.key))}</span><span class="fp2${r.rank<=3?' g':''}">#${r.rank}</span><span class="fs">${fmtN(r.score)}</span></div>`).join('')
+    :'<div class="fr"><span class="fl" style="color:var(--c-muted)">Nie znaleziono</span></div>';
+}
+
+// ── Wiring ──
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  S.page=b.dataset.p;
+  $('mainView').style.display=S.page==='ranking'?'block':'none';
+  $('pgBar').style.display=S.page==='ranking'&&S.rows.length?'flex':'none';
+  $('favView').style.display=S.page==='favorites'?'block':'none';
+  if(S.page==='favorites')renderFavPage();
+}));
+$('favBtn').addEventListener('click',()=>{document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('on'));document.querySelector('[data-p="favorites"]').classList.add('on');S.page='favorites';$('mainView').style.display='none';$('pgBar').style.display='none';$('favView').style.display='block';renderFavPage();});
+$('gameSelect').value=S.game;
+$('gameSelect').addEventListener('change',async e=>{S.game=e.target.value;S.server='';S.eventKey='';S.allianceMode=false;S.curPage=1;updateTypeSeg();showSpin();await Promise.all([loadTexts(),loadServers(),loadEvents()]);await loadRanking();});
+$('serverSelect').addEventListener('change',async e=>{if(e.target.value&&e.target.value!==S.server){S.server=e.target.value;S.curPage=1;await loadRanking();}});
+$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;buildCats();await loadRanking();});
+$('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.addEventListener('click',async()=>{
+  if((b.dataset.v==='alliance')===S.allianceMode)return;
+  S.allianceMode=b.dataset.v==='alliance';S.catIdx=0;S.curPage=1;
+  const pair=S.events.player_to_alliance?.find(e=>e[+!S.allianceMode]===S.eventKey);
+  if(pair)S.eventKey=pair[+S.allianceMode];
+  updateTypeSeg();buildEventSel();await loadRanking();
+}));
+const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;S.curPage=1;await loadRanking(v);};
+$('goSearch').addEventListener('click',doSearch);
+$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+$('refreshBtn').addEventListener('click',()=>{S.curPage=1;loadRanking();});
+$('addBtn').addEventListener('click',()=>{$('mName').value='';$('mErr').style.display='none';buildMSrv();$('mBackdrop').classList.remove('h');$('mName').focus();});
+$('mCancel').addEventListener('click',()=>$('mBackdrop').classList.add('h'));
+$('mBackdrop').addEventListener('click',e=>{if(e.target===$('mBackdrop'))$('mBackdrop').classList.add('h');});
+$('mGame').addEventListener('change',()=>buildMSrv());
+$('mOk').addEventListener('click',()=>{
+  const name=$('mName').value.trim(),game=$('mGame').value,server=$('mServer').value;
+  const err=$('mErr');err.style.display='none';
+  if(!name){err.textContent='Wpisz nick!';err.style.display='block';return;}
+  if(isFav(name,game,server)){err.textContent='Już obserwujesz!';err.style.display='block';return;}
+  S.favs.push({name,game,server});saveFavs();updFavCnt();
+  $('mBackdrop').classList.add('h');toast(`Obserwujesz ${name} ⭐`);
+  if(S.page==='favorites')renderFavPage();
+});
+$('mName').addEventListener('keydown',e=>{if(e.key==='Enter')$('mOk').click();});
+$('clearFavBtn').addEventListener('click',()=>{if(confirm('Usunąć wszystkich obserwowanych?')){S.favs=[];saveFavs();updFavCnt();renderFavPage();}});
+
+// ── Init ──
+let initDone=false;
+setTimeout(()=>{if(!initDone){setSt('err','Przekroczono czas');showSt('⏱','Ładowanie trwało zbyt długo','Odśwież stronę (F5).');}},20000);
+
+async function init(){
+  updFavCnt();updateTypeSeg();showSpin();setSt('spin','Ładowanie...');
+  try{setSt('spin','Tłumaczenia...');await timeout(loadTexts(),4500).catch(()=>{});}catch{}
+  try{setSt('spin','Serwery...');await timeout(loadServers(),7000).catch(()=>{});}catch{}
+  try{setSt('spin','Eventy...');await timeout(loadEvents(),6000).catch(()=>{});}catch{}
+  initDone=true;
+  setSt('spin','Pobieranie rankingu...');
+  S.curPage=1;
+  await loadRanking();
+}
+init();
+</script>
+</body>
+</html>
