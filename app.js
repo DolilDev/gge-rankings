@@ -15,24 +15,59 @@ const STAT_RANKING = {
 // ── Server fallback ──
 const FALLBACK = {
   gge: {
-    'EmpireEx': {nk:'generic_server_de1'}, 'EmpireEx_2': {nk:'generic_server_de2'},
-    'EmpireEx_3': {nk:'generic_server_de3'}, 'EmpireEx_4': {nk:'generic_server_en1'},
-    'EmpireEx_5': {nk:'generic_server_en2'}, 'EmpireEx_6': {nk:'generic_server_en3'},
-    'EmpireEx_7': {nk:'generic_server_pl1'}, 'EmpireEx_8': {nk:'generic_server_pl2'},
-    'EmpireEx_9': {nk:'generic_server_fr1'}, 'EmpireEx_10':{nk:'generic_server_fr2'},
-    'EmpireEx_11':{nk:'generic_server_ru1'}, 'EmpireEx_12':{nk:'generic_server_ru2'},
-    'EmpireEx_13':{nk:'generic_server_tr1'}, 'EmpireEx_14':{nk:'generic_server_pt1'},
-    'EmpireEx_15':{nk:'generic_server_it1'}, 'EmpireEx_16':{nk:'generic_server_es1'},
-    'EmpireEx_17':{nk:'generic_server_nl1'}, 'EmpireEx_18':{nk:'generic_server_cz1'},
-    'EmpireEx_19':{nk:'generic_server_hu1'}, 'EmpireEx_20':{nk:'generic_server_ro1'},
-    'EmpireEx_21':{nk:'generic_server_us1'},
+    'EmpireEx':     {nk:'generic_server_int1',  label:'🌍 Internacjonalny 1'},
+    'EmpireEx_2':   {nk:'generic_server_de1',   label:'🇩🇪 Niemcy 1'},
+    'EmpireEx_3':   {nk:'generic_server_fr1',   label:'🇫🇷 Francja 1'},
+    'EmpireEx_4':   {nk:'generic_server_cz1',   label:'🇨🇿 Republika Czeska 1'},
+    'EmpireEx_5':   {nk:'generic_server_pl1',   label:'🇵🇱 Polska 1'},
+    'EmpireEx_6':   {nk:'generic_server_pt1',   label:'🇵🇹 Portugalski 1'},
+    'EmpireEx_7':   {nk:'generic_server_int2',  label:'🌍 Internacjonalny 2'},
+    'EmpireEx_8':   {nk:'generic_server_es1',   label:'🇪🇸 Hiszpania 1'},
+    'EmpireEx_9':   {nk:'generic_server_it1',   label:'🇮🇹 Włochy 1'},
+    'EmpireEx_10':  {nk:'generic_server_tr1',   label:'🇹🇷 Turcja 1'},
+    'EmpireEx_11':  {nk:'generic_server_nl1',   label:'🇳🇱 Holandia 1'},
+    'EmpireEx_12':  {nk:'generic_server_hu1',   label:'🇭🇺 Węgry 1'},
+    'EmpireEx_13':  {nk:'generic_server_no1',   label:'🇸🇪 Skandynawski 1'},
+    'EmpireEx_14':  {nk:'generic_server_ru1',   label:'🇷🇺 Rosja 1'},
+    'EmpireEx_15':  {nk:'generic_server_ro1',   label:'🇷🇴 Rumunia 1'},
+    'EmpireEx_16':  {nk:'generic_server_bg1',   label:'🇧🇬 Bułgaria 1'},
+    'EmpireEx_17':  {nk:'generic_server_hu2',   label:'🇭🇺 Węgry 2'},
+    'EmpireEx_18':  {nk:'generic_server_sk1',   label:'🇸🇰 Słowacja 1'},
+    'EmpireEx_19':  {nk:'generic_server_en1',   label:'🇬🇧 Wielka Brytania 1'},
+    'EmpireEx_20':  {nk:'generic_server_br1',   label:'🇧🇷 Brazylia 1'},
+    'EmpireEx_21':  {nk:'generic_server_us1',   label:'🇺🇸 Stany Zjednoczone 1'},
+    'EmpireEx_22':  {nk:'generic_server_au1',   label:'🇦🇺 Australia 1'},
+    'EmpireEx_24':  {nk:'generic_server_jp1',   label:'🇯🇵 Japonia 1'},
+    'EmpireEx_25':  {nk:'generic_server_latam1',label:'🌎 Kraje hiszpańskojęzyczne w Ameryce 1'},
+    'EmpireEx_26':  {nk:'generic_server_in1',   label:'🇮🇳 Indie 1'},
+    'EmpireEx_27':  {nk:'generic_server_cn1',   label:'🇨🇳 Chiny 1'},
+    'EmpireEx_28':  {nk:'generic_server_gr1',   label:'🇬🇷 Grecja 1'},
+    'EmpireEx_29':  {nk:'generic_server_lt1',   label:'🇱🇹 Litwa 1'},
+    'EmpireEx_32':  {nk:'generic_server_sa1',   label:'🇸🇦 Arabia Saudyjska 1'},
+    'EmpireEx_33':  {nk:'generic_server_ae1',   label:'🇦🇪 Zjednoczone Emiraty Arabskie 1'},
+    'EmpireEx_34':  {nk:'generic_server_eg1',   label:'🇪🇬 Egipt 1'},
+    'EmpireEx_35':  {nk:'generic_server_arab1', label:'🌍 Liga Arabska 1'},
+    'EmpireEx_36':  {nk:'generic_server_asia1', label:'🌏 Azja 1'},
+    'EmpireEx_37':  {nk:'generic_server_zh1',   label:'🇨🇳 Chiński (tradycyjny) 1'},
+    'EmpireEx_38':  {nk:'generic_server_es2',   label:'🇪🇸 Hiszpania 2'},
+    'EmpireEx_43':  {nk:'generic_server_int3',  label:'🌍 Internacjonalny 3'},
+    'EmpireEx_46':  {nk:'generic_server_world1',label:'🌐 Świat 1'},
+    'EmpireEx_49':  {nk:'generic_server_world2',label:'🌐 Świat 2'},
+    'EmpireExVZ':   {nk:'generic_server_net1',  label:'🌐 Sieć 1'},
+    'EmpireExNK':   {nk:'generic_server_net2',  label:'🌐 Sieć 2'},
+    'EmpireExSP':   {nk:'generic_server_net3',  label:'🌐 Sieć 3'},
+    'EmpireExSP_2': {nk:'generic_server_net4',  label:'🌐 Sieć 4'},
+    'EmpireExSP_3': {nk:'generic_server_net5',  label:'🌐 Sieć 5'},
+    'EmpireExSA':   {nk:'generic_server_net6',  label:'🌐 Sieć 6'},
+    'EmpireExSA_2': {nk:'generic_server_net7',  label:'🌐 Sieć 7'},
+    'EmpireExKA':   {nk:'generic_server_net8',  label:'🌐 Sieć 8'},
   },
   e4k: {
-    'EmpirefourkingdomsExGG_2':{nk:''}, 'EmpirefourkingdomsExGG_3':{nk:''},
-    'EmpirefourkingdomsExGG_4':{nk:''},
+    'EmpirefourkingdomsExGG_2':{nk:'', label:'📱 E4K 2'},
+    'EmpirefourkingdomsExGG_3':{nk:'', label:'📱 E4K 3'},
+    'EmpirefourkingdomsExGG_4':{nk:'', label:'📱 E4K 4'},
   }
 };
-
 const LANG_INFO = {
   de:{f:'🇩🇪',a:'DE',n:'Deutsch'}, en:{f:'🇬🇧',a:'EN',n:'English'},
   pl:{f:'🇵🇱',a:'PL',n:'Polski'}, fr:{f:'🇫🇷',a:'FR',n:'Français'},
@@ -111,6 +146,8 @@ function ggeGlobalUrl(server,lt,rank,lid){
 function parseNK(nk){const m=(nk||'').match(/generic_server_([a-z]+)(\d+)/i);return m?{l:m[1].toLowerCase(),n:+m[2]}:null}
 function getNK(h){return S.servers[h]?.nk||FALLBACK[S.game]?.[h]?.nk||''}
 function sname(h){
+  const fb=FALLBACK[S.game]?.[h];
+  if(fb?.label) return fb.label;
   const nk=getNK(h); const p=parseNK(nk);
   if(!p){
     if(h.startsWith('Empirefourkingdoms'))return`📱 E4K ${h.match(/_(\d+)$/)?.[1]||''}`;
@@ -123,12 +160,7 @@ function sname(h){
 }
 
 function sortSrv(keys){
-  return[...keys].sort((a,b)=>{
-    const pa=parseNK(getNK(a)),pb=parseNK(getNK(b));
-    if(!pa&&!pb)return a.localeCompare(b);if(!pa)return 1;if(!pb)return -1;
-    const la=LANG_INFO[pa.l]?.n||pa.l, lb=LANG_INFO[pb.l]?.n||pb.l;
-    const c=la.localeCompare(lb);return c!==0?c:pa.n-pb.n;
-  });
+  return[...keys].sort((a,b)=>sname(a).localeCompare(sname(b),'pl'));
 }
 
 function trackerURL(name,server){
