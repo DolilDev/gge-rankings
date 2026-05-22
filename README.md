@@ -1,81 +1,91 @@
 # 🏰 GGE Rankings
 
-Strona rankingów dla **Goodgame Empire (GGE)** i **Empire Four Kingdoms (E4K)**.  
-Działa jako statyczna strona — **bez backendu**, bezpośrednio z przeglądarki.
+Strona rankingów dla **Goodgame Empire (GGE)** i **Empire Four Kingdoms (E4K)**.
 
-## 🌐 Demo
+🌐 **[Otwórz ranking](https://dolildev.github.io/gge-rankings/)**
 
-Po wdrożeniu dostępna pod: `https://TWOJ_LOGIN.github.io/gge-rankings/`
+---
 
-## 🚀 Deploy na GitHub Pages
+## 🚀 Jak zacząć
 
-### Metoda 1 — przez przeglądarkę (najprościej)
+### 1. Wybierz grę i serwer
 
-1. Wejdź na [github.com](https://github.com) → **New repository**
-2. Nazwa: `gge-rankings`, Public ✓ → **Create repository**
-3. Kliknij **Add file → Upload files**
-4. Wgraj `index.html`, `README.md`, `.nojekyll`
-5. Wejdź w **Settings → Pages**
-6. Source: **Deploy from a branch** → Branch: **main** / **root**
-7. Kliknij **Save** — strona pojawi się po ~2 min
+Na górze strony wybierz grę (**GGE** lub **E4K**), a następnie serwer z listy — serwery są pogrupowane według języka (🇵🇱 PL, 🇩🇪 DE, 🇬🇧 EN itd.).
 
-### Metoda 2 — przez Git (terminal)
+### 2. Wybierz rodzaj rankingu
 
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/TWOJ_LOGIN/gge-rankings.git
-git push -u origin main
-```
+Z listy **Ranking** wybierz interesujący Cię event, np.:
+- **Honor** — ranking honorowy graczy
+- **Siła (Might)** — ranking siły
+- **Liga** — ranking ligowy
+- i wiele innych eventów sezonowych
 
-Następnie włącz GitHub Pages w Settings → Pages.
+### 3. Przełącz między graczami a sojuszami
 
-## ✅ Funkcje
+Użyj przełącznika **👤 Gracze / 🛡 Sojusze**, aby zobaczyć rankingi indywidualne lub sojusznicze.
 
-| Funkcja | Opis |
-|---------|------|
-| 🏆 Rankingi LIVE | Dane z empire-api.fly.dev |
-| ⚔️ Wszystkie eventy | Honor, Siła, Turnieje, Liga... |
-| 🗂 Kategorie poziomów | Lv 1-19, Lv 20-29, ✦ Legendy |
-| 📄 Paginacja | 10 graczy na stronie |
-| 🔍 Wyszukiwanie | Po ranku (liczba) lub nicku (tekst) |
-| ⭐ Obserwowanie | Śledzenie graczy z podglądem rankingów |
-| 🔗 Klikalne statystyki | Honor/Siła/Poziom → otwiera ranking |
-| 🛡 Tryb ochrony | Wskaźnik przy graczu |
-| 🚫 Ban | Wskaźnik przy zbanowanym graczu |
-| 🌍 Wszystkie serwery | GGE + E4K z flagami |
-| 📱 Responsive | Działa na telefonie i tablecie |
+### 4. Filtruj według poziomu
 
-## 📁 Pliki
+Dla niektórych rankingów (np. Honor, Siła) pojawia się pasek kategorii — możesz filtrować graczy według przedziału poziomów:
 
-```
-index.html    ← cały projekt (jeden plik, ~44KB)
-README.md     ← ta dokumentacja
-.nojekyll     ← wyłącza Jekyll na GitHub Pages (wymagane)
-```
+> `Lv 1-19` · `Lv 20-29` · `Lv 30-39` · ... · `✦ Legendy`
 
-## 🔌 Używane API
+---
 
-- `empire-api.fly.dev` — rankingi GGE/E4K
-- `raw.githubusercontent.com/danadum/ggs-assets` — eventy
-- `translations-api-test.public.ggs-ep.com` — tłumaczenia (opcjonalne)
-- `media.goodgamestudios.com` — lista serwerów (opcjonalne, jest fallback)
+## 🔍 Wyszukiwanie gracza
 
-Wszystkie API mają CORS włączony — działają bezpośrednio z przeglądarki.
+W polu wyszukiwania możesz wpisać:
+- **Numer ranku** (np. `1`, `42`) — przeskoczysz do danej pozycji
+- **Nick gracza** (np. `Rycerz123`) — wyszuka gracza po nazwie
 
-## 🛠 Lokalne uruchomienie
+Zatwierdź klawiszem **Enter** lub przyciskiem **↵**.
 
-Ponieważ to statyczna strona, możesz ją otworzyć lokalnie na dwa sposoby:
+---
 
-```bash
-# Python (wbudowany serwer)
-python -m http.server 8080
-# → otwórz http://localhost:8080
+## 📋 Tabela rankingowa
 
-# Node.js (npx serve)
-npx serve .
-```
+Kliknij na dowolny wiersz, aby rozwinąć szczegóły gracza:
 
-> ⚠️ Nie otwieraj `index.html` bezpośrednio przez `file://` — 
-> przeglądarki blokują wtedy część requestów CORS.
+| Co zobaczysz | Opis |
+|---|---|
+| 🏅 Honor | Kliknij → otwiera ranking honorowy |
+| ⚔️ Siła (Might) | Kliknij → otwiera ranking siły |
+| 🏰 Zamki | Liczba zamków gracza |
+| 📊 Poziom | Poziom legendy |
+| 🛡 Sojusz | Kliknij → otwiera ranking sojuszu |
+| ↗ GGE Tracker | Link do profilu gracza na GGE Tracker |
+
+Ikony przy nicku gracza:
+- 🚫 **Ban** — gracz zbanowany
+- 🛡 **Ochrona** — gracz pod ochroną
+- ★ **Ulubiony** — gracz jest na liście obserwowanych
+
+---
+
+## ⭐ Obserwowanie graczy
+
+### Dodaj gracza do obserwowanych
+- Kliknij **☆** przy nicku gracza w tabeli — od razu doda do listy
+- Lub użyj przycisku **+ Śledź** w prawym górnym rogu i wpisz nick ręcznie
+
+### Przeglądaj obserwowanych
+Kliknij zakładkę **⭐ Ulubieni** — zobaczysz karty z aktualnymi pozycjami rankingowymi każdego obserwowanego gracza.
+
+### Usuń z obserwowanych
+Kliknij **×** na karcie gracza lub ponownie **☆** w tabeli.
+
+---
+
+## ↺ Odświeżanie danych
+
+Dane są pobierane na żywo z API. Aby odświeżyć ranking, kliknij przycisk **↺** na pasku narzędzi. Status połączenia widoczny jest w pasku pod toolbar:
+
+- 🟢 **Dane LIVE** — dane załadowane poprawnie
+- 🟡 **Pobieranie...** — trwa ładowanie
+- 🔴 **Błąd API** — problem z połączeniem
+
+---
+
+## 📱 Urządzenia mobilne
+
+Strona działa na telefonach i tabletach. Na małych ekranach toolbar jest przewijalny poziomo.
