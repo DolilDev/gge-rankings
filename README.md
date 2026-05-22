@@ -1,4 +1,4 @@
-# [🏰 GGE Rankings](https://dolildev.github.io/gge-rankings/)
+# 🏰 GGE Rankings
 
 Strona rankingów dla **Goodgame Empire (GGE)** i **Empire Four Kingdoms (E4K)**.  
 Działa jako statyczna strona — **bez backendu**, bezpośrednio z przeglądarki.
