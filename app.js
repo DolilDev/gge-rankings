@@ -249,14 +249,25 @@ function isGlobal(){return!!curEv().global}
 // ── Parse ──
 function parseRows(data){
   if(!data||data.return_code!==0)return{rows:[],total:0};
-  if(S.allianceMode){console.log('[parseRows] raw content keys:',Object.keys(data.content||{}));console.log('[parseRows] L sample:',JSON.stringify((data.content?.L||data.content?.A||data.content?.R||[])[0]));}
+
   const c=data.content||{};const L=c.L||[];const total=c.LR||c.T||L.length;
   const rows=L.map(entry=>{
     if(!Array.isArray(entry))return null;
     const rank=entry[0],score=entry[1],obj=entry[2]||{};
     const isArr=Array.isArray(obj);
     let name,al,alTag,members,honor,might,glory,level,legendLevel,banned,prot;
-    if(isArr){const strs=obj.filter(x=>typeof x==='string'&&x.length>0);name=strs[0]||'—';}
+    if(isArr){
+      // Alliance format: [allianceId, name, memberCount, ?]
+      // Player format: [?, name, ...]
+      const nums=obj.filter(x=>typeof x==='number');
+      const strs=obj.filter(x=>typeof x==='string'&&x.length>0);
+      name=strs[0]||'—';
+      // memberCount is typically the first small number after the ID
+      if(S.allianceMode){
+        // entry[2] = [id, name, members, ...]
+        members=typeof obj[2]==='number'?obj[2]:null;
+      }
+    }
     else{
       name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;
       members=obj.MC??obj.NM??obj.MCount??obj.memberCount??obj.members??obj.M??null;honor=obj.H??null;might=obj.MP??null;
