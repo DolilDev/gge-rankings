@@ -352,7 +352,7 @@ function parseRows(data){
       avp=obj.AVP??null;hf=obj.HF??null;rpt=obj.RPT??null;
       rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
       ap=obj.AP??null;vp=obj.VP??null;
-      banned=obj.BAN===true||obj.banned===true||false;
+      banned=false;
       prot=false;
     }
     return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
@@ -459,7 +459,7 @@ function renderTable(){
     const rkCls=r.rank<=3?'rk'+r.rank:'';
     const url=trackerURL(r.name,S.server);
     const exp=S.expandedRank===r.rank;
-    const bans=r.banned?'<span class="badge b-ban">🚫 Ban</span>':'';
+    const bans='';
     const pr='';
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
