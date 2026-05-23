@@ -249,8 +249,7 @@ function isGlobal(){return!!curEv().global}
 // ── Parse ──
 function parseRows(data){
   if(!data||data.return_code!==0)return{rows:[],total:0};
-  // Debug: log first entry in alliance mode
-  if(S.allianceMode&&data.content?.L?.[0]){console.log('[parseRows] alliance sample:',JSON.stringify(data.content.L[0]));}
+  if(S.allianceMode){console.log('[parseRows] raw content keys:',Object.keys(data.content||{}));console.log('[parseRows] L sample:',JSON.stringify((data.content?.L||data.content?.A||data.content?.R||[])[0]));}
   const c=data.content||{};const L=c.L||[];const total=c.LR||c.T||L.length;
   const rows=L.map(entry=>{
     if(!Array.isArray(entry))return null;
