@@ -458,7 +458,7 @@ function renderTable(){
     const url=trackerURL(r.name,S.server);
     const exp=S.expandedRank===r.rank;
     const bans=r.banned?'<span class="badge b-ban">🚫 Ban</span>':'';
-    const pr=r.prot?'<span class="badge b-prot">🛡 Ochrona</span>':'';
+    const pr=r.prot?'<span class="badge b-prot">🕊 Ptak</span>':'';
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
