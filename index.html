@@ -23,10 +23,21 @@
 </div>
 
 <div class="toolbar">
-  <span class="tlbl">Gra</span>
-  <select id="gameSelect"><option value="gge">GGE</option><option value="e4k">E4K</option></select>
   <span class="tlbl">Serwer</span>
-  <select id="serverSelect" style="min-width:190px"><option>Ładowanie...</option></select>
+  <div class="srv-wrap" id="srvWrap">
+    <button class="srv-btn" id="srvBtn" type="button">
+      <span id="srvBtnFlag"></span>
+      <span id="srvBtnCode"></span>
+      <span id="srvBtnName">Ładowanie...</span>
+      <span class="srv-arrow">▾</span>
+    </button>
+    <div class="srv-drop h" id="srvDrop">
+      <div class="srv-search-wrap">
+        <input type="text" id="srvSearch" placeholder="Szukaj serwera..." autocomplete="off">
+      </div>
+      <div class="srv-list" id="srvList"></div>
+    </div>
+  </div>
   <span class="tlbl">Ranking</span>
   <select id="eventSelect" style="min-width:190px"><option>Ładowanie...</option></select>
   <div class="seg" id="typeSeg">
@@ -64,8 +75,21 @@
   <div class="mo">
     <h3>⭐ Śledź gracza</h3>
     <label>Nick gracza</label><input type="text" id="mName" placeholder="Wpisz nick...">
-    <label>Gra</label><select id="mGame"><option value="gge">GGE</option><option value="e4k">E4K</option></select>
-    <label>Serwer</label><select id="mServer"></select>
+    <label>Serwer</label>
+    <div class="srv-wrap" id="mSrvWrap">
+      <button class="srv-btn" id="mSrvBtn" type="button">
+        <span id="mSrvBtnFlag"></span>
+        <span id="mSrvBtnCode"></span>
+        <span id="mSrvBtnName">Wybierz serwer</span>
+        <span class="srv-arrow">▾</span>
+      </button>
+      <div class="srv-drop h" id="mSrvDrop">
+        <div class="srv-search-wrap">
+          <input type="text" id="mSrvSearch" placeholder="Szukaj serwera..." autocomplete="off">
+        </div>
+        <div class="srv-list" id="mSrvList"></div>
+      </div>
+    </div>
     <div class="me" id="mErr"></div>
     <div class="ma">
       <button class="btn" id="mCancel">Anuluj</button>
