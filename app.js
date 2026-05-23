@@ -248,16 +248,16 @@ function parseRows(data){
     if(!Array.isArray(entry))return null;
     const rank=entry[0],score=entry[1],obj=entry[2]||{};
     const isArr=Array.isArray(obj);
-    let name,al,alTag,members,honor,might,glory,level,banned,prot;
+    let name,al,alTag,members,honor,might,glory,level,legendLevel,banned,prot;
     if(isArr){const strs=obj.filter(x=>typeof x==='string'&&x.length>0);name=strs[0]||'—';}
     else{
       name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;
       members=obj.MC??obj.NM??null;honor=obj.H??null;might=obj.MP??null;
-      glory=obj.CF??null;level=obj.L??null;
+      glory=obj.CF??null;level=obj.L??null;legendLevel=obj.LL??null;
       banned=obj.BAN===true||obj.banned===true||false;
       prot=(obj.PF!=null&&obj.PF>0)||obj.PC===true||false;
     }
-    return{rank,score,name,al,alTag,members,honor,might,glory,level,banned,prot};
+    return{rank,score,name,al,alTag,members,honor,might,glory,level,legendLevel,banned,prot};
   }).filter(Boolean);
   return{rows,total};
 }
@@ -402,7 +402,8 @@ function toggleDetail(rank){
   if(r.honor!=null)  stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player'});
   if(r.might!=null)  stats.push({v:fmtN(r.might),l:'Siła (Might)',link:'playerMight',mode:'player'});
   if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:null});
-  if(r.level!=null)  stats.push({v:r.level,l:'Poziom',link:'legendLevel',mode:'player'});
+  if(r.legendLevel!=null) stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
+  else if(r.level!=null) stats.push({v:r.level,l:'Poziom',link:'honorPoints',mode:'player'});
   if(r.score!=null)  stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:null});
   if(r.al)           stats.push({v:esc(r.al),l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:null});
