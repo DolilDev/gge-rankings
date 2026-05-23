@@ -200,6 +200,91 @@ function buildSrvDropdown(listId, btnId, searchId, onSelect, currentH) {
   return { updateBtn, renderList, setActive(h){ currentH=h; renderList(search?.value||''); updateBtn(h); } };
 }
 
+
+// ── Alliance members ──
+function gamUrl(server, allianceId){
+  return`${GGE_API}/${server}/gam/%22AID%22:${allianceId}`;
+}
+function gamByNameUrl(server, name){
+  const enc=encodeURIComponent(JSON.stringify({AN:name})).replace(/%22/g,'%22');
+  return`${GGE_API}/${server}/gam/%22AN%22:%22${encodeURIComponent(name)}%22`;
+}
+
+async function fetchAllianceMembers(server, allianceName, allianceId){
+  try{
+    const url=allianceId
+      ? `${GGE_API}/${server}/gam/%22AID%22:${allianceId}`
+      : `${GGE_API}/${server}/gam/%22AN%22:%22${encodeURIComponent(allianceName)}%22`;
+    const d=await timeout(ggeGet(url),8000);
+    if(!d||d.return_code!==0)return null;
+    return d.content?.M||d.content?.members||d.content||null;
+  }catch(e){console.warn('fetchAllianceMembers:',e.message);return null;}
+}
+
+function showAllianceModal(allianceName, server, allianceId){
+  const existing=$('alModal');if(existing)existing.remove();
+  const game=srvGame(server);
+  const si=srvInfo(server);
+  const modal=document.createElement('div');
+  modal.id='alModal';
+  modal.className='mb';
+  modal.innerHTML=`
+    <div class="mo" style="width:520px;max-width:96vw">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h3 style="margin:0">🛡 ${esc(allianceName)}</h3>
+        <button class="btn" id="alClose">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--c-muted);margin-bottom:10px">${si?si.flag+' '+si.name:server}</div>
+      <div id="alBody"><div class="st"><div class="spin"></div><div class="sm" style="font-size:13px">Pobieranie członków...</div></div></div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('#alClose').addEventListener('click',()=>modal.remove());
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+
+  // fetch members
+  fetchAllianceMembers(server, allianceName, allianceId||null).then(members=>{
+    const body=$('alBody');if(!body)return;
+    // Normalize various response shapes
+    let list=members;
+    if(members&&!Array.isArray(members)){
+      list=members.M||members.members||members.Players||Object.values(members);
+    }
+    if(!list||!Array.isArray(list)||!list.length){
+      body.innerHTML='<div class="st"><div class="si">📭</div><div class="sm">Brak danych o członkach</div><div class="ss">Ten endpoint może nie być dostępny dla tego serwera.</div></div>';
+      return;
+    }
+    const members2=list;
+    // sort by might or honor desc
+    const sorted=[...members2].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
+    let h=`<div style="max-height:420px;overflow-y:auto">
+      <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:6px 8px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">#</th>
+        <th style="padding:6px 8px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Gracz</th>
+        <th style="padding:6px 8px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Poziom</th>
+        <th style="padding:6px 8px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Siła</th>
+        <th style="padding:6px 8px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Honor</th>
+      </tr></thead><tbody>`;
+    sorted.forEach((m,i)=>{
+      const name=m.N||m.name||'—';
+      const level=m.LL!=null?`✦ ${m.LL}`:(m.L!=null?(m.L>=70?`✦ ${m.L}`:m.L):'—');
+      const might=m.MP!=null?fmtN(m.MP):'—';
+      const honor=m.H!=null?fmtN(m.H):'—';
+      const url=trackerURL(name,server);
+      h+=`<tr style="border-bottom:1px solid var(--c-border2)">
+        <td style="padding:6px 8px;font-size:12px;color:var(--c-muted)">${i+1}</td>
+        <td style="padding:6px 8px;font-size:13px;font-weight:500"><a href="${url}" target="_blank" rel="noopener" style="color:var(--c-bright);text-decoration:none">${esc(name)}</a></td>
+        <td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--c-muted)">${level}</td>
+        <td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--c-text)">${might}</td>
+        <td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--c-text)">${honor}</td>
+      </tr>`;
+    });
+    h+='</tbody></table></div>';
+    h+=`<div style="margin-top:10px;font-size:11px;color:var(--c-muted)">Łącznie: <b style="color:var(--c-text)">${sorted.length}</b> członków</div>`;
+    body.innerHTML=h;
+  });
+}
+
 // ── API ──
 const CACHE = new Map();
 function cGet(k){const e=CACHE.get(k);return(e&&Date.now()<e.x)?e.v:null}
@@ -248,16 +333,16 @@ function parseRows(data){
     if(!Array.isArray(entry))return null;
     const rank=entry[0],score=entry[1],obj=entry[2]||{};
     const isArr=Array.isArray(obj);
-    let name,al,alTag,members,honor,might,glory,level,legendLevel,banned,prot;
+    let name,al,alTag,alId,members,honor,might,glory,level,legendLevel,banned,prot;
     if(isArr){const strs=obj.filter(x=>typeof x==='string'&&x.length>0);name=strs[0]||'—';}
     else{
-      name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;
+      name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;alId=obj.AID||null;
       members=obj.MC??obj.NM??null;honor=obj.H??null;might=obj.MP??null;
       glory=obj.CF??null;level=obj.L??null;legendLevel=obj.LL??null;
       banned=obj.BAN===true||obj.banned===true||false;
       prot=(obj.PF!=null&&obj.PF>0)||obj.PC===true||false;
     }
-    return{rank,score,name,al,alTag,members,honor,might,glory,level,legendLevel,banned,prot};
+    return{rank,score,name,al,alTag,alId,members,honor,might,glory,level,legendLevel,banned,prot};
   }).filter(Boolean);
   return{rows,total};
 }
@@ -406,9 +491,17 @@ function toggleDetail(rank){
   else if(r.level!=null&&r.level>=70) stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
   else if(r.level!=null) stats.push({v:r.level,l:'Poziom',link:'honorPoints',mode:'player'});
   if(r.score!=null)  stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:null});
-  if(r.al)           stats.push({v:esc(r.al),l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
+  if(r.al)           stats.push({v:esc(r.al),l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al,alName:r.al,alId:r.alId??null});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:null});
   const statHtml=stats.map(st=>{
+    if(st.alName){
+      return`<div style="display:flex;flex-direction:column;gap:4px">
+        <div class="db" title="Otwórz ranking: ${evname(st.link)}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}">
+          <div class="db-v">${st.v}</div><div class="db-l">${st.l}</div><div class="db-hint">→ ${evname(st.link)}</div>
+        </div>
+        <button class="btn" style="font-size:11px" data-al-name="${esc(st.alName)}" data-al-id="${st.alId||''}" >👥 Członkowie</button>
+      </div>`;
+    }
     if(st.link)return`<div class="db" title="Otwórz ranking: ${evname(st.link)}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div><div class="db-hint">→ ${evname(st.link)}</div></div>`;
     return`<div class="db db-plain"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div></div>`;
   }).join('');
@@ -418,6 +511,9 @@ function toggleDetail(rank){
       <a class="btn" href="${url}" target="_blank" rel="noopener">↗ GGE Tracker</a>
       <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?'⭐ Obserwowany':'☆ Obserwuj'}</button>
     </div>`;
+  panel.querySelectorAll('[data-al-name]').forEach(btn=>{
+    btn.addEventListener('click',e=>{e.stopPropagation();showAllianceModal(btn.dataset.alName,S.server,btn.dataset.alId||null);});
+  });
   panel.querySelectorAll('.db[data-link]').forEach(el=>{
     el.addEventListener('click',async()=>{
       const linkKey=el.dataset.link,linkMode=el.dataset.mode,searchVal=el.dataset.search;
