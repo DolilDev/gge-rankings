@@ -416,7 +416,8 @@ async function renderAllianceDetail(r, panel){
     if(al.MP!=null) stats.push({v:fmtN(al.MP),l:'Moc',link:null});
     if(al.CF!=null) stats.push({v:fmtN(al.CF),l:'Punkty chwały',link:null});
     if(al.IS!=null) stats.push({v:al.IS?'Tak':'Nie',l:'Otwarty',link:null});
-    stats.push({v:fmtN(sorted.length),l:'Członkowie',link:null});
+    const memberCount=sorted.length||(al.M&&Array.isArray(al.M)?al.M.length:0)||(al.MC??al.NM??0);
+    stats.push({v:fmtN(memberCount),l:'Członkowie',link:null});
     if(sorted.length){
       const totalAvp=sorted.reduce((s,m)=>s+(m.AVP??0),0);
       const totalRpt=sorted.reduce((s,m)=>s+(m.RPT??0),0);
@@ -425,9 +426,16 @@ async function renderAllianceDetail(r, panel){
       if(totalRpt>0) stats.push({v:fmtN(totalRpt),l:'Punkty rabunku',link:null});
       if(totalHf>0)  stats.push({v:fmtN(totalHf),l:'Punkty obrony',link:null});
     }
-    if(al.D&&al.D!=='Opisz swój sojusz.') stats.push({v:al.D,l:'Opis',link:null});
+    if(al.D&&al.D!=='Opisz swój sojusz.'){
+      const descHtml=al.D.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/&lt;br\s*\/?&gt;/gi,'<br>').replace(/&lt;\/?(b|i|u)&gt;/gi,'');
+      stats.push({v:descHtml,l:'Opis',link:null,html:true});
+    }
 
-    const statHtml=stats.map(st=>`<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${st.l}</div></div>`).join('');
+    const statHtml=stats.map(st=>{
+      if(st.html) return`<div class="db db-plain" style="flex:1 1 200px;min-width:160px"><div class="db-v" style="font-size:12px;font-weight:400;line-height:1.5">${st.v}</div><div class="db-l">${st.l}</div></div>`;
+      return`<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${st.l}</div></div>`;
+    }).join('');
 
     let membersHtml='';
     if(sorted.length){
