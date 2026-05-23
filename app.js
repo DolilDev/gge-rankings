@@ -249,6 +249,8 @@ function isGlobal(){return!!curEv().global}
 // ── Parse ──
 function parseRows(data){
   if(!data||data.return_code!==0)return{rows:[],total:0};
+  // Debug: log first entry in alliance mode
+  if(S.allianceMode&&data.content?.L?.[0]){console.log('[parseRows] alliance sample:',JSON.stringify(data.content.L[0]));}
   const c=data.content||{};const L=c.L||[];const total=c.LR||c.T||L.length;
   const rows=L.map(entry=>{
     if(!Array.isArray(entry))return null;
@@ -258,7 +260,7 @@ function parseRows(data){
     if(isArr){const strs=obj.filter(x=>typeof x==='string'&&x.length>0);name=strs[0]||'—';}
     else{
       name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;
-      members=obj.MC??obj.NM??null;honor=obj.H??null;might=obj.MP??null;
+      members=obj.MC??obj.NM??obj.MCount??obj.memberCount??obj.members??obj.M??null;honor=obj.H??null;might=obj.MP??null;
       glory=obj.CF??null;level=obj.L??null;legendLevel=obj.LL??null;
       banned=obj.BAN===true||obj.banned===true||false;
       prot=(obj.PF!=null&&obj.PF>0)||obj.PC===true||false;
