@@ -229,19 +229,28 @@ function showAllianceModal(allianceName, server, allianceId){
     const body=$('alBody');if(!body)return;
     if(!data){body.innerHTML='<div class="st"><div class="si">📭</div><div class="sm">Brak danych</div></div>';return;}
 
-    // Info section
-    const name=data.N||allianceName;
-    const desc=data.D&&data.D!=='Opisz swój sojusz.'?esc(data.D):'—';
-    const mp=data.MP!=null?fmtN(data.MP):'—';
-    const cf=data.CF!=null?fmtN(data.CF):'—';
+    // data.A = alliance info, data.M = members
+    const al=data.A||data;
+    const name=al.N||allianceName;
+    const desc=al.D&&al.D!=='Opisz swój sojusz.'?esc(al.D):'—';
     const members=Array.isArray(data.M)?data.M:[];
     const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
 
+    // Build stat tiles like player detail panel
+    const alStats=[];
+    if(al.MP!=null) alStats.push({v:fmtN(al.MP),l:'Moc'});
+    if(al.CF!=null) alStats.push({v:fmtN(al.CF),l:'Punkty chwały'});
+    if(al.AVP!=null)alStats.push({v:fmtN(al.AVP),l:'Punkty ataku'});
+    if(al.HF!=null) alStats.push({v:fmtN(al.HF),l:'Punkty obrony'});
+    if(al.RPT!=null)alStats.push({v:fmtN(al.RPT),l:'Punkty rabunku'});
+    if(al.AR!=null) alStats.push({v:fmtN(al.AR),l:'Ranga'});
+    alStats.push({v:fmtN(sorted.length)||'—',l:'Członkowie'});
+
+    const tilesHtml=alStats.map(s=>`<div class="db db-plain"><div class="db-v">${s.v}</div><div class="db-l">${s.l}</div></div>`).join('');
+
     let h=`<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--c-border)">
-      <div class="db db-plain"><div class="db-v">${esc(name)}</div><div class="db-l">Nazwa</div></div>
-      <div class="db db-plain"><div class="db-v">${mp}</div><div class="db-l">Moc</div></div>
-      <div class="db db-plain"><div class="db-v">${cf}</div><div class="db-l">Punkty chwały</div></div>
-      <div class="db db-plain" style="flex:1;min-width:140px"><div class="db-v" style="font-size:12px;font-weight:400">${desc}</div><div class="db-l">Opis</div></div>
+      ${tilesHtml}
+      ${desc!=='—'?`<div class="db db-plain" style="flex:1;min-width:140px"><div class="db-v" style="font-size:12px;font-weight:400">${desc}</div><div class="db-l">Opis</div></div>`:''}
     </div>`;
 
     if(sorted.length){
