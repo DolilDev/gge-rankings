@@ -503,11 +503,12 @@ function toggleDetail(rank){
   const game=srvGame(S.server);
   const fv=isFav(r.name,game,S.server);
   const stats=[];
-  if(r.honor!==undefined&&r.honor!==null)  stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player'});
-  if(r.might!==undefined&&r.might!==null)  stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player'});
+  const pn=r.name; // player name for search links
+  if(r.honor!==undefined&&r.honor!==null)  stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn});
+  if(r.might!==undefined&&r.might!==null)  stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player',search:pn});
   if(r.glory!==undefined&&r.glory!==null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:null});
-  if(r.legendLevel!=null&&r.legendLevel>0) stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
-  else if(r.level!=null&&r.level>=70) stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
+  if(r.legendLevel!=null&&r.legendLevel>0) stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
+  else if(r.level!=null&&r.level>=70) stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
   else if(r.level!=null&&r.level>0) stats.push({v:'Lv '+r.level,l:'Poziom',link:null});
   if(r.avp!=null)    stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:null});
   if(r.hf!=null)     stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:null});
@@ -516,7 +517,7 @@ function toggleDetail(rank){
   if(r.pre!=null&&r.pre>0) stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:null});
   if(r.suf!=null&&r.suf>0) stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:null});
   if(r.score!=null)  stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:null});
-  if(r.al)           stats.push({v:esc(r.al),l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
+  if(r.al)           stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:null});
   const statHtml=stats.map(st=>{
     if(st.link)return`<div class="db" title="Otwórz ranking: ${evname(st.link)}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div><div class="db-hint">→ ${evname(st.link)}</div></div>`;
