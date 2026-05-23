@@ -231,6 +231,7 @@ function showAllianceModal(allianceName, server, allianceId){
 
     // data.A = alliance info, data.M = members
     const al=data.A||data;
+    console.log('[modal] al.MP:', al.MP, 'al.CF:', al.CF, 'al.IS:', al.IS, 'alStats będzie:', al.MP!=null);
     const name=al.N||allianceName;
     const desc=al.D&&al.D!=='Opisz swój sojusz.'?esc(al.D):'—';
     const members=Array.isArray(data.M)?data.M:[];
