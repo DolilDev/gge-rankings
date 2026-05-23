@@ -201,6 +201,86 @@ function buildSrvDropdown(listId, btnId, searchId, onSelect, currentH) {
 }
 
 
+// ── Alliance info (ain) ──
+async function fetchAllianceInfo(server, allianceId){
+  try{
+    const url=`${GGE_API}/${server}/ain/%22AID%22:${allianceId}`;
+    const d=await timeout(ggeGet(url),8000);
+    if(!d||d.return_code!==0)return null;
+    return d.content;
+  }catch(e){console.warn('fetchAllianceInfo:',e.message);return null;}
+}
+
+function showAllianceModal(allianceName, server, allianceId){
+  const existing=$('alModal');if(existing)existing.remove();
+  const si=srvInfo(server);
+  const modal=document.createElement('div');
+  modal.id='alModal';
+  modal.className='mb';
+  modal.innerHTML=`
+    <div class="mo" style="width:560px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0">
+        <h3 style="margin:0">🛡 ${esc(allianceName)}</h3>
+        <button class="btn" id="alClose">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--c-muted);margin-bottom:12px;flex-shrink:0">${si?si.flag+' '+si.name:server}</div>
+      <div id="alBody" style="overflow-y:auto;flex:1"><div class="st"><div class="spin"></div><div class="sm" style="font-size:13px">Pobieranie danych...</div></div></div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('#alClose').addEventListener('click',()=>modal.remove());
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+
+  fetchAllianceInfo(server, allianceId).then(data=>{
+    const body=$('alBody');if(!body)return;
+    if(!data){body.innerHTML='<div class="st"><div class="si">📭</div><div class="sm">Brak danych</div></div>';return;}
+
+    // Info section
+    const name=data.N||allianceName;
+    const desc=data.D&&data.D!=='Opisz swój sojusz.'?esc(data.D):'—';
+    const mp=data.MP!=null?fmtN(data.MP):'—';
+    const cf=data.CF!=null?fmtN(data.CF):'—';
+    const members=Array.isArray(data.M)?data.M:[];
+    const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
+
+    let h=`<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--c-border)">
+      <div class="db db-plain"><div class="db-v">${esc(name)}</div><div class="db-l">Nazwa</div></div>
+      <div class="db db-plain"><div class="db-v">${mp}</div><div class="db-l">Moc</div></div>
+      <div class="db db-plain"><div class="db-v">${cf}</div><div class="db-l">Punkty chwały</div></div>
+      <div class="db db-plain" style="flex:1;min-width:140px"><div class="db-v" style="font-size:12px;font-weight:400">${desc}</div><div class="db-l">Opis</div></div>
+    </div>`;
+
+    if(sorted.length){
+      h+=`<div style="font-size:11px;font-weight:600;color:var(--c-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Członkowie (${sorted.length})</div>`;
+      h+=`<table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">#</th>
+          <th style="padding:6px 8px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Gracz</th>
+          <th style="padding:6px 8px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Poziom</th>
+          <th style="padding:6px 8px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Moc</th>
+          <th style="padding:6px 8px;text-align:right;font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border)">Chwała</th>
+        </tr></thead><tbody>`;
+      sorted.forEach((m,i)=>{
+        const mname=m.N||'—';
+        const lvl=m.LL>0?`✦ ${m.LL}`:(m.L>=70?`✦ ${m.L}`:(m.L>0?`Lv ${m.L}`:'—'));
+        const mmight=m.MP!=null?fmtN(m.MP):'—';
+        const mcf=m.CF!=null?fmtN(m.CF):'—';
+        const url=trackerURL(mname,server);
+        h+=`<tr style="border-bottom:1px solid var(--c-border2)">
+          <td style="padding:6px 8px;font-size:12px;color:var(--c-muted)">${i+1}</td>
+          <td style="padding:6px 8px;font-size:13px;font-weight:500"><a href="${url}" target="_blank" rel="noopener" style="color:var(--c-bright);text-decoration:none">${esc(mname)}</a></td>
+          <td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--c-muted)">${lvl}</td>
+          <td style="padding:6px 8px;font-size:12px;text-align:right">${mmight}</td>
+          <td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--c-muted)">${mcf}</td>
+        </tr>`;
+      });
+      h+='</tbody></table>';
+    } else {
+      h+='<div style="color:var(--c-muted);font-size:12px;padding:12px 0">Brak danych o członkach</div>';
+    }
+    body.innerHTML=h;
+  });
+}
+
 // ── API ──
 const CACHE = new Map();
 function cGet(k){const e=CACHE.get(k);return(e&&Date.now()<e.x)?e.v:null}
@@ -256,15 +336,12 @@ function parseRows(data){
     const rank=entry[0],score=entry[1],obj=entry[2]||{};
     const isArr=Array.isArray(obj);
     let name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot;
+    let allianceId=null;
     if(isArr){
-      // Alliance format: [allianceId, name, memberCount, ?]
-      // Player format: [?, name, ...]
-      const nums=obj.filter(x=>typeof x==='number');
       const strs=obj.filter(x=>typeof x==='string'&&x.length>0);
       name=strs[0]||'—';
-      // memberCount is typically the first small number after the ID
       if(S.allianceMode){
-        // entry[2] = [id, name, members, ...]
+        allianceId=typeof obj[0]==='number'?obj[0]:null;
         members=typeof obj[2]==='number'?obj[2]:null;
       }
     }
@@ -278,7 +355,7 @@ function parseRows(data){
       banned=obj.BAN===true||obj.banned===true||false;
       prot=(obj.PF!=null&&obj.PF>0)||obj.PC===true||false;
     }
-    return{rank,score,name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
+    return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
   }).filter(Boolean);
   return{rows,total};
 }
@@ -389,7 +466,7 @@ function renderTable(){
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}" data-rk="${r.rank}">
       <td class="rk ${rkCls}">${badge}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}">${fv?'⭐':'☆'}</button></td>
-      <td><span class="pn">${esc(r.name)}</span>${fvb}${bans}${pr}</td>
+      <td><span class="pn">${S.allianceMode&&r.allianceId?`<button class="al-link" data-aid="${r.allianceId}" data-name="${esc(r.name)}">${esc(r.name)}</button>`:esc(r.name)}</span>${fvb}${bans}${pr}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       <td><a class="tl" href="${url}" target="_blank" rel="noopener">↗ Tracker</a></td>
@@ -404,6 +481,9 @@ function renderTable(){
     const rk=+tr.dataset.rk;
     tr.querySelector('.sb').addEventListener('click',e=>{e.stopPropagation();const n=e.currentTarget.dataset.n;toggleFav(n,game,S.server,tr)});
     tr.addEventListener('click',()=>toggleDetail(rk));
+  });
+  $('mainView').querySelectorAll('.al-link').forEach(btn=>{
+    btn.addEventListener('click',e=>{e.stopPropagation();showAllianceModal(btn.dataset.name,S.server,+btn.dataset.aid);});
   });
 }
 

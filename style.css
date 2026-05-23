@@ -220,3 +220,7 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 .srv-divider{padding:5px 12px 3px;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--c-muted);border-top:1px solid var(--c-border);margin-top:4px}
 
 .srv-empty{padding:20px;text-align:center;color:var(--c-muted);font-size:12px}
+
+/* Alliance clickable name */
+.al-link{background:none;border:none;cursor:pointer;font-family:var(--font);font-weight:500;font-size:13px;color:var(--c-bright);padding:0;text-align:left;transition:color .15s}
+.al-link:hover{color:var(--c-blue);text-decoration:underline}
