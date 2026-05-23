@@ -323,7 +323,9 @@ function normalizeCats(){
 
 async function fetchRanking(sv){
   const lt=curLT();if(!lt||!S.server)return null;
-  const lid=curCat().id||'';
+  // Skip LID (level category) when searching by player name
+  const isNameSearch=sv&&isNaN(+sv);
+  const lid=isNameSearch?'':curCat().id||'';
   try{
     const url=isGlobal()?ggeGlobalUrl(S.server,lt,sv,lid):ggeUrl(S.server,lt,sv,lid);
     return await timeout(ggeGet(url),10000);
