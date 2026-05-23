@@ -353,7 +353,7 @@ function parseRows(data){
       rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
       ap=obj.AP??null;vp=obj.VP??null;
       banned=obj.BAN===true||obj.banned===true||false;
-      prot=(obj.PF!=null&&obj.PF>0)||obj.PC===true||false;
+      prot=false;
     }
     return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
   }).filter(Boolean);
@@ -458,7 +458,7 @@ function renderTable(){
     const url=trackerURL(r.name,S.server);
     const exp=S.expandedRank===r.rank;
     const bans=r.banned?'<span class="badge b-ban">🚫 Ban</span>':'';
-    const pr=r.prot?'<span class="badge b-prot">🕊 Ptak</span>':'';
+    const pr='';
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
