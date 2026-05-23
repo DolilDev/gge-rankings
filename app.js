@@ -236,15 +236,21 @@ function showAllianceModal(allianceName, server, allianceId){
     const members=Array.isArray(data.M)?data.M:[];
     const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
 
-    // Build stat tiles like player detail panel
+    // Build stat tiles — only fields confirmed in ain response
     const alStats=[];
     if(al.MP!=null) alStats.push({v:fmtN(al.MP),l:'Moc'});
     if(al.CF!=null) alStats.push({v:fmtN(al.CF),l:'Punkty chwały'});
-    if(al.AVP!=null)alStats.push({v:fmtN(al.AVP),l:'Punkty ataku'});
-    if(al.HF!=null) alStats.push({v:fmtN(al.HF),l:'Punkty obrony'});
-    if(al.RPT!=null)alStats.push({v:fmtN(al.RPT),l:'Punkty rabunku'});
-    if(al.AR!=null) alStats.push({v:fmtN(al.AR),l:'Ranga'});
+    if(al.IS!=null) alStats.push({v:al.IS?'Tak':'Nie',l:'Otwarty'});
     alStats.push({v:fmtN(sorted.length)||'—',l:'Członkowie'});
+    // Also try to get stats from members aggregate
+    if(sorted.length){
+      const totalAvp=sorted.reduce((s,m)=>s+(m.AVP??0),0);
+      const totalRpt=sorted.reduce((s,m)=>s+(m.RPT??0),0);
+      const totalHf=sorted.reduce((s,m)=>s+(m.HF??0),0);
+      if(totalAvp>0) alStats.push({v:fmtN(totalAvp),l:'Punkty ataku (suma)'});
+      if(totalRpt>0) alStats.push({v:fmtN(totalRpt),l:'Punkty rabunku (suma)'});
+      if(totalHf>0)  alStats.push({v:fmtN(totalHf),l:'Punkty obrony (suma)'});
+    }
 
     const tilesHtml=alStats.map(s=>`<div class="db db-plain"><div class="db-v">${s.v}</div><div class="db-l">${s.l}</div></div>`).join('');
 
