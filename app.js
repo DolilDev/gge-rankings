@@ -478,7 +478,7 @@ function renderTable(){
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}" data-rk="${r.rank}">
       <td class="rk ${rkCls}">${badge}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}">${fv?'⭐':'☆'}</button></td>
-      <td><span class="pn">${S.allianceMode&&r.allianceId?`<button class="al-link" data-aid="${r.allianceId}" data-name="${esc(r.name)}">${esc(r.name)}</button>`:esc(r.name)}</span>${fvb}${bans}${pr}</td>
+      <td><span class="pn">${esc(r.name)}</span>${fvb}${bans}${pr}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       <td></td>
@@ -491,11 +491,13 @@ function renderTable(){
   $('mainView').innerHTML=h;
   $('mainView').querySelectorAll('.dr').forEach(tr=>{
     const rk=+tr.dataset.rk;
+    const row=S.rows.find(x=>x.rank===rk);
     tr.querySelector('.sb').addEventListener('click',e=>{e.stopPropagation();const n=e.currentTarget.dataset.n;toggleFav(n,game,S.server,tr)});
-    tr.addEventListener('click',()=>toggleDetail(rk));
-  });
-  $('mainView').querySelectorAll('.al-link').forEach(btn=>{
-    btn.addEventListener('click',e=>{e.stopPropagation();showAllianceModal(btn.dataset.name,S.server,+btn.dataset.aid);});
+    if(S.allianceMode&&row?.allianceId){
+      tr.addEventListener('click',()=>showAllianceModal(row.name,S.server,row.allianceId));
+    } else {
+      tr.addEventListener('click',()=>toggleDetail(rk));
+    }
   });
 }
 
