@@ -224,7 +224,7 @@ function evname(k){return S.texts[k]||EV_LABELS[k]||k.replace(/_/g,' ')}
 function catname(c){
   if(!c)return'';const v=c.value;
   if(v!=null&&v!==''){
-    if(c.name==='level_placeholder')return`Lv ${v}`;
+    if(c.name==='level_placeholder')return v==='70'?'✦ 70+':(`Lv ${v}`);
     if(c.name==='legendaryLevel_placeholder')return`✦ ${v}`;
     if(c.name==='dialog_ci_filter01_all')return'Wszyscy';
     const t=S.texts[c.name];return t?t.replace(/%s|\{[^}]*\}/gi,v).trim():String(v);
@@ -276,17 +276,29 @@ async function loadEvents(){
   if(!S.events.player){
     S.events={
       player:{
-        honorPoints:{id:5,categories:[{id:1,name:'level_placeholder',value:'1-19'},{id:2,name:'level_placeholder',value:'20-29'},{id:3,name:'level_placeholder',value:'30-39'},{id:4,name:'level_placeholder',value:'40-59'},{id:5,name:'level_placeholder',value:'50-69'},{id:6,name:'level_placeholder',value:'70'}]},
-        playerMight:{id:6,categories:[{id:1,name:'level_placeholder',value:'1-19'},{id:2,name:'level_placeholder',value:'20-29'},{id:3,name:'level_placeholder',value:'30-39'},{id:4,name:'level_placeholder',value:'40-59'},{id:5,name:'level_placeholder',value:'50-69'},{id:6,name:'level_placeholder',value:'70'}]}
+        honorPoints:{id:5,categories:[{id:6,name:'level_placeholder',value:'70'},{id:5,name:'level_placeholder',value:'50-69'},{id:4,name:'level_placeholder',value:'40-59'},{id:3,name:'level_placeholder',value:'30-39'},{id:2,name:'level_placeholder',value:'20-29'},{id:1,name:'level_placeholder',value:'1-19'}]},
+        playerMight:{id:6,categories:[{id:6,name:'level_placeholder',value:'70'},{id:5,name:'level_placeholder',value:'50-69'},{id:4,name:'level_placeholder',value:'40-59'},{id:3,name:'level_placeholder',value:'30-39'},{id:2,name:'level_placeholder',value:'20-29'},{id:1,name:'level_placeholder',value:'1-19'}]}
       },
       alliance:{allianceHonor:{id:10,categories:[{id:1,name:'dialog_ci_filter01_all'}]},allianceMight:{id:11,categories:[{id:1,name:'dialog_ci_filter01_all'}]}},
       player_to_alliance:[['honorPoints','allianceHonor'],['playerMight','allianceMight']]
     };
   }
-  validateEv();buildEventSel();
+  normalizeCats();validateEv();buildEventSel();
 }
 
 function validateEv(){const l=evList();if(!(S.eventKey in l))S.eventKey=Object.keys(l)[0]||''}
+
+function normalizeCats(){
+  // Reverse level categories so highest level appears first
+  ['player','alliance'].forEach(mode=>{
+    const evs=S.events[mode]||{};
+    Object.values(evs).forEach(ev=>{
+      if(!ev.categories)return;
+      const isLevel=ev.categories.some(c=>c.name==='level_placeholder');
+      if(isLevel) ev.categories=[...ev.categories].reverse();
+    });
+  });
+}
 
 async function fetchRanking(sv){
   const lt=curLT();if(!lt||!S.server)return null;
