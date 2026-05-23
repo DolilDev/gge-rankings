@@ -403,6 +403,7 @@ function toggleDetail(rank){
   if(r.might!=null)  stats.push({v:fmtN(r.might),l:'Siła (Might)',link:'playerMight',mode:'player'});
   if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:null});
   if(r.legendLevel!=null) stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
+  else if(r.level!=null&&r.level>=70) stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
   else if(r.level!=null) stats.push({v:r.level,l:'Poziom',link:'honorPoints',mode:'player'});
   if(r.score!=null)  stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:null});
   if(r.al)           stats.push({v:esc(r.al),l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
