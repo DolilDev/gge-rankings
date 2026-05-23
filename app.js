@@ -85,6 +85,7 @@ const S = {
   rows:[], expandedRank:null, loading:false, reqId:0, lastSearch:'',
   events:{}, texts:{},
   favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
+  favAls: JSON.parse(localStorage.getItem('gge_favAls_v1')||'[]'),
 };
 
 // ── Helpers ──
@@ -452,10 +453,21 @@ async function renderAllianceDetail(r, panel){
         </div></div>`;
     }
 
+    const favAl=isFavAl(r.name,S.server);
     panel.innerHTML=`<div class="dp" style="flex-direction:column;gap:8px">
-      <div class="ds">${statHtml}</div>
+      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+        <div class="ds">${statHtml}</div>
+        <div class="da">
+          <button class="btn${favAl?' primary':''}" id="dfaval_${r.rank}">${favAl?'⭐ Obserwowany':'☆ Obserwuj'}</button>
+        </div>
+      </div>
       ${membersHtml}
     </div>`;
+    $(`dfaval_${r.rank}`)?.addEventListener('click',e=>{
+      e.stopPropagation();
+      const btn=$(`dfaval_${r.rank}`);
+      toggleFavAl(r.name,S.server,r.allianceId,btn);
+    });
 
     // Click on member → search for them in player ranking
     panel.querySelectorAll('[data-search-player]').forEach(el=>{
@@ -572,7 +584,22 @@ function buildCats(){
 function updateTypeSeg(){$('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.classList.toggle('on',b.dataset.v===(S.allianceMode?'alliance':'player')))}
 
 // ── Favorites ──
-function updFavCnt(){const n=S.favs.length;$('favCnt').textContent=n;$('favBtn').classList.toggle('primary',n>0)}
+function updFavCnt(){const n=S.favs.length+S.favAls.length;$('favCnt').textContent=n;$('favBtn').classList.toggle('primary',n>0)}
+
+function isFavAl(name,server){return S.favAls.some(f=>f.name===name&&f.server===server)}
+function saveFavAls(){localStorage.setItem('gge_favAls_v1',JSON.stringify(S.favAls))}
+
+function toggleFavAl(name,server,allianceId,btn){
+  if(isFavAl(name,server)){
+    S.favAls=S.favAls.filter(f=>!(f.name===name&&f.server===server));
+    toast('Usunięto sojusz z obserwowanych');
+  } else {
+    S.favAls.push({name,server,allianceId,game:srvGame(server)});
+    toast(`Obserwujesz sojusz ${name} ⭐`);
+  }
+  saveFavAls();updFavCnt();
+  if(btn){const now=isFavAl(name,server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now);}
+}
 
 function toggleFav(name,game,server,tr){
   if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast('Usunięto z obserwowanych');}
@@ -584,17 +611,50 @@ function toggleFav(name,game,server,tr){
 
 function renderFavPage(){
   const grid=$('favGrid');
-  if(!S.favs.length){grid.innerHTML='<div class="fe">Brak obserwowanych graczy.<br>Kliknij ☆ przy dowolnym graczu.</div>';return;}
+  if(!S.favs.length&&!S.favAls.length){grid.innerHTML='<div class="fe">Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.</div>';return;}
   grid.innerHTML='';
+
+  // Players
   S.favs.forEach(fav=>{
     const card=document.createElement('div');card.className='fc';
     const si=srvInfo(fav.server);
-    const label=si?`${si.flag} ${si.name} (${si.game.toUpperCase()})`:fav.server;
-    card.innerHTML=`<div class="fch"><div><div class="fcn">⭐ ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}">×</button></div><div class="frr" id="fr_${esc(fav.name).replace(/\W/g,'_')}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
+    const label=si?`${si.flag} ${si.name}`:fav.server;
+    card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}">×</button></div><div class="frr" id="fr_${esc(fav.name).replace(/\W/g,'_')}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
     card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast('Usunięto');});
     grid.appendChild(card);
     loadFavRanks(fav,card);
   });
+
+  // Alliances
+  S.favAls.forEach(fav=>{
+    const card=document.createElement('div');card.className='fc';
+    const si=srvInfo(fav.server);
+    const label=si?`${si.flag} ${si.name}`:fav.server;
+    const cid='fral_'+fav.name.replace(/\W/g,'_');
+    card.innerHTML=`<div class="fch"><div><div class="fcn">🛡 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-s="${fav.server}">×</button></div><div class="frr" id="${cid}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
+    card.querySelector('.fcd').addEventListener('click',function(){S.favAls=S.favAls.filter(f=>!(f.name===this.dataset.n&&f.server===this.dataset.s));saveFavAls();updFavCnt();renderFavPage();toast('Usunięto');});
+    grid.appendChild(card);
+    loadFavAlStats(fav,card,cid);
+  });
+}
+
+async function loadFavAlStats(fav,card,cid){
+  const el=card.querySelector('#'+CSS.escape(cid));if(!el)return;
+  try{
+    const url=`${GGE_API}/${fav.server}/ain/%22AID%22:${fav.allianceId}`;
+    const d=await ggeGet(url);
+    if(!el.isConnected)return;
+    if(!d||d.return_code!==0){el.innerHTML='<div class="fr"><span class="fl" style="color:var(--c-muted)">Brak danych</span></div>';return;}
+    const al=d.content.A||d.content;
+    const members=Array.isArray(d.content.M)?d.content.M:[];
+    const rows=[];
+    if(al.MP!=null) rows.push({l:'Moc',v:fmtN(al.MP)});
+    if(al.CF!=null) rows.push({l:'Punkty chwały',v:fmtN(al.CF)});
+    rows.push({l:'Członkowie',v:fmtN(members.length)});
+    el.innerHTML=rows.map(r=>`<div class="fr"><span class="fl">${r.l}</span><span class="fp2">${r.v}</span></div>`).join('');
+  }catch{
+    if(el.isConnected)el.innerHTML='<div class="fr"><span class="fl" style="color:var(--c-muted)">Błąd</span></div>';
+  }
 }
 
 async function loadFavRanks(fav,card){
