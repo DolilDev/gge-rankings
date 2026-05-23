@@ -59,7 +59,7 @@ const ALL_SERVERS = [
 ];
 
 const EV_LABELS = {
-  honorPoints:'Honor', playerMight:'Siła (Might)', legendLevel:'Poziom legendy',
+  honorPoints:'Honor', playerMight:'Moc', legendLevel:'Poziom legendy',
   allianceHonor:'Honor sojuszu', allianceMight:'Siła sojuszu',
   dominionPoints:'Dominium', cargo_points:'Karawan',
   event_title_71:'Turniej 71', event_title_72:'Turniej 72',
@@ -255,7 +255,7 @@ function parseRows(data){
     if(!Array.isArray(entry))return null;
     const rank=entry[0],score=entry[1],obj=entry[2]||{};
     const isArr=Array.isArray(obj);
-    let name,al,alTag,members,honor,might,glory,level,legendLevel,banned,prot;
+    let name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot;
     if(isArr){
       // Alliance format: [allianceId, name, memberCount, ?]
       // Player format: [?, name, ...]
@@ -272,10 +272,13 @@ function parseRows(data){
       name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;
       members=obj.MC??obj.NM??obj.MCount??obj.memberCount??obj.members??obj.M??null;honor=obj.H??null;might=obj.MP??null;
       glory=obj.CF??null;level=obj.L??null;legendLevel=obj.LL??null;
+      avp=obj.AVP??null;hf=obj.HF??null;rpt=obj.RPT??null;
+      rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
+      ap=obj.AP??null;vp=obj.VP??null;
       banned=obj.BAN===true||obj.banned===true||false;
       prot=(obj.PF!=null&&obj.PF>0)||obj.PC===true||false;
     }
-    return{rank,score,name,al,alTag,members,honor,might,glory,level,legendLevel,banned,prot};
+    return{rank,score,name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
   }).filter(Boolean);
   return{rows,total};
 }
@@ -417,12 +420,20 @@ function toggleDetail(rank){
   const game=srvGame(S.server);
   const fv=isFav(r.name,game,S.server);
   const stats=[];
-  if(r.honor!=null)  stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player'});
-  if(r.might!=null)  stats.push({v:fmtN(r.might),l:'Siła (Might)',link:'playerMight',mode:'player'});
-  if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:null});
+  if(r.honor!==undefined&&r.honor!==null)  stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player'});
+  if(r.might!==undefined&&r.might!==null)  stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player'});
+  if(r.glory!==undefined&&r.glory!==null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:null});
   if(r.legendLevel!=null&&r.legendLevel>0) stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
   else if(r.level!=null&&r.level>=70) stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player'});
   else if(r.level!=null&&r.level>0) stats.push({v:'Lv '+r.level,l:'Poziom',link:null});
+  if(r.avp!=null)    stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:null});
+  if(r.hf!=null)     stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:null});
+  if(r.rpt!=null)    stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:null});
+  if(r.ap!=null)     stats.push({v:fmtN(r.ap),l:'Punkty sojuszu',link:null});
+  if(r.vp!=null)     stats.push({v:fmtN(r.vp),l:'Punkty zwycięstw',link:null});
+  if(r.rank2!=null)  stats.push({v:fmtN(r.rank2),l:'Ranga',link:null});
+  if(r.pre!=null&&r.pre>0) stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:null});
+  if(r.suf!=null&&r.suf>0) stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:null});
   if(r.score!=null)  stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:null});
   if(r.al)           stats.push({v:esc(r.al),l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:null});
