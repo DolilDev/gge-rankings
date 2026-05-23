@@ -429,8 +429,6 @@ function toggleDetail(rank){
   if(r.avp!=null)    stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:null});
   if(r.hf!=null)     stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:null});
   if(r.rpt!=null)    stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:null});
-  if(r.ap!=null)     stats.push({v:fmtN(r.ap),l:'Punkty sojuszu',link:null});
-  if(r.vp!=null)     stats.push({v:fmtN(r.vp),l:'Punkty zwycięstw',link:null});
   if(r.rank2!=null)  stats.push({v:fmtN(r.rank2),l:'Ranga',link:null});
   if(r.pre!=null&&r.pre>0) stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:null});
   if(r.suf!=null&&r.suf>0) stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:null});
