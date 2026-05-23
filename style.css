@@ -224,3 +224,8 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 /* Alliance clickable name */
 .al-link{background:none;border:none;cursor:pointer;font-family:var(--font);font-weight:500;font-size:13px;color:var(--c-bright);padding:0;text-align:left;transition:color .15s}
 .al-link:hover{color:var(--c-blue);text-decoration:underline}
+
+/* Search highlight */
+tr.dr.match{background:rgba(88,166,255,.08)!important;outline:1px solid rgba(88,166,255,.3)}
+tr.dr.match .pn{color:var(--c-blue)}
+tr.dr.match .al-link{color:var(--c-blue)}

@@ -82,7 +82,7 @@ const S = {
   server: localStorage.getItem('server') || 'EmpireEx_5', // default PL1
   eventKey:'', catIdx:0, allianceMode:false,
   curPage:1, totalRows:0,
-  rows:[], expandedRank:null, loading:false, reqId:0,
+  rows:[], expandedRank:null, loading:false, reqId:0, lastSearch:'',
   events:{}, texts:{},
   favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
 };
@@ -412,6 +412,7 @@ async function fetchRanking(sv){
 
 async function loadRanking(sv='1'){
   const rid=++S.reqId;S.loading=true;S.expandedRank=null;
+  S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
   setSt('spin','Pobieranie...');showSpin();
   if(!S.server||!curLT()){S.loading=false;setSt('err','Wybierz serwer lub ranking');showSt('⚙️','Wybierz serwer z listy','');return;}
   const data=await fetchRanking(sv);
@@ -450,6 +451,7 @@ function renderTable(){
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
+  const sq=S.lastSearch;
   S.rows.forEach(r=>{
     const fv=isFav(r.name,game,S.server);
     const pct=Math.min(100,Math.round(((r.score||0)/max)*100));
@@ -460,10 +462,11 @@ function renderTable(){
     const bans=r.banned?'<span class="badge b-ban">🚫 Ban</span>':'';
     const pr='';
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
+    const isMatch=sq&&r.name.toLowerCase().includes(sq);
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
       :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<span class="badge b-al">${esc(r.alTag||r.al.slice(0,5))}</span>`:'—'}</td>`;
-    h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}" data-rk="${r.rank}">
+    h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}" data-rk="${r.rank}">
       <td class="rk ${rkCls}">${badge}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}">${fv?'⭐':'☆'}</button></td>
       <td><span class="pn">${S.allianceMode&&r.allianceId?`<button class="al-link" data-aid="${r.allianceId}" data-name="${esc(r.name)}">${esc(r.name)}</button>`:esc(r.name)}</span>${fvb}${bans}${pr}</td>
