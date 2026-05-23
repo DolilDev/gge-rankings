@@ -101,11 +101,6 @@ function timeout(p,ms){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>
 function srvInfo(h){return ALL_SERVERS.find(s=>s.h===h)||null}
 function srvGame(h){return srvInfo(h)?.game||'gge'}
 function sname(h){const s=srvInfo(h);return s?`${s.flag} ${s.name}`:`Serwer ${h}`}
-function trackerURL(name,server){
-  const s=srvInfo(server);
-  const clean=s?s.name:'';
-  return`https://gge-tracker.com/players?search=${encodeURIComponent(name)}&server=${encodeURIComponent(clean)}`;
-}
 
 // ── Custom server dropdown ──
 function buildSrvDropdown(listId, btnId, searchId, onSelect, currentH) {
@@ -264,10 +259,9 @@ function showAllianceModal(allianceName, server, allianceId){
         const lvl=m.LL>0?`✦ ${m.LL}`:(m.L>=70?`✦ ${m.L}`:(m.L>0?`Lv ${m.L}`:'—'));
         const mmight=m.MP!=null?fmtN(m.MP):'—';
         const mcf=m.CF!=null?fmtN(m.CF):'—';
-        const url=trackerURL(mname,server);
         h+=`<tr style="border-bottom:1px solid var(--c-border2)">
           <td style="padding:6px 8px;font-size:12px;color:var(--c-muted)">${i+1}</td>
-          <td style="padding:6px 8px;font-size:13px;font-weight:500"><a href="${url}" target="_blank" rel="noopener" style="color:var(--c-bright);text-decoration:none">${esc(mname)}</a></td>
+          <td style="padding:6px 8px;font-size:13px;font-weight:500;color:var(--c-bright)">${esc(mname)}</td>
           <td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--c-muted)">${lvl}</td>
           <td style="padding:6px 8px;font-size:12px;text-align:right">${mmight}</td>
           <td style="padding:6px 8px;font-size:12px;text-align:right;color:var(--c-muted)">${mcf}</td>
@@ -457,8 +451,7 @@ function renderTable(){
     const pct=Math.min(100,Math.round(((r.score||0)/max)*100));
     const badge=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':r.rank;
     const rkCls=r.rank<=3?'rk'+r.rank:'';
-    const url=trackerURL(r.name,S.server);
-    const exp=S.expandedRank===r.rank;
+      const exp=S.expandedRank===r.rank;
     const bans='';
     const pr='';
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
@@ -472,7 +465,7 @@ function renderTable(){
       <td><span class="pn">${S.allianceMode&&r.allianceId?`<button class="al-link" data-aid="${r.allianceId}" data-name="${esc(r.name)}">${esc(r.name)}</button>`:esc(r.name)}</span>${fvb}${bans}${pr}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
-      <td><a class="tl" href="${url}" target="_blank" rel="noopener">↗ Tracker</a></td>
+      <td></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
       <td colspan="6"><div class="dp" id="dp_${r.rank}"></div></td>
@@ -502,7 +495,6 @@ function toggleDetail(rank){
   }
   S.expandedRank=rank;xtr.style.display='';dtr?.classList.add('exp');
   const panel=$(`dp_${rank}`);if(!panel)return;
-  const url=trackerURL(r.name,S.server);
   const game=srvGame(S.server);
   const fv=isFav(r.name,game,S.server);
   const stats=[];
@@ -529,8 +521,7 @@ function toggleDetail(rank){
   panel.innerHTML=`
     <div class="ds">${statHtml||'<span style="color:var(--c-muted);font-size:12px">Brak szczegółowych danych</span>'}</div>
     <div class="da">
-      <a class="btn" href="${url}" target="_blank" rel="noopener">↗ GGE Tracker</a>
-      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?'⭐ Obserwowany':'☆ Obserwuj'}</button>
+<button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?'⭐ Obserwowany':'☆ Obserwuj'}</button>
     </div>`;
   panel.querySelectorAll('.db[data-link]').forEach(el=>{
     el.addEventListener('click',async()=>{
@@ -607,10 +598,9 @@ function renderFavPage(){
   grid.innerHTML='';
   S.favs.forEach(fav=>{
     const card=document.createElement('div');card.className='fc';
-    const url=trackerURL(fav.name,fav.server);
     const si=srvInfo(fav.server);
     const label=si?`${si.flag} ${si.name} (${si.game.toUpperCase()})`:fav.server;
-    card.innerHTML=`<div class="fch"><div><div class="fcn">⭐ ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}">×</button></div><div class="frr" id="fr_${esc(fav.name).replace(/\W/g,'_')}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div><br><a class="btn" href="${url}" target="_blank" rel="noopener" style="font-size:11px">↗ Profil GGE Tracker</a>`;
+    card.innerHTML=`<div class="fch"><div><div class="fcn">⭐ ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}">×</button></div><div class="frr" id="fr_${esc(fav.name).replace(/\W/g,'_')}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
     card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast('Usunięto');});
     grid.appendChild(card);
     loadFavRanks(fav,card);
