@@ -6,6 +6,21 @@ Strona rankingów dla **Goodgame Empire (GGE)** i **Empire Four Kingdoms (E4K)**
 
 ---
 
+## ✨ Co nowego
+
+- **📲 Instalacja (PWA)** — zainstaluj stronę jako aplikację („Dodaj do ekranu głównego"). Działa offline (cache statyków) i ładuje się szybciej.
+- **🇵🇱 / 🇬🇧 Język PL/EN** — przycisk `PL/EN` w nagłówku przełącza cały interfejs oraz teksty gry. Wybór jest zapamiętywany.
+- **Δ Zmiana wyniku** — obok wskaźnika zmiany pozycji (▲/▼) widać o ile zmienił się wynik od ostatniego snapshotu (pełna wartość w dymku).
+- **Rozmiar strony** — przełącznik **10 / 25 / 50** wierszy + pole „skocz do strony".
+- **Tryb kompaktowy** — gęstsze wiersze, więcej danych na ekranie (przycisk `≣` lub `Shift + C`).
+- **Sticky nagłówek tabeli** — nagłówek kolumn przykleja się przy przewijaniu (desktop).
+- **🔔 Powiadomienia przeglądarki** — prawdziwe alerty (nie tylko toasty), gdy obserwowany wejdzie/wypadnie z TOP 10/3 — także przy karcie w tle.
+- **📝 Notatki przy ulubionych** — krótki opis (np. „wróg / sojusznik / cel") na karcie obserwowanego; widoczny też jako 📝 w tabeli i w szczegółach.
+- **🛡 Klikalny tag sojuszu** — klik w tag w rankingu listuje graczy danego sojuszu i pokazuje agregaty (liczba graczy, suma i średni wynik).
+- **📷 Eksport karty gracza (PNG)** — ładny obrazek do wrzucenia na Discorda (przycisk w szczegółach gracza).
+
+---
+
 ## 🚀 Jak zacząć
 
 ### 1. Wybierz grę i serwer
@@ -50,10 +65,11 @@ Kliknij dowolny wiersz, aby rozwinąć szczegóły gracza. Każdy wiersz zawiera
 |---|---|
 | ☑ Checkbox | Dodaj do porównania (max 4) |
 | 🥇/🥈/🥉/# | Pozycja w rankingu + wskaźnik zmiany |
-| ▲5 / ▼3 / = | Zmiana pozycji od ostatniego sprawdzenia |
+| ▲5 / ▼3 | Zmiana pozycji od ostatniego sprawdzenia |
+| Δ+1.2k | **Zmiana wyniku** od ostatniego snapshotu (dymek = pełna wartość) |
 | ☆/⭐ | Dodaj/usuń z obserwowanych |
-| Nick | Klik → rozwiń szczegóły |
-| Sojusz | Tag sojuszu |
+| Nick | Klik → rozwiń szczegóły (📝 = masz notatkę o tym graczu) |
+| Sojusz | **Klikalny** tag — klik filtruje ranking do tego sojuszu |
 | Wynik | Z paskiem postępu (% top 1) |
 
 ### Sortowanie
@@ -70,6 +86,8 @@ Po rozwinięciu wiersza zobaczysz:
 - Punkty ataku, obrony, rabunku
 - 📈 **Wykres historii pozycji** (sparkline) — jeśli mamy dane z poprzednich odświeżeń
 - Klikalne statystyki → przekierowanie do odpowiedniego rankingu
+- 📷 **Karta PNG** — pobierz ładny obrazek z danymi gracza (do wrzucenia na Discorda)
+- 📝 Twoja notatka o graczu (jeśli jest obserwowany i ma notatkę)
 
 Ikony przy nicku gracza:
 - 🚫 **Ban** — gracz zbanowany
@@ -85,13 +103,15 @@ Ikony przy nicku gracza:
 - Lub **+ Śledź** w prawym górnym rogu — modal z wyborem serwera
 
 ### Przeglądaj obserwowanych
-Zakładka **⭐ Ulubieni** — karty z aktualnymi pozycjami w dostępnych eventach + **wykres historii pozycji**.
+Zakładka **⭐ Ulubieni** — karty z aktualnymi pozycjami w dostępnych eventach + **wykres historii pozycji**. Na każdej karcie możesz dopisać **📝 notatkę** (np. „wróg / sojusznik / cel") — zapisuje się lokalnie i pokazuje w tabeli oraz w szczegółach gracza.
 
 ### Powiadomienia
-Toast przy zmianie:
+Komunikat (toast) przy zmianie:
 - 🚀 Obserwowany gracz wszedł do TOP 10
 - 📉 Obserwowany gracz wypadł z TOP 10
 - 🏅 Obserwowany gracz wszedł do TOP 3
+
+Dodatkowo przycisk **🔔 Powiadomienia** (zakładka Ulubieni) włącza **prawdziwe powiadomienia przeglądarki** — docierają nawet przy karcie w tle. Najlepiej z włączonym auto-odświeżaniem na obserwowanym rankingu (strona musi działać — brak push z serwera).
 
 ### Usuń z obserwowanych
 - × na karcie / ponownie ☆ w tabeli / 🗑 Wyczyść wszystkich
@@ -115,7 +135,9 @@ Kliknij **⚙ Filtry** (lub `F`), aby pokazać pasek filtrów:
 - **Nazwa sojuszu** — szukaj po nazwie/tagu
 - **Min. wynik** — pokaż tylko z wynikiem ≥ X
 
-Filtry działają na aktualnej stronie. Wyczyść przyciskiem **× Wyczyść**.
+Po włączeniu filtra pobieramy do **2000** najlepszych graczy i filtrujemy wśród nich (nie tylko bieżącą stronę). Wyczyść przyciskiem **× Wyczyść**.
+
+💡 Klik w **tag sojuszu** w tabeli automatycznie ustawia filtr na ten sojusz i pokazuje baner z agregatami: liczba graczy w rankingu, suma i średni wynik.
 
 ---
 
@@ -134,9 +156,14 @@ Kliknij **⏱ Auto** w toolbar, wybierz interwał (30s / 1 min / 5 min / 10 min)
 
 ---
 
-## 🌙 Motyw
+## 🌙 Motyw, język i widok
 
-Przycisk **🌙/☀️** w prawym górnym rogu przełącza między ciemnym a jasnym motywem. Preferencja zapisywana.
+W prawym górnym rogu:
+- **🌙 / ☀️** — ciemny / jasny motyw (`Shift + D`)
+- **PL / EN** — język interfejsu (PL/EN)
+- **≣** — tryb kompaktowy / gęstszy (`Shift + C`)
+
+Wszystkie preferencje są zapisywane lokalnie.
 
 ---
 
@@ -151,6 +178,7 @@ Przycisk **🌙/☀️** w prawym górnym rogu przełącza między ciemnym a jas
 | `F` | Pokaż/ukryj filtry |
 | `E` | Menu eksportu |
 | `Shift + D` | Przełącz motyw |
+| `Shift + C` | Tryb kompaktowy (gęstszy) |
 | `←` `→` | Poprzednia / następna strona |
 
 ---
@@ -176,9 +204,11 @@ Przy błędzie następuje automatyczny retry z exponential backoff (do 2 prób).
 
 ---
 
-## 📱 Urządzenia mobilne
+## 📱 Urządzenia mobilne i instalacja (PWA)
 
 Strona działa na telefonach i tabletach. Toolbar i tabela przewijalne poziomo. ARIA labels dla czytników ekranu.
+
+Możesz ją **zainstalować jako aplikację**: w przeglądarce wybierz „Dodaj do ekranu głównego" / „Zainstaluj". Po instalacji działa w trybie pełnoekranowym, statyczne pliki są cache'owane (szybszy start, podstawowy tryb offline).
 
 ---
 
@@ -186,6 +216,6 @@ Strona działa na telefonach i tabletach. Toolbar i tabela przewijalne poziomo. 
 
 W `localStorage`:
 - Ostatnio wybrany serwer
-- Lista obserwowanych graczy i sojuszów
+- Lista obserwowanych graczy i sojuszów (wraz z notatkami)
 - Historia pozycji (do 14 dni, ~12 snapshotów na ranking)
-- Preferencja motywu i auto-odświeżania
+- Preferencje: motyw, język, auto-odświeżanie, rozmiar strony, tryb kompaktowy, powiadomienia
