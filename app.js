@@ -467,8 +467,7 @@ function visibleRows(){return applySort(applyFilter(S.rows))}
 
 function chgIndicator(name,curRk){
   const prev=getPrevRank(name);
-  if(prev==null)return'';
-  if(prev===curRk)return`<span class="chg eq" title="Bez zmian">=</span>`;
+  if(prev==null||prev===curRk)return'';
   if(prev>curRk)return`<span class="chg up" title="Awansował z #${prev}">▲${prev-curRk}</span>`;
   return`<span class="chg dn" title="Spadł z #${prev}">▼${curRk-prev}</span>`;
 }

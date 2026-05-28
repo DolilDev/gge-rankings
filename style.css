@@ -99,7 +99,7 @@ tr.xr{border-bottom:1px solid var(--c-border);background:var(--c-surface)}tr.xr 
 
 td{padding:8px 12px;font-size:13px;vertical-align:middle}
 
-.rk{width:40px;text-align:center;font-size:12px;font-weight:600;color:var(--c-muted)}
+.rk{width:40px;text-align:center;font-size:12px;font-weight:600;color:var(--c-muted);white-space:nowrap}
 
 .rk1{color:#f0c030;font-size:15px}.rk2{color:#b0b8c8;font-size:14px}.rk3{color:#c07828;font-size:13px}
 
@@ -120,7 +120,6 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 .chg{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;margin-left:6px;font-variant-numeric:tabular-nums;vertical-align:middle}
 .chg.up{color:var(--c-green);background:rgba(63,185,80,.12)}
 .chg.dn{color:var(--c-red);background:rgba(248,81,73,.12)}
-.chg.eq{color:var(--c-muted);background:rgba(177,186,196,.08)}
 .chg.new{color:var(--c-yellow);background:rgba(210,153,34,.12)}
 
 .sc{display:flex;align-items:center;gap:7px;justify-content:flex-end}
