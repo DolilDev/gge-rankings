@@ -85,6 +85,222 @@ const EV_LABELS = {
   eventBuilding_DonationEvent:'Donacje',
 };
 
+// ── i18n (UI strings; Polish is the source language, English overrides below; missing key → Polish) ──
+const EN={
+  // Header / nav
+  '⚔️ Ranking':'⚔️ Ranking',
+  '⭐ Ulubieni':'⭐ Favorites',
+  'Zmień motyw (Shift+D)':'Toggle theme (Shift+D)',
+  'Zmień motyw':'Toggle theme',
+  'Tryb kompaktowy (Shift+C)':'Compact mode (Shift+C)',
+  'Język / Language':'Language / Język',
+  'Pokaż ulubionych':'Show favorites',
+  '+ Śledź':'+ Track',
+  'Dodaj gracza do śledzenia':'Track a player',
+  // Toolbar
+  'Serwer':'Server',
+  'Wybierz serwer':'Choose server',
+  'Szukaj serwera...':'Search server...',
+  'Szukaj serwera':'Search server',
+  'Wybierz typ rankingu':'Choose ranking type',
+  '👤 Gracze':'👤 Players',
+  '🛡 Sojusze':'🛡 Alliances',
+  'Rank lub nick... (/)':'Rank or name... (/)',
+  'Wyszukaj rank lub nick':'Search rank or name',
+  'Szukaj (Enter)':'Search (Enter)',
+  'Szukaj':'Search',
+  'Odśwież (R)':'Refresh (R)',
+  'Odśwież':'Refresh',
+  '⚙ Filtry':'⚙ Filters',
+  'Filtry (F)':'Filters (F)',
+  'Pokaż filtry':'Show filters',
+  '⬇ Eksport':'⬇ Export',
+  'Eksport (E)':'Export (E)',
+  'Eksportuj':'Export',
+  '🔗 Kopiuj link':'🔗 Copy link',
+  'Auto-odświeżanie':'Auto-refresh',
+  '⏹ Wyłącz':'⏹ Off',
+  '30 sekund':'30 seconds',
+  '1 minuta':'1 minute',
+  '5 minut':'5 minutes',
+  '10 minut':'10 minutes',
+  'Wierszy':'Rows',
+  'Wierszy na stronę':'Rows per page',
+  // Filter bar
+  'Sojusz:':'Alliance:',
+  'Wszyscy':'All',
+  'Z sojuszem':'With alliance',
+  'Bez sojuszu':'Without alliance',
+  'Nazwa sojuszu:':'Alliance name:',
+  'Filtruj po sojuszu...':'Filter by alliance...',
+  'Filtruj po nazwie sojuszu':'Filter by alliance name',
+  'Min. wynik:':'Min. score:',
+  'Minimalny wynik':'Minimum score',
+  '× Wyczyść':'× Clear',
+  'Wyczyść filtry':'Clear filters',
+  'ℹ Filtry obejmują do 2000 graczy':'ℹ Filters cover up to 2000 players',
+  'Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich':'When a filter is enabled we fetch up to the top 2000 players and filter among them',
+  // Status bar
+  'Razem:':'Total:',
+  'Strona:':'Page:',
+  // Favorites
+  '⭐ Obserwowani gracze':'⭐ Watched players',
+  '🗑 Wyczyść':'🗑 Clear',
+  '🔔 Powiadomienia':'🔔 Notifications',
+  // Compare
+  '📊 Porównaj':'📊 Compare',
+  'Porównaj →':'Compare →',
+  'Wyczyść':'Clear',
+  '📊 Porównanie':'📊 Comparison',
+  'Pasek porównania':'Comparison bar',
+  // Modal
+  '⭐ Śledź gracza':'⭐ Track player',
+  'Nick gracza':'Player name',
+  'Wpisz nick...':'Enter name...',
+  'Anuluj':'Cancel',
+  '⭐ Śledź':'⭐ Track',
+  'Dodaj gracza':'Add player',
+  'Porównanie':'Comparison',
+  'Zamknij':'Close',
+  // Loading / status
+  'Ładowanie...':'Loading...',
+  'Pobieranie...':'Fetching...',
+  'Pobieranie danych...':'Fetching data...',
+  'Wybierz serwer lub ranking':'Choose a server or ranking',
+  'Wybierz serwer z listy':'Choose a server from the list',
+  'Błąd API':'API error',
+  'Błąd połączenia z API':'API connection error',
+  'Sprawdź połączenie z internetem i spróbuj ponownie.':'Check your internet connection and try again.',
+  'Brak danych':'No data',
+  'Brak danych dla tego rankingu':'No data for this ranking',
+  'Ten event może nie być aktywny na wybranym serwerze.':'This event may not be active on the selected server.',
+  'Dane LIVE · {t}':'LIVE data · {t}',
+  'Pobieranie graczy do filtrów… {n}':'Fetching players for filters… {n}',
+  'Pobieranie graczy do filtrów…':'Fetching players for filters…',
+  'Filtr: {n} z {pool} pobranych':'Filter: {n} of {pool} fetched',
+  'Tłumaczenia...':'Translations...',
+  'Eventy...':'Events...',
+  'Pobieranie rankingu...':'Fetching ranking...',
+  'Przekroczono czas':'Timed out',
+  'Ładowanie trwało zbyt długo':'Loading took too long',
+  'Odśwież stronę (F5).':'Refresh the page (F5).',
+  'Brak':'None',
+  'Brak wyników':'No results',
+  // Table
+  'Członkowie':'Members',
+  'Sojusz':'Alliance',
+  'Gracz':'Player',
+  'Wynik':'Score',
+  'Zaznacz do porównania':'Select to compare',
+  'Usuń z ulubionych':'Remove from favorites',
+  'Dodaj do ulubionych':'Add to favorites',
+  'Awansował z #{p}':'Up from #{p}',
+  'Spadł z #{p}':'Down from #{p}',
+  'Wśród {n} pobranych graczy nikt nie pasuje do filtrów.':'None of the {n} fetched players match the filters.',
+  'Spróbuj wyczyścić filtry lub zmienić kryteria.':'Try clearing filters or changing the criteria.',
+  'Brak wyników po filtrach':'No results after filtering',
+  'Pokaż graczy tego sojuszu':'Show players of this alliance',
+  'Sojusz {n}: {c} graczy · suma {sum} · śr. {avg}':'Alliance {n}: {c} players · total {sum} · avg {avg}',
+  // Compare modal
+  'Maksymalnie {n} elementów do porównania':'Maximum {n} items to compare',
+  'Usuń':'Remove',
+  'Brak elementów do porównania':'No items to compare',
+  'Pozycja':'Position',
+  'Moc':'Might',
+  'Chwała':'Glory',
+  'Lv legendarny':'Legend Lv',
+  'Poziom':'Level',
+  'Atak':'Attack',
+  'Obrona':'Defense',
+  'Rabunek':'Loot',
+  // Detail panel
+  'Punkty chwały':'Glory points',
+  'Poziom legendarny':'Legendary level',
+  'Punkty ataku':'Attack points',
+  'Punkty obrony':'Defense points',
+  'Punkty rabunku':'Loot points',
+  'Ranga':'Rank',
+  'Tytuł (prefix)':'Title (prefix)',
+  'Tytuł (suffix)':'Title (suffix)',
+  'Wynik rankingu':'Ranking score',
+  'Brak szczegółowych danych':'No detailed data',
+  'Otwórz ranking: {x}':'Open ranking: {x}',
+  '📈 Historia pozycji ({n} pkt)':'📈 Position history ({n} pts)',
+  'Za mało danych historycznych':'Not enough history',
+  '☆ Obserwuj':'☆ Watch',
+  '⭐ Obserwowany':'⭐ Watching',
+  '📷 Karta PNG':'📷 PNG card',
+  // Alliance detail
+  'Brak ID sojuszu':'No alliance ID',
+  'Otwarty':'Open',
+  'Tak':'Yes',
+  'Nie':'No',
+  'Opis':'Description',
+  'Członkowie ({n})':'Members ({n})',
+  'Błąd pobierania danych':'Error fetching data',
+  'Śr. moc':'Avg. might',
+  // Favorites cards
+  'Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.':'No watched players or alliances.<br>Click ☆ on any player or alliance.',
+  '⏳ Pobieranie...':'⏳ Fetching...',
+  'Usunięto':'Removed',
+  'Nie znaleziono':'Not found',
+  'Błąd':'Error',
+  'Notatka (np. wróg / sojusznik / cel)':'Note (e.g. enemy / ally / target)',
+  // Pagination
+  'Pierwsza strona':'First page',
+  'Poprzednia':'Previous',
+  'Następna':'Next',
+  'Ostatnia':'Last',
+  'Strona {i}':'Page {i}',
+  'Skocz do strony':'Jump to page',
+  'Str. {cur} z {total} · {n} {kind}':'Page {cur} of {total} · {n} {kind}',
+  'po filtrach':'after filters',
+  'graczy':'players',
+  // Toasts
+  'Usunięto sojusz z obserwowanych':'Alliance removed from watched',
+  'Obserwujesz sojusz {n} ⭐':'Watching alliance {n} ⭐',
+  'Usunięto z obserwowanych':'Removed from watched',
+  'Obserwujesz {n} ⭐':'Watching {n} ⭐',
+  '🔗 Link skopiowany do schowka':'🔗 Link copied to clipboard',
+  'Skopiuj URL ręcznie':'Copy the URL manually',
+  '📥 Pobrano {name}':'📥 Downloaded {name}',
+  '📥 Zapisano kartę PNG':'📥 Saved PNG card',
+  'Brak danych do eksportu':'No data to export',
+  'Wpisz nick!':'Enter a name!',
+  'Już obserwujesz!':'Already watching!',
+  'Usunąć wszystkich obserwowanych?':'Remove all watched?',
+  'Auto-odświeżanie: co {t}':'Auto-refresh: every {t}',
+  'Auto-odświeżanie wyłączone':'Auto-refresh disabled',
+  'Powiadomienia włączone':'Notifications enabled',
+  'Powiadomienia wyłączone':'Notifications disabled',
+  'Powiadomienia zablokowane w ustawieniach przeglądarki':'Notifications are blocked in browser settings',
+  'Twoja przeglądarka nie obsługuje powiadomień':'Your browser does not support notifications',
+};
+function curLocale(){return S.lang==='en'?'en-US':'pl-PL'}
+function L(s,p){
+  let o=(S.lang==='en'&&EN[s]!=null)?EN[s]:s;
+  if(p)for(const k in p)o=o.split('{'+k+'}').join(p[k]);
+  return o;
+}
+function applyI18n(){
+  try{document.documentElement.lang=S.lang}catch{}
+  document.querySelectorAll('[data-t]').forEach(el=>el.textContent=L(el.getAttribute('data-t')));
+  document.querySelectorAll('[data-tph]').forEach(el=>el.setAttribute('placeholder',L(el.getAttribute('data-tph'))));
+  document.querySelectorAll('[data-ttl]').forEach(el=>el.setAttribute('title',L(el.getAttribute('data-ttl'))));
+  document.querySelectorAll('[data-tar]').forEach(el=>el.setAttribute('aria-label',L(el.getAttribute('data-tar'))));
+}
+async function setLang(lang){
+  if(lang===S.lang)return;
+  S.lang=lang;localStorage.setItem('gge_lang',lang);
+  const lb=$('langBtn');if(lb)lb.textContent=lang.toUpperCase();
+  applyI18n();
+  await loadTexts().catch(()=>{});
+  buildEventSel();updateAutoRefUI();
+  if(filterActive()&&S.filtered){renderFilteredStatus();renderTable();renderPg();}
+  else if(S.rows.length){renderTable();renderPg();}
+  if(S.page==='favorites')renderFavPage();
+}
+
 // ── State ──
 const S = {
   page:'ranking',
@@ -101,12 +317,16 @@ const S = {
   compare: [],
   autoRef: +localStorage.getItem('gge_autoref')||0,
   theme: localStorage.getItem('gge_theme')||'dark',
+  lang: localStorage.getItem('gge_lang')||'pl',
+  pageSize: +localStorage.getItem('gge_pagesize')||10,
+  compact: localStorage.getItem('gge_compact')==='1',
+  notify: localStorage.getItem('gge_notify')==='1',
 };
 
 // ── Helpers ──
 const $ = id => document.getElementById(id);
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(x)?String(n):x.toLocaleString('pl-PL')}
+function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(x)?String(n):x.toLocaleString(curLocale())}
 function isFav(n,g,s){return S.favs.some(f=>f.name===n&&f.game===g&&f.server===s)}
 function saveFavs(){localStorage.setItem('gge_favs_v7',JSON.stringify(S.favs))}
 let _tt;
@@ -230,7 +450,7 @@ function buildSrvDropdown(listId,btnId,searchId,onSelect,currentH){
     }
     const ggeHtml=renderItems(ggeItems);
     const e4kHtml=renderItems(e4kItems);
-    list.innerHTML=(ggeHtml||e4kHtml)?ggeHtml+(e4kHtml?`<div class="srv-divider">Empire Four Kingdoms</div>${e4kHtml}`:''):'<div class="srv-empty">Brak wyników</div>';
+    list.innerHTML=(ggeHtml||e4kHtml)?ggeHtml+(e4kHtml?`<div class="srv-divider">Empire Four Kingdoms</div>${e4kHtml}`:''):`<div class="srv-empty">${L('Brak wyników')}</div>`;
     list.querySelectorAll('.srv-item').forEach(el=>el.addEventListener('click',()=>{currentH=el.dataset.h;closeDrop();onSelect(currentH)}));
   }
   function updateBtn(h){
@@ -351,7 +571,7 @@ function parseRows(data){
 
 // ── Load ──
 async function loadTexts(){
-  try{const r=await timeout(fetch(TEXTS_URL('pl')),4000);if(r.ok){const d=await r.json();if(d)S.texts=d;}}catch{}
+  try{const r=await timeout(fetch(TEXTS_URL(S.lang)),4000);if(r.ok){const d=await r.json();if(d)S.texts=d;}}catch{}
 }
 async function loadEvents(){
   const game=srvGame(S.server);
@@ -394,22 +614,22 @@ async function fetchRanking(sv){
 async function loadRanking(sv='1'){
   const rid=++S.reqId;S.loading=true;S.expandedRank=null;
   S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
-  setSt('spin','Pobieranie...');showSpin();
-  if(!S.server||!curLT()){S.loading=false;setSt('err','Wybierz serwer lub ranking');showSt('⚙️','Wybierz serwer z listy','');return}
+  setSt('spin',L('Pobieranie...'));showSpin();
+  if(!S.server||!curLT()){S.loading=false;setSt('err',L('Wybierz serwer lub ranking'));showSt('⚙️',L('Wybierz serwer z listy'),'');return}
   const data=await fetchRanking(sv);
   if(rid!==S.reqId)return;
   S.loading=false;
-  if(!data){setSt('err','Błąd API');showSt('🔌','Błąd połączenia z API','Sprawdź połączenie z internetem i spróbuj ponownie.');return}
+  if(!data){setSt('err',L('Błąd API'));showSt('🔌',L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));return}
   const{rows,total}=parseRows(data);
 
   // Detect fav movements before capturing new snapshot
   if(!S.allianceMode) detectFavMovements(rows);
 
   S.rows=rows;S.totalRows=total;
-  if(!rows.length){setSt('live','Brak danych');showSt('📭','Brak danych dla tego rankingu','Ten event może nie być aktywny na wybranym serwerze.');return}
+  if(!rows.length){setSt('live',L('Brak danych'));showSt('📭',L('Brak danych dla tego rankingu'),L('Ten event może nie być aktywny na wybranym serwerze.'));return}
   const totalPgs=Math.max(1,Math.ceil(total/PAGE_SIZE));
   $('sTotal').textContent=fmtN(total);$('sPage').textContent=`${S.curPage} / ${totalPgs}`;
-  setSt('live',`Dane LIVE · ${new Date().toLocaleTimeString('pl-PL')}`);
+  setSt('live',L('Dane LIVE · {t}',{t:new Date().toLocaleTimeString(curLocale())}));
   if(S.server)localStorage.setItem('server',S.server);
 
   renderTable();renderPg();
@@ -448,7 +668,7 @@ async function goPage(page){
 window.goPage=goPage;
 
 // ── Render ──
-function showSpin(){$('mainView').innerHTML=`<div class="st"><div class="spin"></div><div class="sm">Pobieranie danych...</div></div>`;$('pgBar').style.display='none'}
+function showSpin(){$('mainView').innerHTML=`<div class="st"><div class="spin"></div><div class="sm">${L('Pobieranie danych...')}</div></div>`;$('pgBar').style.display='none'}
 function showSt(icon,msg,sub){$('mainView').innerHTML=`<div class="st"><div class="si">${icon}</div><div class="sm">${esc(msg)}</div>${sub?`<div class="ss">${esc(sub)}</div>`:''}</div>`;$('pgBar').style.display='none'}
 
 function applyFilter(rows){
@@ -470,7 +690,7 @@ function applySort(rows){
     const va=a[col],vb=b[col];
     if(va==null&&vb==null)return 0;
     if(va==null)return 1;if(vb==null)return-1;
-    if(typeof va==='string')return va.localeCompare(vb,'pl')*sign;
+    if(typeof va==='string')return va.localeCompare(vb,curLocale())*sign;
     return(va-vb)*sign;
   });
 }
@@ -494,7 +714,7 @@ async function ensurePool(){
       const res=await Promise.all(batch.map(s=>fetchRanking(String(s)).then(d=>d?parseRows(d).rows:[]).catch(()=>[])));
       let got=0;res.forEach(rows=>{got+=rows.length;all.push(...rows)});
       if(poolCtx()!==ctx){S._poolPromise=null;return S.pool||[]}
-      setSt('spin',`Pobieranie graczy do filtrów… ${all.length}`);
+      setSt('spin',L('Pobieranie graczy do filtrów… {n}',{n:all.length}));
       if(got===0)break;
     }
     const map=new Map();all.forEach(r=>{if(r&&r.rank!=null)map.set(r.rank,r)});
@@ -510,12 +730,12 @@ function renderFilteredStatus(){
   const totalPgs=Math.max(1,Math.ceil(n/PAGE_SIZE));
   $('sTotal').textContent=fmtN(n);
   $('sPage').textContent=`${Math.min(S.curPage,totalPgs)} / ${totalPgs}`;
-  setSt('live',`Filtr: ${fmtN(n)} z ${fmtN(poolN)} pobranych`);
+  setSt('live',L('Filtr: {n} z {pool} pobranych',{n:fmtN(n),pool:fmtN(poolN)}));
 }
 async function runFilter(){
   if(!filterActive()){S.filtered=null;await loadRanking('1');return}
   const ctx=poolCtx();
-  if(!(S.pool&&S.poolCtx===ctx)){S.loading=true;showSpin();setSt('spin','Pobieranie graczy do filtrów…')}
+  if(!(S.pool&&S.poolCtx===ctx)){S.loading=true;showSpin();setSt('spin',L('Pobieranie graczy do filtrów…'))}
   const pool=await ensurePool();
   S.loading=false;
   if(poolCtx()!==ctx)return;
@@ -540,8 +760,8 @@ async function reloadCtx(){invalidatePool();if(filterActive())await runFilter();
 function chgIndicator(name,curRk){
   const prev=getPrevRank(name);
   if(prev==null||prev===curRk)return'';
-  if(prev>curRk)return`<span class="chg up" title="Awansował z #${prev}">▲${prev-curRk}</span>`;
-  return`<span class="chg dn" title="Spadł z #${prev}">▼${curRk-prev}</span>`;
+  if(prev>curRk)return`<span class="chg up" title="${L('Awansował z #{p}',{p:prev})}">▲${prev-curRk}</span>`;
+  return`<span class="chg dn" title="${L('Spadł z #{p}',{p:prev})}">▼${curRk-prev}</span>`;
 }
 
 function renderTable(){
@@ -561,9 +781,9 @@ function renderTable(){
     <th style="width:34px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
     <th style="width:26px"></th>
-    <th class="${sortable('name')}" data-sort="name">${isAl?'Sojusz':'Gracz'}</th>
-    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}">${isAl?'Członkowie':'Sojusz'}</th>
-    <th class="${sortable('score','r')}" data-sort="score" style="min-width:150px">Wynik</th>
+    <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
+    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
+    <th class="${sortable('score','r')}" data-sort="score" style="min-width:150px">${L('Wynik')}</th>
     <th style="width:75px"></th>
     </tr></thead><tbody>`;
 
@@ -583,9 +803,9 @@ function renderTable(){
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
       :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<span class="badge b-al">${esc(r.alTag||r.al.slice(0,5))}</span>`:'—'}</td>`;
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
-      <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="Zaznacz do porównania" onclick="event.stopPropagation()"></td>
+      <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}</td>
-      <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?'Usuń z ulubionych':'Dodaj do ulubionych'}">${fv?'⭐':'☆'}</button></td>
+      <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
       <td><span class="pn">${esc(r.name)}</span>${fvb}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
@@ -597,8 +817,8 @@ function renderTable(){
   });
   h+='</tbody></table></div>';
   if(!rows.length&&(filt||S.rows.length)){
-    const sub=filt?`Wśród ${fmtN((S.pool||[]).length)} pobranych graczy nikt nie pasuje do filtrów.`:'Spróbuj wyczyścić filtry lub zmienić kryteria.';
-    h=`<div class="st"><div class="si">🔍</div><div class="sm">Brak wyników po filtrach</div><div class="ss">${sub}</div></div>`;
+    const sub=filt?L('Wśród {n} pobranych graczy nikt nie pasuje do filtrów.',{n:fmtN((S.pool||[]).length)}):L('Spróbuj wyczyścić filtry lub zmienić kryteria.');
+    h=`<div class="st"><div class="si">🔍</div><div class="sm">${L('Brak wyników po filtrach')}</div><div class="ss">${sub}</div></div>`;
   }
   $('mainView').innerHTML=h;
 
@@ -629,7 +849,7 @@ function toggleCompare(rank,checked){
   if(checked){
     if(existingIdx>=0)return;
     if(S.compare.length>=MAX_COMPARE){
-      toast(`Maksymalnie ${MAX_COMPARE} elementów do porównania`,'error');
+      toast(L('Maksymalnie {n} elementów do porównania',{n:MAX_COMPARE}),'error');
       const ck=document.querySelector(`.ck[data-rk="${rank}"]`);if(ck)ck.checked=false;
       return;
     }
@@ -650,7 +870,7 @@ function updateCompareBar(){
   $('cCount').textContent=S.compare.length;
   $('cChips').innerHTML=S.compare.map((c,i)=>{
     const icon=c.type==='alliance'?'🛡':'👤';
-    return`<span class="cChip">${icon} ${esc(c.name)} <button class="cChip-rm" data-i="${i}" aria-label="Usuń">×</button></span>`;
+    return`<span class="cChip">${icon} ${esc(c.name)} <button class="cChip-rm" data-i="${i}" aria-label="${L('Usuń')}">×</button></span>`;
   }).join('');
   $('cChips').querySelectorAll('.cChip-rm').forEach(b=>b.addEventListener('click',e=>{
     e.stopPropagation();
@@ -663,7 +883,7 @@ function updateCompareBar(){
 }
 
 function openCompareModal(){
-  if(!S.compare.length){toast('Brak elementów do porównania');return}
+  if(!S.compare.length){toast(L('Brak elementów do porównania'));return}
   const body=$('cmpBody');
   const isAl=S.compare[0].type==='alliance';
   const stats=isAl
@@ -684,10 +904,10 @@ function openCompareModal(){
           else if(val===sorted[sorted.length-1])cls='worst';
         }
         const display=key==='rank'?'#'+val:(key==='legendLevel'||key==='level'?fmtN(val):fmtN(val));
-        return`<div class="cmp-row ${cls}"><span class="l">${label}</span><span class="v">${display}</span></div>`;
+        return`<div class="cmp-row ${cls}"><span class="l">${L(label)}</span><span class="v">${display}</span></div>`;
       }).join('');
       return`<div class="cmp-col">
-        <div class="cmp-name">${(c.type==='alliance'?'🛡 ':'👤 ')+esc(c.name)} <button class="cmp-rm" data-i="${idx}" aria-label="Usuń">×</button></div>
+        <div class="cmp-name">${(c.type==='alliance'?'🛡 ':'👤 ')+esc(c.name)} <button class="cmp-rm" data-i="${idx}" aria-label="${L('Usuń')}">×</button></div>
         <div class="cmp-srv">${srv?srv.flag+' '+srv.name:esc(c.server)}${c.data.al?' · '+esc(c.data.al):''}</div>
         ${rowsHtml||'<div class="cmp-row"><span class="l">Brak danych</span></div>'}
       </div>`;
@@ -711,24 +931,26 @@ function openCompareModal(){
 
 async function renderAllianceDetail(r,panel){
   panel.innerHTML=`<div class="dp"><div class="st" style="padding:20px"><div class="spin"></div></div></div>`;
-  if(!r.allianceId){panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Brak ID sojuszu</span></div>';return}
+  if(!r.allianceId){panel.innerHTML=`<div class="dp"><span style="color:var(--c-muted);font-size:12px">${L('Brak ID sojuszu')}</span></div>`;return}
   try{
     const url=`${GGE_API}/${S.server}/ain/%22AID%22:${r.allianceId}`;
     const d=await timeout(ggeGet(url),8000);
-    if(!d||d.return_code!==0){panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Brak danych</span></div>';return}
+    if(!d||d.return_code!==0){panel.innerHTML=`<div class="dp"><span style="color:var(--c-muted);font-size:12px">${L('Brak danych')}</span></div>`;return}
     const al=d.content.A||d.content;
     const members=Array.isArray(d.content.M)?d.content.M:[];
     const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
     const stats=[];
     if(al.MP!=null)stats.push({v:fmtN(al.MP),l:'Moc'});
     if(al.CF!=null)stats.push({v:fmtN(al.CF),l:'Punkty chwały'});
-    if(al.IS!=null)stats.push({v:al.IS?'Tak':'Nie',l:'Otwarty'});
+    if(al.IS!=null)stats.push({v:al.IS?L('Tak'):L('Nie'),l:'Otwarty'});
     const memberCount=sorted.length||(al.M&&Array.isArray(al.M)?al.M.length:0)||(al.MC??al.NM??0);
     stats.push({v:fmtN(memberCount),l:'Członkowie'});
     if(sorted.length){
       const totalAvp=sorted.reduce((s,m)=>s+(m.AVP??0),0);
       const totalRpt=sorted.reduce((s,m)=>s+(m.RPT??0),0);
       const totalHf=sorted.reduce((s,m)=>s+(m.HF??0),0);
+      const totalMp=sorted.reduce((s,m)=>s+(m.MP??0),0);
+      if(totalMp>0)stats.push({v:fmtN(Math.round(totalMp/sorted.length)),l:'Śr. moc'});
       if(totalAvp>0)stats.push({v:fmtN(totalAvp),l:'Punkty ataku'});
       if(totalRpt>0)stats.push({v:fmtN(totalRpt),l:'Punkty rabunku'});
       if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Punkty obrony'});
@@ -739,13 +961,13 @@ async function renderAllianceDetail(r,panel){
       stats.push({v:descHtml,l:'Opis',html:true});
     }
     const statHtml=stats.map(st=>{
-      if(st.html)return`<div class="db db-plain" style="flex:1 1 200px;min-width:160px"><div class="db-v" style="font-size:12px;font-weight:400;line-height:1.5">${st.v}</div><div class="db-l">${st.l}</div></div>`;
-      return`<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${st.l}</div></div>`;
+      if(st.html)return`<div class="db db-plain" style="flex:1 1 200px;min-width:160px"><div class="db-v" style="font-size:12px;font-weight:400;line-height:1.5">${st.v}</div><div class="db-l">${L(st.l)}</div></div>`;
+      return`<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${L(st.l)}</div></div>`;
     }).join('');
     let membersHtml='';
     if(sorted.length){
       membersHtml=`<div style="width:100%;margin-top:10px;border-top:1px solid var(--c-border);padding-top:10px">
-        <div style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Członkowie (${sorted.length})</div>
+        <div style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${L('Członkowie ({n})',{n:sorted.length})}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
         ${sorted.map(m=>{
           const lvl=m.LL>0?`✦${m.LL}`:(m.L>=70?`✦${m.L}`:(m.L>0?`${m.L}`:'?'));
@@ -761,7 +983,7 @@ async function renderAllianceDetail(r,panel){
       <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
         <div class="ds">${statHtml}</div>
         <div class="da">
-          <button class="btn${favAl?' primary':''}" id="dfaval_${r.rank}">${favAl?'⭐ Obserwowany':'☆ Obserwuj'}</button>
+          <button class="btn${favAl?' primary':''}" id="dfaval_${r.rank}">${favAl?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
         </div>
       </div>
       ${membersHtml}
@@ -781,7 +1003,7 @@ async function renderAllianceDetail(r,panel){
         await loadRanking(name);
       });
     });
-  }catch(e){console.warn('renderAllianceDetail:',e);panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Błąd pobierania danych</span></div>'}
+  }catch(e){console.warn('renderAllianceDetail:',e);panel.innerHTML=`<div class="dp"><span style="color:var(--c-muted);font-size:12px">${L('Błąd pobierania danych')}</span></div>`}
 }
 
 function toggleDetail(rank){
@@ -817,20 +1039,20 @@ function toggleDetail(rank){
   if(r.al)stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie'});
   const statHtml=stats.map(st=>{
-    if(st.link)return`<div class="db" title="Otwórz ranking: ${evname(st.link)}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div><div class="db-hint">→ ${evname(st.link)}</div></div>`;
-    return`<div class="db db-plain"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div></div>`;
+    if(st.link)return`<div class="db" title="${L('Otwórz ranking: {x}',{x:evname(st.link)})}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}"><div class="db-v">${st.v}</div><div class="db-l">${L(st.l)}</div><div class="db-hint">→ ${evname(st.link)}</div></div>`;
+    return`<div class="db db-plain"><div class="db-v">${st.v}</div><div class="db-l">${L(st.l)}</div></div>`;
   }).join('');
   // Mini-sparkline of historical rank (current ranking only)
   const series=getRankSeriesForKey(r.name,histKey(),12);
   const spkHtml=series.length>=2?`
     <div class="spk-wrap" style="width:100%">
-      <div class="spk-lbl"><span>📈 Historia pozycji (${series.length} pkt)</span><span>#${series[0].rk} → #${r.rank}</span></div>
+      <div class="spk-lbl"><span>${L('📈 Historia pozycji ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${r.rank}</span></div>
       ${renderSparklineSVG(series)}
     </div>`:'';
   panel.innerHTML=`
-    <div class="ds">${statHtml||'<span style="color:var(--c-muted);font-size:12px">Brak szczegółowych danych</span>'}</div>
+    <div class="ds">${statHtml||`<span style="color:var(--c-muted);font-size:12px">${L('Brak szczegółowych danych')}</span>`}</div>
     <div class="da">
-      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?'⭐ Obserwowany':'☆ Obserwuj'}</button>
+      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
     </div>
     ${spkHtml}`;
   panel.querySelectorAll('.db[data-link]').forEach(el=>{
@@ -851,12 +1073,12 @@ function toggleDetail(rank){
   });
   $(`dfav_${rank}`)?.addEventListener('click',e=>{
     e.stopPropagation();toggleFav(r.name,game,S.server,null);
-    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now)}
+    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.textContent=now?L('⭐ Obserwowany'):L('☆ Obserwuj');btn.classList.toggle('primary',now)}
   });
 }
 
 function renderSparklineSVG(series,w=240,h=40){
-  if(series.length<2)return`<div class="spk-empty">Za mało danych historycznych</div>`;
+  if(series.length<2)return`<div class="spk-empty">${L('Za mało danych historycznych')}</div>`;
   const ranks=series.map(s=>s.rk);
   const min=Math.min(...ranks),max=Math.max(...ranks);
   const range=max-min||1;
@@ -897,7 +1119,7 @@ function renderPg(){
 // ── Event select & cats ──
 function buildEventSel(){
   const sel=$('eventSelect');const list=evList();const keys=Object.keys(list);
-  if(!keys.length){sel.innerHTML='<option>Brak</option>';return}
+  if(!keys.length){sel.innerHTML=`<option>${L('Brak')}</option>`;return}
   sel.innerHTML=keys.map(k=>`<option value="${k}">${evname(k)}</option>`).join('');
   if(!(S.eventKey in list))S.eventKey=keys[0];
   sel.value=S.eventKey;buildCats();
@@ -924,17 +1146,17 @@ function saveFavAls(){localStorage.setItem('gge_favAls_v1',JSON.stringify(S.favA
 function toggleFavAl(name,server,allianceId,btn){
   if(isFavAl(name,server)){
     S.favAls=S.favAls.filter(f=>!(f.name===name&&f.server===server));
-    toast('Usunięto sojusz z obserwowanych');
+    toast(L('Usunięto sojusz z obserwowanych'));
   }else{
     S.favAls.push({name,server,allianceId,game:srvGame(server)});
-    toast(`Obserwujesz sojusz ${name} ⭐`,'success');
+    toast(L('Obserwujesz sojusz {n} ⭐',{n:name}),'success');
   }
   saveFavAls();updFavCnt();
-  if(btn){const now=isFavAl(name,server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now)}
+  if(btn){const now=isFavAl(name,server);btn.textContent=now?L('⭐ Obserwowany'):L('☆ Obserwuj');btn.classList.toggle('primary',now)}
 }
 function toggleFav(name,game,server,tr){
-  if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast('Usunięto z obserwowanych')}
-  else{S.favs.push({name,game,server});toast(`Obserwujesz ${name} ⭐`,'success')}
+  if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast(L('Usunięto z obserwowanych'))}
+  else{S.favs.push({name,game,server});toast(L('Obserwujesz {n} ⭐',{n:name}),'success')}
   saveFavs();updFavCnt();
   document.querySelectorAll(`.sb[data-n="${esc(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.textContent=isFav(name,game,server)?'⭐':'☆'});
   if(tr)tr.classList.toggle('fav',isFav(name,game,server));
@@ -942,7 +1164,7 @@ function toggleFav(name,game,server,tr){
 
 function renderFavPage(){
   const grid=$('favGrid');
-  if(!S.favs.length&&!S.favAls.length){grid.innerHTML='<div class="fe">Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.</div>';return}
+  if(!S.favs.length&&!S.favAls.length){grid.innerHTML=`<div class="fe">${L('Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.')}</div>`;return}
   grid.innerHTML='';
   S.favs.forEach(fav=>{
     const card=document.createElement('div');card.className='fc';
@@ -950,10 +1172,10 @@ function renderFavPage(){
     const label=si?`${si.flag} ${si.name}`:fav.server;
     const cid='fr_'+fav.name.replace(/\W/g,'_');
     const spkId='spk_'+fav.name.replace(/\W/g,'_')+'_'+fav.server;
-    card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="Usuń">×</button></div>
-      <div class="frr" id="${cid}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>
+    card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="${L('Usuń')}">×</button></div>
+      <div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('⏳ Pobieranie...')}</span></div></div>
       <div id="${spkId}"></div>`;
-    card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast('Usunięto')});
+    card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast(L('Usunięto'))});
     grid.appendChild(card);
     loadFavRanks(fav,card,spkId);
   });
@@ -962,8 +1184,8 @@ function renderFavPage(){
     const si=srvInfo(fav.server);
     const label=si?`${si.flag} ${si.name}`:fav.server;
     const cid='fral_'+fav.name.replace(/\W/g,'_');
-    card.innerHTML=`<div class="fch"><div><div class="fcn">🛡 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-s="${fav.server}" aria-label="Usuń">×</button></div><div class="frr" id="${cid}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
-    card.querySelector('.fcd').addEventListener('click',function(){S.favAls=S.favAls.filter(f=>!(f.name===this.dataset.n&&f.server===this.dataset.s));saveFavAls();updFavCnt();renderFavPage();toast('Usunięto')});
+    card.innerHTML=`<div class="fch"><div><div class="fcn">🛡 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-s="${fav.server}" aria-label="${L('Usuń')}">×</button></div><div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('⏳ Pobieranie...')}</span></div></div>`;
+    card.querySelector('.fcd').addEventListener('click',function(){S.favAls=S.favAls.filter(f=>!(f.name===this.dataset.n&&f.server===this.dataset.s));saveFavAls();updFavCnt();renderFavPage();toast(L('Usunięto'))});
     grid.appendChild(card);
     loadFavAlStats(fav,card,cid);
   });
@@ -975,16 +1197,16 @@ async function loadFavAlStats(fav,card,cid){
     const url=`${GGE_API}/${fav.server}/ain/%22AID%22:${fav.allianceId}`;
     const d=await ggeGet(url);
     if(!el.isConnected)return;
-    if(!d||d.return_code!==0){el.innerHTML='<div class="fr"><span class="fl" style="color:var(--c-muted)">Brak danych</span></div>';return}
+    if(!d||d.return_code!==0){el.innerHTML=`<div class="fr"><span class="fl" style="color:var(--c-muted)">${L('Brak danych')}</span></div>`;return}
     const al=d.content.A||d.content;
     const members=Array.isArray(d.content.M)?d.content.M:[];
     const rows=[];
     if(al.MP!=null)rows.push({l:'Moc',v:fmtN(al.MP)});
     if(al.CF!=null)rows.push({l:'Punkty chwały',v:fmtN(al.CF)});
     rows.push({l:'Członkowie',v:fmtN(members.length)});
-    el.innerHTML=rows.map(r=>`<div class="fr"><span class="fl">${r.l}</span><span class="fp2">${r.v}</span></div>`).join('');
+    el.innerHTML=rows.map(r=>`<div class="fr"><span class="fl">${L(r.l)}</span><span class="fp2">${r.v}</span></div>`).join('');
   }catch{
-    if(el.isConnected)el.innerHTML='<div class="fr"><span class="fl" style="color:var(--c-muted)">Błąd</span></div>';
+    if(el.isConnected)el.innerHTML=`<div class="fr"><span class="fl" style="color:var(--c-muted)">${L('Błąd')}</span></div>`;
   }
 }
 
@@ -1004,7 +1226,7 @@ async function loadFavRanks(fav,card,spkId){
   }
   if(!el.isConnected)return;
   el.innerHTML=res.length?res.map(r=>`<div class="fr"><span class="fl">${esc(evname(r.key))}</span><span class="fp2${r.rank<=3?' g':''}">#${r.rank}</span><span class="fs">${fmtN(r.score)}</span></div>`).join('')
-    :'<div class="fr"><span class="fl" style="color:var(--c-muted)">Nie znaleziono</span></div>';
+    :`<div class="fr"><span class="fl" style="color:var(--c-muted)">${L('Nie znaleziono')}</span></div>`;
   // Sparkline (best key for this player)
   const spkEl=card.querySelector('#'+CSS.escape(spkId));
   if(spkEl){
@@ -1024,11 +1246,11 @@ function downloadFile(name,content,type){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},100);
-  toast(`📥 Pobrano ${name}`,'success');
+  toast(L('📥 Pobrano {name}',{name}),'success');
 }
 function exportData(fmt){
   const rows=visibleRows();
-  if(!rows.length){toast('Brak danych do eksportu','error');return}
+  if(!rows.length){toast(L('Brak danych do eksportu'),'error');return}
   const stamp=new Date().toISOString().slice(0,16).replace(/[T:]/g,'-');
   const srv=srvInfo(S.server)?.code||S.server;
   const baseName=`gge_${srv}_${S.eventKey}_p${S.curPage}_${stamp}`;
@@ -1061,8 +1283,8 @@ function exportData(fmt){
     setTimeout(()=>{
       const url=location.href;
       if(navigator.clipboard?.writeText){
-        navigator.clipboard.writeText(url).then(()=>toast('🔗 Link skopiowany do schowka','success')).catch(()=>toast('Skopiuj URL ręcznie','error'));
-      }else toast('Skopiuj URL ręcznie','error');
+        navigator.clipboard.writeText(url).then(()=>toast(L('🔗 Link skopiowany do schowka'),'success')).catch(()=>toast(L('Skopiuj URL ręcznie'),'error'));
+      }else toast(L('Skopiuj URL ręcznie'),'error');
     },200);
   }
 }
@@ -1156,6 +1378,7 @@ $('favBtn').addEventListener('click',()=>{
 });
 
 $('themeBtn').addEventListener('click',toggleTheme);
+$('langBtn').addEventListener('click',()=>setLang(S.lang==='pl'?'en':'pl'));
 
 const mainDrop=buildSrvDropdown('srvList','srvBtn','srvSearch',async h=>{
   if(h===S.server)return;
@@ -1196,14 +1419,14 @@ $('mOk').addEventListener('click',()=>{
   const server=modalServer;
   const game=srvGame(server);
   const err=$('mErr');err.style.display='none';
-  if(!name){err.textContent='Wpisz nick!';err.style.display='block';return}
-  if(isFav(name,game,server)){err.textContent='Już obserwujesz!';err.style.display='block';return}
+  if(!name){err.textContent=L('Wpisz nick!');err.style.display='block';return}
+  if(isFav(name,game,server)){err.textContent=L('Już obserwujesz!');err.style.display='block';return}
   S.favs.push({name,game,server});saveFavs();updFavCnt();
-  $('mBackdrop').classList.add('h');toast(`Obserwujesz ${name} ⭐`,'success');
+  $('mBackdrop').classList.add('h');toast(L('Obserwujesz {n} ⭐',{n:name}),'success');
   if(S.page==='favorites')renderFavPage();
 });
 $('mName').addEventListener('keydown',e=>{if(e.key==='Enter')$('mOk').click()});
-$('clearFavBtn').addEventListener('click',()=>{if(confirm('Usunąć wszystkich obserwowanych?')){S.favs=[];S.favAls=[];saveFavs();saveFavAls();updFavCnt();renderFavPage()}});
+$('clearFavBtn').addEventListener('click',()=>{if(confirm(L('Usunąć wszystkich obserwowanych?'))){S.favs=[];S.favAls=[];saveFavs();saveFavAls();updFavCnt();renderFavPage()}});
 
 // Compare
 $('cOpenBtn').addEventListener('click',openCompareModal);
@@ -1221,7 +1444,7 @@ setupMiniDrop('autoRefBtn','autoRefDrop',opt=>{
   localStorage.setItem('gge_autoref',S.autoRef);
   updateAutoRefUI();
   startAutoRef();
-  toast(S.autoRef?`Auto-odświeżanie: co ${fmtCountdown(S.autoRef)}`:'Auto-odświeżanie wyłączone');
+  toast(S.autoRef?L('Auto-odświeżanie: co {t}',{t:fmtCountdown(S.autoRef)}):L('Auto-odświeżanie wyłączone'));
 });
 
 setupFilters();
@@ -1229,11 +1452,13 @@ setupKeyboard();
 
 // ── Init ──
 let initDone=false;
-setTimeout(()=>{if(!initDone){setSt('err','Przekroczono czas');showSt('⏱','Ładowanie trwało zbyt długo','Odśwież stronę (F5).')}},20000);
+setTimeout(()=>{if(!initDone){setSt('err',L('Przekroczono czas'));showSt('⏱',L('Ładowanie trwało zbyt długo'),L('Odśwież stronę (F5).'))}},20000);
 
 async function init(){
   loadHistory();
   applyTheme(S.theme);
+  const lb=$('langBtn');if(lb)lb.textContent=S.lang.toUpperCase();
+  applyI18n();
   updateAutoRefUI();
 
   // Read URL hash params
@@ -1245,12 +1470,12 @@ async function init(){
   if(h.page)S.curPage=h.page;
   if(h.q)$('searchInput').value=h.q;
 
-  updFavCnt();updateTypeSeg();showSpin();setSt('spin','Ładowanie...');
-  try{setSt('spin','Tłumaczenia...');await timeout(loadTexts(),4500).catch(()=>{})}catch{}
-  try{setSt('spin','Eventy...');await timeout(loadEvents(),6000).catch(()=>{})}catch{}
+  updFavCnt();updateTypeSeg();showSpin();setSt('spin',L('Ładowanie...'));
+  try{setSt('spin',L('Tłumaczenia...'));await timeout(loadTexts(),4500).catch(()=>{})}catch{}
+  try{setSt('spin',L('Eventy...'));await timeout(loadEvents(),6000).catch(()=>{})}catch{}
   updateTypeSeg();
   initDone=true;
-  setSt('spin','Pobieranie rankingu...');
+  setSt('spin',L('Pobieranie rankingu...'));
   const initSv=h.q||(S.curPage>1?String((S.curPage-1)*PAGE_SIZE+1):'1');
   await loadRanking(initSv);
   startAutoRef();

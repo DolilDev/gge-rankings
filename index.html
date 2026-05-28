@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GGE Rankings</title>
-  <link rel="stylesheet" href="style.css?v=20260528-3">
+  <link rel="stylesheet" href="style.css?v=20260529-1">
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 </head>
@@ -13,20 +13,21 @@
 <div class="header">
   <a class="logo" href="https://dolildev.github.io/gge-rankings/" style="text-decoration:none;color:inherit">🏰 GGE Rankings</a>
   <nav class="nav" role="tablist">
-    <button class="nav-btn on" data-p="ranking" role="tab" aria-selected="true">⚔️ Ranking</button>
-    <button class="nav-btn" data-p="favorites" role="tab" aria-selected="false">⭐ Ulubieni</button>
+    <button class="nav-btn on" data-p="ranking" data-t="⚔️ Ranking" role="tab" aria-selected="true">⚔️ Ranking</button>
+    <button class="nav-btn" data-p="favorites" data-t="⭐ Ulubieni" role="tab" aria-selected="false">⭐ Ulubieni</button>
   </nav>
   <div class="header-right">
-    <button class="btn icon-btn" id="themeBtn" title="Zmień motyw (Shift+D)" aria-label="Zmień motyw">🌙</button>
-    <button class="btn" id="favBtn" aria-label="Pokaż ulubionych">⭐ <span class="fav-n" id="favCnt">0</span></button>
-    <button class="btn primary" id="addBtn" aria-label="Dodaj gracza do śledzenia">+ Śledź</button>
+    <button class="btn icon-btn" id="langBtn" data-ttl="Język / Language" title="Język / Language" aria-label="Język / Language">PL</button>
+    <button class="btn icon-btn" id="themeBtn" data-ttl="Zmień motyw (Shift+D)" data-tar="Zmień motyw" title="Zmień motyw (Shift+D)" aria-label="Zmień motyw">🌙</button>
+    <button class="btn" id="favBtn" data-tar="Pokaż ulubionych" aria-label="Pokaż ulubionych">⭐ <span class="fav-n" id="favCnt">0</span></button>
+    <button class="btn primary" id="addBtn" data-t="+ Śledź" data-tar="Dodaj gracza do śledzenia" aria-label="Dodaj gracza do śledzenia">+ Śledź</button>
   </div>
 </div>
 
 <div class="toolbar">
-  <span class="tlbl">Serwer</span>
+  <span class="tlbl" data-t="Serwer">Serwer</span>
   <div class="srv-wrap" id="srvWrap">
-    <button class="srv-btn" id="srvBtn" type="button" aria-label="Wybierz serwer" aria-haspopup="listbox">
+    <button class="srv-btn" id="srvBtn" type="button" data-tar="Wybierz serwer" aria-label="Wybierz serwer" aria-haspopup="listbox">
       <span id="srvBtnFlag"></span>
       <span id="srvBtnCode"></span>
       <span id="srvBtnName">Ładowanie...</span>
@@ -34,60 +35,60 @@
     </button>
     <div class="srv-drop h" id="srvDrop" role="listbox">
       <div class="srv-search-wrap">
-        <input type="text" id="srvSearch" placeholder="Szukaj serwera..." autocomplete="off" aria-label="Szukaj serwera">
+        <input type="text" id="srvSearch" placeholder="Szukaj serwera..." autocomplete="off" data-tph="Szukaj serwera..." data-tar="Szukaj serwera" aria-label="Szukaj serwera">
       </div>
       <div class="srv-list" id="srvList"></div>
     </div>
   </div>
-  <span class="tlbl">Ranking</span>
-  <select id="eventSelect" style="min-width:190px" aria-label="Wybierz typ rankingu"><option>Ładowanie...</option></select>
+  <span class="tlbl" data-t="Ranking">Ranking</span>
+  <select id="eventSelect" style="min-width:190px" data-tar="Wybierz typ rankingu" aria-label="Wybierz typ rankingu"><option>Ładowanie...</option></select>
   <div class="seg" id="typeSeg" role="tablist">
-    <button class="seg-b on" data-v="player" role="tab" aria-selected="true">👤 Gracze</button>
-    <button class="seg-b" data-v="alliance" role="tab" aria-selected="false">🛡 Sojusze</button>
+    <button class="seg-b on" data-v="player" data-t="👤 Gracze" role="tab" aria-selected="true">👤 Gracze</button>
+    <button class="seg-b" data-v="alliance" data-t="🛡 Sojusze" role="tab" aria-selected="false">🛡 Sojusze</button>
   </div>
-  <div class="sw"><input type="text" id="searchInput" placeholder="Rank lub nick... (/)" aria-label="Wyszukaj rank lub nick"></div>
-  <button class="btn" id="goSearch" title="Szukaj (Enter)" aria-label="Szukaj">↵</button>
-  <button class="btn" id="refreshBtn" title="Odśwież (R)" aria-label="Odśwież">↺</button>
-  <button class="btn" id="filterBtn" title="Filtry (F)" aria-label="Pokaż filtry" aria-expanded="false">⚙ Filtry</button>
+  <div class="sw"><input type="text" id="searchInput" placeholder="Rank lub nick... (/)" data-tph="Rank lub nick... (/)" data-tar="Wyszukaj rank lub nick" aria-label="Wyszukaj rank lub nick"></div>
+  <button class="btn" id="goSearch" title="Szukaj (Enter)" data-ttl="Szukaj (Enter)" data-tar="Szukaj" aria-label="Szukaj">↵</button>
+  <button class="btn" id="refreshBtn" title="Odśwież (R)" data-ttl="Odśwież (R)" data-tar="Odśwież" aria-label="Odśwież">↺</button>
+  <button class="btn" id="filterBtn" title="Filtry (F)" data-t="⚙ Filtry" data-ttl="Filtry (F)" data-tar="Pokaż filtry" aria-label="Pokaż filtry" aria-expanded="false">⚙ Filtry</button>
   <div class="dwrap">
-    <button class="btn" id="exportBtn" title="Eksport (E)" aria-label="Eksportuj" aria-haspopup="menu">⬇ Eksport</button>
+    <button class="btn" id="exportBtn" title="Eksport (E)" data-t="⬇ Eksport" data-ttl="Eksport (E)" data-tar="Eksportuj" aria-label="Eksportuj" aria-haspopup="menu">⬇ Eksport</button>
     <div class="mini-drop h" id="expDrop" role="menu">
-      <button class="mini-opt" data-fmt="csv">📄 CSV (.csv)</button>
-      <button class="mini-opt" data-fmt="json">{} JSON (.json)</button>
-      <button class="mini-opt" data-fmt="link">🔗 Kopiuj link</button>
+      <button class="mini-opt" data-fmt="csv" data-t="📄 CSV (.csv)">📄 CSV (.csv)</button>
+      <button class="mini-opt" data-fmt="json" data-t="{} JSON (.json)">{} JSON (.json)</button>
+      <button class="mini-opt" data-fmt="link" data-t="🔗 Kopiuj link">🔗 Kopiuj link</button>
     </div>
   </div>
   <div class="dwrap">
-    <button class="btn" id="autoRefBtn" title="Auto-odświeżanie" aria-label="Auto-odświeżanie" aria-haspopup="menu">⏱ Auto</button>
+    <button class="btn" id="autoRefBtn" title="Auto-odświeżanie" data-ttl="Auto-odświeżanie" data-tar="Auto-odświeżanie" aria-label="Auto-odświeżanie" aria-haspopup="menu">⏱ Auto</button>
     <div class="mini-drop h" id="autoRefDrop" role="menu">
-      <button class="mini-opt" data-v="0">⏹ Wyłącz</button>
-      <button class="mini-opt" data-v="30">30 sekund</button>
-      <button class="mini-opt" data-v="60">1 minuta</button>
-      <button class="mini-opt" data-v="300">5 minut</button>
-      <button class="mini-opt" data-v="600">10 minut</button>
+      <button class="mini-opt" data-v="0" data-t="⏹ Wyłącz">⏹ Wyłącz</button>
+      <button class="mini-opt" data-v="30" data-t="30 sekund">30 sekund</button>
+      <button class="mini-opt" data-v="60" data-t="1 minuta">1 minuta</button>
+      <button class="mini-opt" data-v="300" data-t="5 minut">5 minut</button>
+      <button class="mini-opt" data-v="600" data-t="10 minut">10 minut</button>
     </div>
   </div>
 </div>
 
 <div class="fbar h" id="fBar">
   <div class="fgrp">
-    <span class="tlbl">Sojusz:</span>
+    <span class="tlbl" data-t="Sojusz:">Sojusz:</span>
     <div class="seg" id="fAlSeg">
-      <button class="seg-b on" data-f="all">Wszyscy</button>
-      <button class="seg-b" data-f="with">Z sojuszem</button>
-      <button class="seg-b" data-f="without">Bez sojuszu</button>
+      <button class="seg-b on" data-f="all" data-t="Wszyscy">Wszyscy</button>
+      <button class="seg-b" data-f="with" data-t="Z sojuszem">Z sojuszem</button>
+      <button class="seg-b" data-f="without" data-t="Bez sojuszu">Bez sojuszu</button>
     </div>
   </div>
   <div class="fgrp">
-    <span class="tlbl">Nazwa sojuszu:</span>
-    <div class="sw"><input type="text" id="fAlName" placeholder="Filtruj po sojuszu..." aria-label="Filtruj po nazwie sojuszu"></div>
+    <span class="tlbl" data-t="Nazwa sojuszu:">Nazwa sojuszu:</span>
+    <div class="sw"><input type="text" id="fAlName" placeholder="Filtruj po sojuszu..." data-tph="Filtruj po sojuszu..." data-tar="Filtruj po nazwie sojuszu" aria-label="Filtruj po nazwie sojuszu"></div>
   </div>
   <div class="fgrp">
-    <span class="tlbl">Min. wynik:</span>
-    <input type="number" id="fMinScore" placeholder="0" min="0" style="width:110px" aria-label="Minimalny wynik">
+    <span class="tlbl" data-t="Min. wynik:">Min. wynik:</span>
+    <input type="number" id="fMinScore" placeholder="0" min="0" style="width:110px" data-tar="Minimalny wynik" aria-label="Minimalny wynik">
   </div>
-  <button class="btn" id="fClear" aria-label="Wyczyść filtry">× Wyczyść</button>
-  <span class="fhint" title="Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich">ℹ Filtry obejmują do 2000 graczy</span>
+  <button class="btn" id="fClear" data-t="× Wyczyść" data-tar="Wyczyść filtry" aria-label="Wyczyść filtry">× Wyczyść</button>
+  <span class="fhint" data-t="ℹ Filtry obejmują do 2000 graczy" data-ttl="Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich" title="Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich">ℹ Filtry obejmują do 2000 graczy</span>
 </div>
 
 <div class="cats" id="catBar" style="display:none"></div>
@@ -96,8 +97,8 @@
   <div class="dot"></div>
   <span id="sMsg">Ładowanie...</span>
   <div class="r">
-    <span>Razem: <b id="sTotal">—</b></span>
-    <span>Strona: <b id="sPage">—</b></span>
+    <span><span data-t="Razem:">Razem:</span> <b id="sTotal">—</b></span>
+    <span><span data-t="Strona:">Strona:</span> <b id="sPage">—</b></span>
     <span id="sAutoR" style="display:none">⏱ <b id="sAutoRT">—</b></span>
   </div>
 </div>
@@ -107,51 +108,51 @@
 
 <div id="favView" style="display:none" class="fp">
   <div class="fph">
-    <div class="fpt">⭐ Obserwowani gracze</div>
-    <button class="btn" id="clearFavBtn">🗑 Wyczyść</button>
+    <div class="fpt" data-t="⭐ Obserwowani gracze">⭐ Obserwowani gracze</div>
+    <button class="btn" id="clearFavBtn" data-t="🗑 Wyczyść">🗑 Wyczyść</button>
   </div>
   <div class="fg" id="favGrid"></div>
 </div>
 
-<div class="cbar h" id="cBar" role="region" aria-label="Pasek porównania">
-  <span class="ctitle">📊 Porównaj <span class="ccnt" id="cCount">0</span> / 4</span>
+<div class="cbar h" id="cBar" role="region" data-tar="Pasek porównania" aria-label="Pasek porównania">
+  <span class="ctitle"><span data-t="📊 Porównaj">📊 Porównaj</span> <span class="ccnt" id="cCount">0</span> / 4</span>
   <div class="cChips" id="cChips"></div>
-  <button class="btn primary" id="cOpenBtn">Porównaj →</button>
-  <button class="btn" id="cClearBtn">Wyczyść</button>
+  <button class="btn primary" id="cOpenBtn" data-t="Porównaj →">Porównaj →</button>
+  <button class="btn" id="cClearBtn" data-t="Wyczyść">Wyczyść</button>
 </div>
 
-<div class="mb h" id="mBackdrop" role="dialog" aria-label="Dodaj gracza" aria-modal="true">
+<div class="mb h" id="mBackdrop" role="dialog" data-tar="Dodaj gracza" aria-label="Dodaj gracza" aria-modal="true">
   <div class="mo">
-    <h3>⭐ Śledź gracza</h3>
-    <label for="mName">Nick gracza</label><input type="text" id="mName" placeholder="Wpisz nick...">
-    <label>Serwer</label>
+    <h3 data-t="⭐ Śledź gracza">⭐ Śledź gracza</h3>
+    <label for="mName" data-t="Nick gracza">Nick gracza</label><input type="text" id="mName" placeholder="Wpisz nick..." data-tph="Wpisz nick...">
+    <label data-t="Serwer">Serwer</label>
     <div class="srv-wrap" id="mSrvWrap">
       <button class="srv-btn" id="mSrvBtn" type="button" aria-haspopup="listbox">
         <span id="mSrvBtnFlag"></span>
         <span id="mSrvBtnCode"></span>
-        <span id="mSrvBtnName">Wybierz serwer</span>
+        <span id="mSrvBtnName" data-t="Wybierz serwer">Wybierz serwer</span>
         <span class="srv-arrow">▾</span>
       </button>
       <div class="srv-drop h" id="mSrvDrop" role="listbox">
         <div class="srv-search-wrap">
-          <input type="text" id="mSrvSearch" placeholder="Szukaj serwera..." autocomplete="off">
+          <input type="text" id="mSrvSearch" placeholder="Szukaj serwera..." autocomplete="off" data-tph="Szukaj serwera...">
         </div>
         <div class="srv-list" id="mSrvList"></div>
       </div>
     </div>
     <div class="me" id="mErr"></div>
     <div class="ma">
-      <button class="btn" id="mCancel">Anuluj</button>
-      <button class="btn primary" id="mOk">⭐ Śledź</button>
+      <button class="btn" id="mCancel" data-t="Anuluj">Anuluj</button>
+      <button class="btn primary" id="mOk" data-t="⭐ Śledź">⭐ Śledź</button>
     </div>
   </div>
 </div>
 
-<div class="mb h" id="cmpBackdrop" role="dialog" aria-label="Porównanie" aria-modal="true">
+<div class="mb h" id="cmpBackdrop" role="dialog" data-tar="Porównanie" aria-label="Porównanie" aria-modal="true">
   <div class="mo cmt">
     <div class="cmt-head">
-      <h3>📊 Porównanie</h3>
-      <button class="btn icon-btn" id="cmpClose" aria-label="Zamknij">×</button>
+      <h3 data-t="📊 Porównanie">📊 Porównanie</h3>
+      <button class="btn icon-btn" id="cmpClose" data-tar="Zamknij" aria-label="Zamknij">×</button>
     </div>
     <div id="cmpBody"></div>
   </div>
@@ -159,6 +160,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="app.js?v=20260528-3"></script>
+<script src="app.js?v=20260529-1"></script>
 </body>
 </html>
