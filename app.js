@@ -6,7 +6,7 @@
 const GGE_API = 'https://empire-api.fly.dev';
 const EVENTS_URL = game => `https://raw.githubusercontent.com/danadum/ggs-assets/main/${game}/events.json`;
 const TEXTS_URL = lang => `https://translations-api-test.public.ggs-ep.com/12/${lang}`;
-const PAGE_SIZE = 10;
+const API_PAGE = 10; // GGE highscore endpoint returns 10 entries per request; the UI page size is S.pageSize
 const FILTER_POOL_MAX = 2000;
 const FILTER_FETCH_CONC = 10;
 const MAX_COMPARE = 4;
@@ -611,23 +611,39 @@ async function fetchRanking(sv){
   }catch(e){console.warn('fetchRanking:',e.message);return null}
 }
 
+// Fetch one UI page (up to S.pageSize rows). Name search → single request;
+// numeric start rank → ceil(pageSize/API_PAGE) chunks fetched in parallel and merged.
+async function fetchRankingPage(sv){
+  const isName=sv&&isNaN(+sv);
+  if(isName){const d=await fetchRanking(sv);return d?parseRows(d):null}
+  const start=Math.max(1,+sv||1);
+  const chunks=Math.max(1,Math.ceil(S.pageSize/API_PAGE));
+  const starts=[];for(let i=0;i<chunks;i++)starts.push(start+i*API_PAGE);
+  const results=await Promise.all(starts.map(s=>fetchRanking(String(s))));
+  if(!results.some(Boolean))return null;
+  const map=new Map();let total=0;
+  results.forEach(d=>{if(!d)return;const pr=parseRows(d);if(pr.total>total)total=pr.total;pr.rows.forEach(r=>{if(r&&r.rank!=null)map.set(r.rank,r)})});
+  const rows=[...map.values()].sort((a,b)=>a.rank-b.rank).slice(0,S.pageSize);
+  return{rows,total:total||rows.length};
+}
+
 async function loadRanking(sv='1'){
   const rid=++S.reqId;S.loading=true;S.expandedRank=null;
   S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
   setSt('spin',L('Pobieranie...'));showSpin();
   if(!S.server||!curLT()){S.loading=false;setSt('err',L('Wybierz serwer lub ranking'));showSt('⚙️',L('Wybierz serwer z listy'),'');return}
-  const data=await fetchRanking(sv);
+  const res=await fetchRankingPage(sv);
   if(rid!==S.reqId)return;
   S.loading=false;
-  if(!data){setSt('err',L('Błąd API'));showSt('🔌',L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));return}
-  const{rows,total}=parseRows(data);
+  if(!res){setSt('err',L('Błąd API'));showSt('🔌',L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));return}
+  const{rows,total}=res;
 
   // Detect fav movements before capturing new snapshot
   if(!S.allianceMode) detectFavMovements(rows);
 
   S.rows=rows;S.totalRows=total;
   if(!rows.length){setSt('live',L('Brak danych'));showSt('📭',L('Brak danych dla tego rankingu'),L('Ten event może nie być aktywny na wybranym serwerze.'));return}
-  const totalPgs=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  const totalPgs=Math.max(1,Math.ceil(total/S.pageSize));
   $('sTotal').textContent=fmtN(total);$('sPage').textContent=`${S.curPage} / ${totalPgs}`;
   setSt('live',L('Dane LIVE · {t}',{t:new Date().toLocaleTimeString(curLocale())}));
   if(S.server)localStorage.setItem('server',S.server);
@@ -654,7 +670,7 @@ function detectFavMovements(rows){
 
 async function goPage(page){
   if(filterActive()&&S.filtered){
-    const totalPgs=Math.max(1,Math.ceil(S.filtered.length/PAGE_SIZE));
+    const totalPgs=Math.max(1,Math.ceil(S.filtered.length/S.pageSize));
     S.curPage=Math.min(Math.max(1,page),totalPgs);
     S.expandedRank=null;
     renderFilteredStatus();renderTable();renderPg();writeHash();
@@ -662,7 +678,7 @@ async function goPage(page){
     return;
   }
   S.curPage=page;
-  await loadRanking(String((page-1)*PAGE_SIZE+1));
+  await loadRanking(String((page-1)*S.pageSize+1));
   window.scrollTo({top:0,behavior:'smooth'});
 }
 window.goPage=goPage;
@@ -710,7 +726,7 @@ async function ensurePool(){
     const all=[];
     for(let sv=1;sv<=FILTER_POOL_MAX;){
       const batch=[];
-      for(let j=0;j<FILTER_FETCH_CONC&&sv<=FILTER_POOL_MAX;j++,sv+=PAGE_SIZE)batch.push(sv);
+      for(let j=0;j<FILTER_FETCH_CONC&&sv<=FILTER_POOL_MAX;j++,sv+=API_PAGE)batch.push(sv);
       const res=await Promise.all(batch.map(s=>fetchRanking(String(s)).then(d=>d?parseRows(d).rows:[]).catch(()=>[])));
       let got=0;res.forEach(rows=>{got+=rows.length;all.push(...rows)});
       if(poolCtx()!==ctx){S._poolPromise=null;return S.pool||[]}
@@ -727,7 +743,7 @@ async function ensurePool(){
 function applyFiltered(){S.filtered=applySort(applyFilter(S.pool||[]))}
 function renderFilteredStatus(){
   const n=S.filtered.length,poolN=(S.pool||[]).length;
-  const totalPgs=Math.max(1,Math.ceil(n/PAGE_SIZE));
+  const totalPgs=Math.max(1,Math.ceil(n/S.pageSize));
   $('sTotal').textContent=fmtN(n);
   $('sPage').textContent=`${Math.min(S.curPage,totalPgs)} / ${totalPgs}`;
   setSt('live',L('Filtr: {n} z {pool} pobranych',{n:fmtN(n),pool:fmtN(poolN)}));
@@ -742,7 +758,7 @@ async function runFilter(){
   if(!filterActive()){S.filtered=null;await loadRanking('1');return}
   S.pool=pool;
   applyFiltered();
-  const totalPgs=Math.max(1,Math.ceil(S.filtered.length/PAGE_SIZE));
+  const totalPgs=Math.max(1,Math.ceil(S.filtered.length/S.pageSize));
   if(S.curPage>totalPgs)S.curPage=1;
   renderFilteredStatus();
   renderTable();renderPg();
@@ -763,13 +779,32 @@ function chgIndicator(name,curRk){
   if(prev>curRk)return`<span class="chg up" title="${L('Awansował z #{p}',{p:prev})}">▲${prev-curRk}</span>`;
   return`<span class="chg dn" title="${L('Spadł z #{p}',{p:prev})}">▼${curRk-prev}</span>`;
 }
+function getPrevScore(name,key=histKey()){
+  const arr=HIST?.[key]?.[name];
+  if(!arr||!arr.length)return null;
+  return arr[arr.length-1][2];
+}
+function fmtAbbr(n){
+  n=Math.abs(+n)||0;
+  if(n>=1e6)return +(n/1e6).toFixed(n>=1e7?0:1)+'M';
+  if(n>=1e3)return +(n/1e3).toFixed(n>=1e4?0:1)+'k';
+  return String(Math.round(n));
+}
+// Δ score delta vs last snapshot — shown next to the rank-change arrow.
+function scoreChgIndicator(name,curScore){
+  if(curScore==null)return'';
+  const prev=getPrevScore(name);
+  if(prev==null||prev===curScore)return'';
+  const d=curScore-prev,up=d>0;
+  return`<span class="chg sd ${up?'up':'dn'}" title="Δ ${up?'+':'−'}${fmtN(Math.abs(d))}">Δ${up?'+':'−'}${fmtAbbr(d)}</span>`;
+}
 
 function renderTable(){
   const isAl=S.allianceMode;
   const filt=filterActive()&&!!S.pool;
   const full=filt?applySort(applyFilter(S.pool)):visibleRows();
   if(filt)S.filtered=full;
-  const rows=filt?full.slice((S.curPage-1)*PAGE_SIZE,S.curPage*PAGE_SIZE):full;
+  const rows=filt?full.slice((S.curPage-1)*S.pageSize,S.curPage*S.pageSize):full;
   const max=(filt?S.pool[0]?.score:S.rows[0]?.score)||rows[0]?.score||1;
   const sortCol=S.sort?.col, sortDir=S.sort?.dir;
   const sortable=(col,extraClass='')=>{
@@ -799,12 +834,13 @@ function renderTable(){
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
     const inCmp=S.compare.some(c=>c.name===r.name&&c.server===S.server);
     const chg=chgIndicator(r.name,r.rank);
+    const scd=scoreChgIndicator(r.name,r.score);
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
       :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<span class="badge b-al">${esc(r.alTag||r.al.slice(0,5))}</span>`:'—'}</td>`;
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
-      <td class="rk ${rkCls}">${badge}${chg}</td>
+      <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
       <td><span class="pn">${esc(r.name)}</span>${fvb}</td>
       ${alCell}
@@ -1100,20 +1136,23 @@ function renderPg(){
   const pg=$('pgBar');
   const filt=filterActive()&&S.filtered;
   const totalItems=filt?S.filtered.length:S.totalRows;
-  const total=Math.max(1,Math.ceil(totalItems/PAGE_SIZE));
+  const total=Math.max(1,Math.ceil(totalItems/S.pageSize));
   if(total<=1){pg.style.display='none';return}
   pg.style.display='flex';
   const cur=S.curPage;
-  let h=`<button class="pgb" onclick="goPage(1)" ${cur===1?'disabled':''} aria-label="Pierwsza strona">«</button>`;
-  h+=`<button class="pgb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''} aria-label="Poprzednia">‹</button>`;
+  let h=`<button class="pgb" onclick="goPage(1)" ${cur===1?'disabled':''} aria-label="${L('Pierwsza strona')}">«</button>`;
+  h+=`<button class="pgb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''} aria-label="${L('Poprzednia')}">‹</button>`;
   const s=Math.max(1,cur-2),e=Math.min(total,cur+2);
   if(s>1)h+=`<span class="pgi">…</span>`;
-  for(let i=s;i<=e;i++)h+=`<button class="pgb${i===cur?' cur':''}" onclick="goPage(${i})" aria-label="Strona ${i}">${i}</button>`;
+  for(let i=s;i<=e;i++)h+=`<button class="pgb${i===cur?' cur':''}" onclick="goPage(${i})" aria-label="${L('Strona {i}',{i})}">${i}</button>`;
   if(e<total)h+=`<span class="pgi">…</span>`;
-  h+=`<button class="pgb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''} aria-label="Następna">›</button>`;
-  h+=`<button class="pgb" onclick="goPage(${total})" ${cur===total?'disabled':''} aria-label="Ostatnia">»</button>`;
-  h+=`<span class="pgi">Str. ${cur} z ${total} · ${fmtN(totalItems)} ${filt?'po filtrach':'graczy'}</span>`;
+  h+=`<button class="pgb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''} aria-label="${L('Następna')}">›</button>`;
+  h+=`<button class="pgb" onclick="goPage(${total})" ${cur===total?'disabled':''} aria-label="${L('Ostatnia')}">»</button>`;
+  if(total>5)h+=`<input type="number" id="pgJump" class="pgjump" min="1" max="${total}" placeholder="${L('Skocz do strony')}" aria-label="${L('Skocz do strony')}" title="${L('Skocz do strony')}">`;
+  h+=`<span class="pgi">${L('Str. {cur} z {total} · {n} {kind}',{cur,total,n:fmtN(totalItems),kind:filt?L('po filtrach'):L('graczy')})}</span>`;
   pg.innerHTML=h;
+  const jump=$('pgJump');
+  if(jump)jump.addEventListener('keydown',ev=>{if(ev.key==='Enter'){const v=Math.min(total,Math.max(1,+jump.value||1));goPage(v)}});
 }
 
 // ── Event select & cats ──
@@ -1302,7 +1341,7 @@ function startAutoRef(){
   _arTimer=setInterval(()=>{
     _arCount--;
     $('sAutoRT').textContent=fmtCountdown(_arCount);
-    if(_arCount<=0){_arCount=S.autoRef;if(filterActive()){reloadCtx()}else{const sv=S.lastSearch||String((S.curPage-1)*PAGE_SIZE+1);loadRanking(sv)}}
+    if(_arCount<=0){_arCount=S.autoRef;if(filterActive()){reloadCtx()}else{const sv=S.lastSearch||String((S.curPage-1)*S.pageSize+1);loadRanking(sv)}}
   },1000);
 }
 function updateAutoRefUI(){
@@ -1355,8 +1394,9 @@ function setupKeyboard(){
     if(e.key==='f'||e.key==='F'){$('filterBtn').click();return}
     if(e.key==='e'||e.key==='E'){$('exportBtn').click();return}
     if(e.shiftKey&&(e.key==='D'||e.key==='d')){toggleTheme();return}
+    if(e.shiftKey&&(e.key==='C'||e.key==='c')){applyCompact(!S.compact);return}
     if(e.key==='ArrowLeft'){if(S.curPage>1)goPage(S.curPage-1);return}
-    if(e.key==='ArrowRight'){const t=Math.ceil(S.totalRows/PAGE_SIZE);if(S.curPage<t)goPage(S.curPage+1);return}
+    if(e.key==='ArrowRight'){const t=Math.ceil(S.totalRows/S.pageSize);if(S.curPage<t)goPage(S.curPage+1);return}
   });
 }
 
@@ -1379,6 +1419,24 @@ $('favBtn').addEventListener('click',()=>{
 
 $('themeBtn').addEventListener('click',toggleTheme);
 $('langBtn').addEventListener('click',()=>setLang(S.lang==='pl'?'en':'pl'));
+
+// ── Compact (dense) mode ──
+function applyCompact(on){
+  S.compact=on;
+  document.body.classList.toggle('compact',on);
+  localStorage.setItem('gge_compact',on?'1':'0');
+  const b=$('compactBtn');if(b)b.classList.toggle('on',on);
+}
+$('compactBtn').addEventListener('click',()=>applyCompact(!S.compact));
+
+// ── Page size ──
+function setPageSize(n){
+  n=+n||10;S.pageSize=n;localStorage.setItem('gge_pagesize',n);S.curPage=1;
+  const sel=$('pageSizeSel');if(sel)sel.value=String(n);
+  if(filterActive()&&S.filtered){renderFilteredStatus();renderTable();renderPg();}
+  else loadRanking(S.lastSearch||'1');
+}
+$('pageSizeSel').addEventListener('change',e=>setPageSize(+e.target.value));
 
 const mainDrop=buildSrvDropdown('srvList','srvBtn','srvSearch',async h=>{
   if(h===S.server)return;
@@ -1459,6 +1517,8 @@ async function init(){
   applyTheme(S.theme);
   const lb=$('langBtn');if(lb)lb.textContent=S.lang.toUpperCase();
   applyI18n();
+  applyCompact(S.compact);
+  const ps=$('pageSizeSel');if(ps)ps.value=String(S.pageSize);
   updateAutoRefUI();
 
   // Read URL hash params
@@ -1476,7 +1536,7 @@ async function init(){
   updateTypeSeg();
   initDone=true;
   setSt('spin',L('Pobieranie rankingu...'));
-  const initSv=h.q||(S.curPage>1?String((S.curPage-1)*PAGE_SIZE+1):'1');
+  const initSv=h.q||(S.curPage>1?String((S.curPage-1)*S.pageSize+1):'1');
   await loadRanking(initSv);
   startAutoRef();
 }

@@ -23,6 +23,7 @@
   <div class="header-right">
     <button class="btn icon-btn" id="langBtn" data-ttl="Język / Language" title="Język / Language" aria-label="Język / Language">PL</button>
     <button class="btn icon-btn" id="themeBtn" data-ttl="Zmień motyw (Shift+D)" data-tar="Zmień motyw" title="Zmień motyw (Shift+D)" aria-label="Zmień motyw">🌙</button>
+    <button class="btn icon-btn" id="compactBtn" data-ttl="Tryb kompaktowy (Shift+C)" data-tar="Tryb kompaktowy (Shift+C)" title="Tryb kompaktowy (Shift+C)" aria-label="Tryb kompaktowy (Shift+C)">≣</button>
     <button class="btn" id="favBtn" data-tar="Pokaż ulubionych" aria-label="Pokaż ulubionych">⭐ <span class="fav-n" id="favCnt">0</span></button>
     <button class="btn primary" id="addBtn" data-t="+ Śledź" data-tar="Dodaj gracza do śledzenia" aria-label="Dodaj gracza do śledzenia">+ Śledź</button>
   </div>
@@ -72,6 +73,12 @@
       <button class="mini-opt" data-v="600" data-t="10 minut">10 minut</button>
     </div>
   </div>
+  <span class="tlbl" data-t="Wierszy">Wierszy</span>
+  <select id="pageSizeSel" data-tar="Wierszy na stronę" aria-label="Wierszy na stronę" style="min-width:62px">
+    <option value="10">10</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
+  </select>
 </div>
 
 <div class="fbar h" id="fBar">
