@@ -1,10 +1,18 @@
+// ══════════════════════════════════════════════════════════════
+//  GGE Rankings — full app
+// ══════════════════════════════════════════════════════════════
+
 // ── Config ──
 const GGE_API = 'https://empire-api.fly.dev';
 const EVENTS_URL = game => `https://raw.githubusercontent.com/danadum/ggs-assets/main/${game}/events.json`;
 const TEXTS_URL = lang => `https://translations-api-test.public.ggs-ep.com/12/${lang}`;
 const PAGE_SIZE = 10;
+const MAX_COMPARE = 4;
+const HIST_MAX_PER_PLAYER = 12;
+const HIST_DEDUPE_MS = 60 * 1000;
+const HIST_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
-// ── All servers (GGE first, E4K at the bottom) ──
+// ── Servers ──
 const ALL_SERVERS = [
   {h:'EmpireEx',     game:'gge', flag:'🌍', code:'INT1',   name:'Internacjonalny 1'},
   {h:'EmpireEx_7',   game:'gge', flag:'🌍', code:'INT2',   name:'Internacjonalny 2'},
@@ -52,7 +60,6 @@ const ALL_SERVERS = [
   {h:'EmpireExSA',   game:'gge', flag:'🌐', code:'NET6',   name:'Sieć 6'},
   {h:'EmpireExSA_2', game:'gge', flag:'🌐', code:'NET7',   name:'Sieć 7'},
   {h:'EmpireExKA',   game:'gge', flag:'🌐', code:'NET8',   name:'Sieć 8'},
-  // E4K — at the bottom
   {h:'EmpirefourkingdomsExGG_2', game:'e4k', flag:'🇧🇷', code:'E4K_BR1',   name:'Empire Four Kingdoms - Brazil 1'},
   {h:'EmpirefourkingdomsExGG_3', game:'e4k', flag:'🇨🇳', code:'E4K_HANT1', name:'Empire Four Kingdoms - Chinese (Traditional)'},
   {h:'EmpirefourkingdomsExGG_4', game:'e4k', flag:'🇫🇷', code:'E4K_FR1',   name:'Empire Four Kingdoms - France 1'},
@@ -79,13 +86,18 @@ const EV_LABELS = {
 // ── State ──
 const S = {
   page:'ranking',
-  server: localStorage.getItem('server') || 'EmpireEx_5', // default PL1
+  server: localStorage.getItem('server') || 'EmpireEx_5',
   eventKey:'', catIdx:0, allianceMode:false,
   curPage:1, totalRows:0,
   rows:[], expandedRank:null, loading:false, reqId:0, lastSearch:'',
   events:{}, texts:{},
   favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
   favAls: JSON.parse(localStorage.getItem('gge_favAls_v1')||'[]'),
+  sort: null,
+  filter: {alliance:'all', alName:'', minScore:0},
+  compare: [],
+  autoRef: +localStorage.getItem('gge_autoref')||0,
+  theme: localStorage.getItem('gge_theme')||'dark',
 };
 
 // ── Helpers ──
@@ -95,122 +107,183 @@ function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(
 function isFav(n,g,s){return S.favs.some(f=>f.name===n&&f.game===g&&f.server===s)}
 function saveFavs(){localStorage.setItem('gge_favs_v7',JSON.stringify(S.favs))}
 let _tt;
-function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('show'),2600)}
+function toast(m,kind=''){const t=$('toast');t.textContent=m;t.className='toast show'+(kind?' '+kind:'');clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',2600)}
 function setSt(cls,msg){const b=$('sBar');b.className='sbar '+cls;$('sMsg').textContent=msg}
 function timeout(p,ms){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))])}
-
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
 function srvInfo(h){return ALL_SERVERS.find(s=>s.h===h)||null}
 function srvGame(h){return srvInfo(h)?.game||'gge'}
 function sname(h){const s=srvInfo(h);return s?`${s.flag} ${s.name}`:`Serwer ${h}`}
 
-// ── Custom server dropdown ──
-function buildSrvDropdown(listId, btnId, searchId, onSelect, currentH) {
-  const list = $(listId);
-  const btn  = $(btnId);
-  const search = $(searchId);
+// ── Theme ──
+function applyTheme(t){
+  S.theme=t;
+  if(t==='light') document.documentElement.setAttribute('data-theme','light');
+  else document.documentElement.removeAttribute('data-theme');
+  const b=$('themeBtn'); if(b) b.textContent = t==='light'?'☀️':'🌙';
+  localStorage.setItem('gge_theme',t);
+}
+function toggleTheme(){applyTheme(S.theme==='light'?'dark':'light')}
 
-  function renderList(filter='') {
-    const q = filter.toLowerCase();
-    const ggeItems = ALL_SERVERS.filter(s=>s.game==='gge');
-    const e4kItems = ALL_SERVERS.filter(s=>s.game==='e4k');
-
-    function renderItems(items) {
-      return items
-        .filter(s => !q || s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q))
-        .map(s => `
-          <div class="srv-item${s.h===currentH?' active':''}" data-h="${s.h}">
-            <span class="srv-item-flag">${s.flag}</span>
-            <span class="srv-item-code">${s.code}</span>
-            <span class="srv-item-name">${esc(s.name)}</span>
-          </div>`).join('');
-    }
-
-    const ggeHtml = renderItems(ggeItems);
-    const e4kHtml = renderItems(e4kItems);
-    const hasAny  = ggeHtml || e4kHtml;
-
-    list.innerHTML = hasAny
-      ? ggeHtml + (e4kHtml ? `<div class="srv-divider">Empire Four Kingdoms</div>${e4kHtml}` : '')
-      : '<div class="srv-empty">Brak wyników</div>';
-
-    list.querySelectorAll('.srv-item').forEach(el => {
-      el.addEventListener('click', () => {
-        currentH = el.dataset.h;
-        closeDrop();
-        onSelect(currentH);
-      });
-    });
-  }
-
-  function updateBtn(h) {
-    const s = srvInfo(h);
-    if (!s) return;
-    const flagEl = btn.querySelector('[id$="BtnFlag"]');
-    const codeEl = btn.querySelector('[id$="BtnCode"]');
-    const nameEl = btn.querySelector('[id$="BtnName"]');
-    if (flagEl) flagEl.textContent = s.flag;
-    if (codeEl) codeEl.textContent = s.code;
-    if (nameEl) nameEl.textContent = s.name;
-  }
-
-  function openDrop() {
-    const drop = btn.nextElementSibling;
-    drop.classList.remove('h');
-    btn.classList.add('open');
-    search.value = '';
-    renderList('');
-    search.focus();
-    // scroll active into view
-    setTimeout(()=>{const a=list.querySelector('.active');if(a)a.scrollIntoView({block:'nearest'});},50);
-  }
-
-  function closeDrop() {
-    const drop = btn.nextElementSibling;
-    drop.classList.add('h');
-    btn.classList.remove('open');
-  }
-
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    const drop = btn.nextElementSibling;
-    drop.classList.contains('h') ? openDrop() : closeDrop();
-  });
-
-  search.addEventListener('input', () => renderList(search.value));
-  search.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeDrop();
-    if (e.key === 'Enter') {
-      const first = list.querySelector('.srv-item');
-      if (first) first.click();
-    }
-  });
-
-  // close on outside click
-  document.addEventListener('click', e => {
-    if (!btn.closest('.srv-wrap').contains(e.target)) closeDrop();
-  });
-
-  updateBtn(currentH);
-  renderList('');
-
-  return { updateBtn, renderList, setActive(h){ currentH=h; renderList(search?.value||''); updateBtn(h); } };
+// ── URL hash sync ──
+function readHash(){
+  const h=location.hash.slice(1);if(!h)return{};
+  const p=new URLSearchParams(h);
+  return{server:p.get('s'),event:p.get('e'),cat:p.get('c'),type:p.get('t'),page:+p.get('p')||0,q:p.get('q')||''};
+}
+let _writeHashTimer;
+function writeHash(){
+  clearTimeout(_writeHashTimer);
+  _writeHashTimer=setTimeout(()=>{
+    const p=new URLSearchParams();
+    if(S.server) p.set('s',S.server);
+    if(S.eventKey) p.set('e',S.eventKey);
+    if(S.catIdx) p.set('c',S.catIdx);
+    if(S.allianceMode) p.set('t','a');
+    if(S.curPage>1) p.set('p',S.curPage);
+    if(S.lastSearch) p.set('q',S.lastSearch);
+    const newHash='#'+p.toString();
+    if(location.hash!==newHash) history.replaceState(null,'',newHash);
+  },150);
 }
 
+// ── History (snapshots for change indicators + sparklines) ──
+let HIST=null;
+function loadHistory(){
+  try{HIST=JSON.parse(localStorage.getItem('gge_hist_v1')||'{}')}catch{HIST={}}
+  pruneHistory();
+}
+function saveHistory(){
+  try{localStorage.setItem('gge_hist_v1',JSON.stringify(HIST))}catch(e){
+    // Quota exceeded — drop oldest keys
+    const keys=Object.keys(HIST);
+    if(keys.length>0){
+      for(let i=0;i<Math.ceil(keys.length/4);i++)delete HIST[keys[i]];
+      try{localStorage.setItem('gge_hist_v1',JSON.stringify(HIST))}catch{HIST={};localStorage.removeItem('gge_hist_v1')}
+    }
+  }
+}
+function pruneHistory(){
+  const cutoff=Date.now()-HIST_MAX_AGE_MS;
+  Object.keys(HIST).forEach(k=>{
+    Object.keys(HIST[k]).forEach(name=>{
+      HIST[k][name]=HIST[k][name].filter(([t])=>t>cutoff);
+      if(HIST[k][name].length===0)delete HIST[k][name];
+    });
+    if(Object.keys(HIST[k]).length===0)delete HIST[k];
+  });
+}
+function histKey(server=S.server,event=S.eventKey,catIdx=S.catIdx,alliance=S.allianceMode){
+  return `${server}_${event}_${alliance?'a':'p'}_${catIdx}`;
+}
+function getPrevRank(name,key=histKey()){
+  const arr=HIST?.[key]?.[name];
+  if(!arr||!arr.length)return null;
+  return arr[arr.length-1][1];
+}
+function captureSnapshot(rows){
+  if(!rows.length||!S.eventKey)return;
+  const k=histKey();
+  HIST[k]=HIST[k]||{};
+  const now=Date.now();
+  rows.slice(0,100).forEach(r=>{
+    const arr=HIST[k][r.name]=HIST[k][r.name]||[];
+    const last=arr[arr.length-1];
+    if(last&&(now-last[0])<HIST_DEDUPE_MS){
+      arr[arr.length-1]=[now,r.rank,r.score];
+    }else{
+      arr.push([now,r.rank,r.score]);
+      if(arr.length>HIST_MAX_PER_PLAYER)arr.shift();
+    }
+  });
+  saveHistory();
+}
+function getRankSeriesForKey(playerName,key,maxLen=12){
+  const arr=HIST?.[key]?.[playerName];
+  if(!arr)return[];
+  return arr.slice(-maxLen).map(([t,rk,sc])=>({t,rk,sc}));
+}
+function getBestRankSeries(playerName,server,maxLen=12){
+  const keys=Object.keys(HIST||{}).filter(k=>k.startsWith(server+'_'));
+  let bestKey=null,bestLen=0;
+  keys.forEach(k=>{const arr=HIST[k][playerName];if(arr&&arr.length>bestLen){bestKey=k;bestLen=arr.length}});
+  if(!bestKey)return[];
+  return HIST[bestKey][playerName].slice(-maxLen).map(([t,rk,sc])=>({t,rk,sc,k:bestKey}));
+}
 
-// ── API ──
-const CACHE = new Map();
+// ── Custom server dropdown ──
+function buildSrvDropdown(listId,btnId,searchId,onSelect,currentH){
+  const list=$(listId),btn=$(btnId),search=$(searchId);
+  function renderList(filter=''){
+    const q=filter.toLowerCase();
+    const ggeItems=ALL_SERVERS.filter(s=>s.game==='gge');
+    const e4kItems=ALL_SERVERS.filter(s=>s.game==='e4k');
+    function renderItems(items){
+      return items.filter(s=>!q||s.name.toLowerCase().includes(q)||s.code.toLowerCase().includes(q))
+        .map(s=>`<div class="srv-item${s.h===currentH?' active':''}" data-h="${s.h}" role="option" aria-selected="${s.h===currentH}">
+          <span class="srv-item-flag">${s.flag}</span>
+          <span class="srv-item-code">${s.code}</span>
+          <span class="srv-item-name">${esc(s.name)}</span></div>`).join('');
+    }
+    const ggeHtml=renderItems(ggeItems);
+    const e4kHtml=renderItems(e4kItems);
+    list.innerHTML=(ggeHtml||e4kHtml)?ggeHtml+(e4kHtml?`<div class="srv-divider">Empire Four Kingdoms</div>${e4kHtml}`:''):'<div class="srv-empty">Brak wyników</div>';
+    list.querySelectorAll('.srv-item').forEach(el=>el.addEventListener('click',()=>{currentH=el.dataset.h;closeDrop();onSelect(currentH)}));
+  }
+  function updateBtn(h){
+    const s=srvInfo(h);if(!s)return;
+    const flagEl=btn.querySelector('[id$="BtnFlag"]'),codeEl=btn.querySelector('[id$="BtnCode"]'),nameEl=btn.querySelector('[id$="BtnName"]');
+    if(flagEl)flagEl.textContent=s.flag;if(codeEl)codeEl.textContent=s.code;if(nameEl)nameEl.textContent=s.name;
+  }
+  function openDrop(){const drop=btn.nextElementSibling;drop.classList.remove('h');btn.classList.add('open');search.value='';renderList('');search.focus();setTimeout(()=>{const a=list.querySelector('.active');if(a)a.scrollIntoView({block:'nearest'})},50)}
+  function closeDrop(){const drop=btn.nextElementSibling;drop.classList.add('h');btn.classList.remove('open')}
+  btn.addEventListener('click',e=>{e.stopPropagation();btn.nextElementSibling.classList.contains('h')?openDrop():closeDrop()});
+  search.addEventListener('input',()=>renderList(search.value));
+  search.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrop();if(e.key==='Enter'){const first=list.querySelector('.srv-item');if(first)first.click()}});
+  document.addEventListener('click',e=>{if(!btn.closest('.srv-wrap').contains(e.target))closeDrop()});
+  updateBtn(currentH);renderList('');
+  return{updateBtn,renderList,setActive(h){currentH=h;renderList(search?.value||'');updateBtn(h)}};
+}
+
+// ── Mini dropdown helper ──
+function setupMiniDrop(btnId,dropId,onSelect){
+  const btn=$(btnId),drop=$(dropId);
+  btn.addEventListener('click',e=>{
+    e.stopPropagation();
+    document.querySelectorAll('.mini-drop').forEach(d=>{if(d!==drop)d.classList.add('h')});
+    drop.classList.toggle('h');
+  });
+  drop.querySelectorAll('.mini-opt').forEach(opt=>{
+    opt.addEventListener('click',e=>{e.stopPropagation();drop.classList.add('h');onSelect(opt)});
+  });
+  document.addEventListener('click',e=>{if(!drop.contains(e.target)&&e.target!==btn)drop.classList.add('h')});
+}
+
+// ── API with retry ──
+const CACHE=new Map();
 function cGet(k){const e=CACHE.get(k);return(e&&Date.now()<e.x)?e.v:null}
 function cSet(k,v,ttl){CACHE.set(k,{v,x:Date.now()+ttl})}
+async function fetchRetry(url,retries=2){
+  for(let i=0;i<=retries;i++){
+    try{
+      const r=await fetch(url);
+      if(r.ok)return r;
+      if(r.status>=500&&i<retries){await delay(400*(i+1));continue}
+      return r;
+    }catch(e){
+      if(i===retries)throw e;
+      await delay(400*(i+1));
+    }
+  }
+}
 async function ggeGet(url){
   const hit=cGet(url);if(hit)return hit;
-  const r=await fetch(url);if(!r.ok)return null;
-  const d=await r.json();cSet(url,d,60000);return d;
-}
-function wspUrl(server,name){
-  return`${GGE_API}/${server}/wsp/%22PN%22:%22${encodeURIComponent(name)}%22`;
+  try{
+    const r=await fetchRetry(url);if(!r||!r.ok)return null;
+    const d=await r.json();cSet(url,d,60000);return d;
+  }catch(e){console.warn('ggeGet failed:',e.message);return null}
 }
 function ggeUrl(server,lt,sv,lid){
-  // sv can be a page number or player name — encode properly
   const svEnc=encodeURIComponent(sv);
   let p=`%22LT%22:${lt},%22SV%22:%22${svEnc}%22`;
   if(lid)p=`%22LT%22:${lt},%22LID%22:${lid},%22SV%22:%22${svEnc}%22`;
@@ -245,7 +318,6 @@ function isGlobal(){return!!curEv().global}
 // ── Parse ──
 function parseRows(data){
   if(!data||data.return_code!==0)return{rows:[],total:0};
-
   const c=data.content||{};const L=c.L||[];const total=c.LR||c.T||L.length;
   const rows=L.map(entry=>{
     if(!Array.isArray(entry))return null;
@@ -260,16 +332,14 @@ function parseRows(data){
         allianceId=typeof obj[0]==='number'?obj[0]:null;
         members=typeof obj[2]==='number'?obj[2]:null;
       }
-    }
-    else{
+    }else{
       name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;
       members=obj.MC??obj.NM??obj.MCount??obj.memberCount??obj.members??obj.M??null;honor=obj.H??null;might=obj.MP??null;
       glory=obj.CF??null;level=obj.L??null;legendLevel=obj.LL??null;
       avp=obj.AVP??null;hf=obj.HF??null;rpt=obj.RPT??null;
       rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
       ap=obj.AP??null;vp=obj.VP??null;
-      banned=false;
-      prot=false;
+      banned=false;prot=false;
     }
     return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
   }).filter(Boolean);
@@ -280,13 +350,9 @@ function parseRows(data){
 async function loadTexts(){
   try{const r=await timeout(fetch(TEXTS_URL('pl')),4000);if(r.ok){const d=await r.json();if(d)S.texts=d;}}catch{}
 }
-
 async function loadEvents(){
-  const game = srvGame(S.server);
-  try{
-    const r=await timeout(fetch(EVENTS_URL(game)),6000);
-    if(r.ok){const d=await r.json();if(d)S.events=d;}
-  }catch{}
+  const game=srvGame(S.server);
+  try{const r=await timeout(fetch(EVENTS_URL(game)),6000);if(r.ok){const d=await r.json();if(d)S.events=d;}}catch{}
   if(!S.events.player){
     S.events={
       player:{
@@ -299,50 +365,68 @@ async function loadEvents(){
   }
   normalizeCats();validateEv();buildEventSel();
 }
-
 function validateEv(){const l=evList();if(!(S.eventKey in l))S.eventKey=Object.keys(l)[0]||''}
-
 function normalizeCats(){
-  // Reverse level categories so highest level appears first
   ['player','alliance'].forEach(mode=>{
     const evs=S.events[mode]||{};
     Object.values(evs).forEach(ev=>{
       if(!ev.categories)return;
       const isLevel=ev.categories.some(c=>c.name==='level_placeholder');
-      if(isLevel) ev.categories=[...ev.categories].reverse();
+      if(isLevel)ev.categories=[...ev.categories].reverse();
     });
   });
 }
 
 async function fetchRanking(sv){
   const isNameSearch=sv&&isNaN(+sv);
-  // For name search: use base event id without category filter
   const lt=isNameSearch?(curEv().id??curLT()):curLT();
   if(!lt||!S.server)return null;
   const lid=isNameSearch?'':curCat().id||'';
   try{
     const url=isGlobal()?ggeGlobalUrl(S.server,lt,sv,lid):ggeUrl(S.server,lt,sv,lid);
     return await timeout(ggeGet(url),10000);
-  }catch(e){console.warn('fetchRanking:',e.message);return null;}
+  }catch(e){console.warn('fetchRanking:',e.message);return null}
 }
 
 async function loadRanking(sv='1'){
   const rid=++S.reqId;S.loading=true;S.expandedRank=null;
   S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
   setSt('spin','Pobieranie...');showSpin();
-  if(!S.server||!curLT()){S.loading=false;setSt('err','Wybierz serwer lub ranking');showSt('⚙️','Wybierz serwer z listy','');return;}
+  if(!S.server||!curLT()){S.loading=false;setSt('err','Wybierz serwer lub ranking');showSt('⚙️','Wybierz serwer z listy','');return}
   const data=await fetchRanking(sv);
   if(rid!==S.reqId)return;
   S.loading=false;
-  if(!data){setSt('err','Błąd API');showSt('🔌','Błąd połączenia z API','Sprawdź połączenie z internetem i spróbuj ponownie.');return;}
+  if(!data){setSt('err','Błąd API');showSt('🔌','Błąd połączenia z API','Sprawdź połączenie z internetem i spróbuj ponownie.');return}
   const{rows,total}=parseRows(data);
+
+  // Detect fav movements before capturing new snapshot
+  if(!S.allianceMode) detectFavMovements(rows);
+
   S.rows=rows;S.totalRows=total;
-  if(!rows.length){setSt('live','Brak danych');showSt('📭','Brak danych dla tego rankingu','Ten event może nie być aktywny na wybranym serwerze.');return;}
+  if(!rows.length){setSt('live','Brak danych');showSt('📭','Brak danych dla tego rankingu','Ten event może nie być aktywny na wybranym serwerze.');return}
   const totalPgs=Math.max(1,Math.ceil(total/PAGE_SIZE));
   $('sTotal').textContent=fmtN(total);$('sPage').textContent=`${S.curPage} / ${totalPgs}`;
   setSt('live',`Dane LIVE · ${new Date().toLocaleTimeString('pl-PL')}`);
   if(S.server)localStorage.setItem('server',S.server);
+
   renderTable();renderPg();
+  // Capture snapshot AFTER render so prev ranks were available for indicators
+  captureSnapshot(rows);
+  writeHash();
+}
+
+function detectFavMovements(rows){
+  const game=srvGame(S.server);
+  S.favs.forEach(fav=>{
+    if(fav.game!==game||fav.server!==S.server)return;
+    const cur=rows.find(r=>r.name===fav.name);
+    if(!cur)return;
+    const prev=getPrevRank(fav.name);
+    if(prev==null)return;
+    if(prev>10&&cur.rank<=10) toast(`🚀 ${fav.name} wszedł do TOP 10 (#${cur.rank})`,'success');
+    else if(prev<=10&&cur.rank>10) toast(`📉 ${fav.name} wypadł z TOP 10 (#${cur.rank})`,'error');
+    else if(prev>3&&cur.rank<=3) toast(`🏅 ${fav.name} wszedł do TOP 3 (#${cur.rank})`,'success');
+  });
 }
 
 async function goPage(page){
@@ -356,94 +440,239 @@ window.goPage=goPage;
 function showSpin(){$('mainView').innerHTML=`<div class="st"><div class="spin"></div><div class="sm">Pobieranie danych...</div></div>`;$('pgBar').style.display='none'}
 function showSt(icon,msg,sub){$('mainView').innerHTML=`<div class="st"><div class="si">${icon}</div><div class="sm">${esc(msg)}</div>${sub?`<div class="ss">${esc(sub)}</div>`:''}</div>`;$('pgBar').style.display='none'}
 
+function applyFilter(rows){
+  let r=rows;
+  if(S.filter.alliance==='with')r=r.filter(x=>x.al);
+  else if(S.filter.alliance==='without')r=r.filter(x=>!x.al);
+  if(S.filter.alName){
+    const q=S.filter.alName.toLowerCase();
+    r=r.filter(x=>(x.al||'').toLowerCase().includes(q)||(x.alTag||'').toLowerCase().includes(q));
+  }
+  if(S.filter.minScore)r=r.filter(x=>(x.score||0)>=S.filter.minScore);
+  return r;
+}
+function applySort(rows){
+  if(!S.sort)return rows;
+  const {col,dir}=S.sort;
+  const sign=dir==='asc'?1:-1;
+  return[...rows].sort((a,b)=>{
+    const va=a[col],vb=b[col];
+    if(va==null&&vb==null)return 0;
+    if(va==null)return 1;if(vb==null)return-1;
+    if(typeof va==='string')return va.localeCompare(vb,'pl')*sign;
+    return(va-vb)*sign;
+  });
+}
+function visibleRows(){return applySort(applyFilter(S.rows))}
+
+function chgIndicator(name,curRk){
+  const prev=getPrevRank(name);
+  if(prev==null)return'';
+  if(prev===curRk)return`<span class="chg eq" title="Bez zmian">=</span>`;
+  if(prev>curRk)return`<span class="chg up" title="Awansował z #${prev}">▲${prev-curRk}</span>`;
+  return`<span class="chg dn" title="Spadł z #${prev}">▼${curRk-prev}</span>`;
+}
+
 function renderTable(){
-  const isAl=S.allianceMode;const max=S.rows[0]?.score||1;
+  const isAl=S.allianceMode;
+  const rows=visibleRows();
+  const max=S.rows[0]?.score||1;
+  const sortCol=S.sort?.col, sortDir=S.sort?.dir;
+  const sortable=(col,extraClass='')=>{
+    let cls=`sortable ${extraClass}`;
+    if(sortCol===col)cls+=' sort-'+sortDir;
+    return cls.trim();
+  };
   let h=`<div class="twrap"><table><thead><tr>
-    <th style="width:40px;text-align:center">#</th><th style="width:26px"></th>
-    <th>${isAl?'Sojusz':'Gracz'}</th>
-    <th class="r">${isAl?'Członkowie':'Sojusz'}</th>
-    <th class="r" style="min-width:150px">Wynik</th>
+    <th style="width:34px"></th>
+    <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
+    <th style="width:26px"></th>
+    <th class="${sortable('name')}" data-sort="name">${isAl?'Sojusz':'Gracz'}</th>
+    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}">${isAl?'Członkowie':'Sojusz'}</th>
+    <th class="${sortable('score','r')}" data-sort="score" style="min-width:150px">Wynik</th>
     <th style="width:75px"></th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
   const sq=S.lastSearch;
-  S.rows.forEach(r=>{
+  rows.forEach(r=>{
     const fv=isFav(r.name,game,S.server);
     const pct=Math.min(100,Math.round(((r.score||0)/max)*100));
     const badge=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':r.rank;
     const rkCls=r.rank<=3?'rk'+r.rank:'';
-      const exp=S.expandedRank===r.rank;
-    const bans='';
-    const pr='';
+    const exp=S.expandedRank===r.rank;
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
+    const inCmp=S.compare.some(c=>c.name===r.name&&c.server===S.server);
+    const chg=chgIndicator(r.name,r.rank);
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
       :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<span class="badge b-al">${esc(r.alTag||r.al.slice(0,5))}</span>`:'—'}</td>`;
-    h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}" data-rk="${r.rank}">
-      <td class="rk ${rkCls}">${badge}</td>
-      <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}">${fv?'⭐':'☆'}</button></td>
-      <td><span class="pn">${esc(r.name)}</span>${fvb}${bans}${pr}</td>
+    h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
+      <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="Zaznacz do porównania" onclick="event.stopPropagation()"></td>
+      <td class="rk ${rkCls}">${badge}${chg}</td>
+      <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?'Usuń z ulubionych':'Dodaj do ulubionych'}">${fv?'⭐':'☆'}</button></td>
+      <td><span class="pn">${esc(r.name)}</span>${fvb}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       <td></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
-      <td colspan="6"><div class="dp" id="dp_${r.rank}"></div></td>
+      <td colspan="7"><div class="dp" id="dp_${r.rank}"></div></td>
       </tr>`;
   });
   h+='</tbody></table></div>';
+  if(!rows.length&&S.rows.length){
+    h=`<div class="st"><div class="si">🔍</div><div class="sm">Brak wyników po filtrach</div><div class="ss">Spróbuj wyczyścić filtry lub zmienić kryteria.</div></div>`;
+  }
   $('mainView').innerHTML=h;
+
+  $('mainView').querySelectorAll('th.sortable').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const col=th.dataset.sort;
+      if(S.sort?.col===col){
+        if(S.sort.dir==='asc')S.sort={col,dir:'desc'};
+        else S.sort=null;
+      }else S.sort={col,dir:col==='rank'?'asc':'desc'};
+      S.expandedRank=null;
+      renderTable();
+    });
+  });
   $('mainView').querySelectorAll('.dr').forEach(tr=>{
     const rk=+tr.dataset.rk;
-    tr.querySelector('.sb').addEventListener('click',e=>{e.stopPropagation();const n=e.currentTarget.dataset.n;toggleFav(n,game,S.server,tr)});
+    const sb=tr.querySelector('.sb');
+    if(sb)sb.addEventListener('click',e=>{e.stopPropagation();const n=e.currentTarget.dataset.n;toggleFav(n,game,S.server,tr)});
+    const ck=tr.querySelector('.ck');
+    if(ck)ck.addEventListener('change',e=>{e.stopPropagation();toggleCompare(rk,ck.checked)});
     tr.addEventListener('click',()=>toggleDetail(rk));
   });
 }
 
-async function renderAllianceDetail(r, panel){
+function toggleCompare(rank,checked){
+  const r=S.rows.find(x=>x.rank===rank);if(!r)return;
+  const existingIdx=S.compare.findIndex(c=>c.name===r.name&&c.server===S.server);
+  if(checked){
+    if(existingIdx>=0)return;
+    if(S.compare.length>=MAX_COMPARE){
+      toast(`Maksymalnie ${MAX_COMPARE} elementów do porównania`,'error');
+      const ck=document.querySelector(`.ck[data-rk="${rank}"]`);if(ck)ck.checked=false;
+      return;
+    }
+    S.compare.push({name:r.name,type:S.allianceMode?'alliance':'player',server:S.server,data:{...r}});
+  }else{
+    if(existingIdx>=0)S.compare.splice(existingIdx,1);
+  }
+  updateCompareBar();
+  const tr=document.querySelector(`.dr[data-rk="${rank}"]`);
+  if(tr)tr.classList.toggle('sel',checked);
+}
+
+function updateCompareBar(){
+  const bar=$('cBar');
+  if(!S.compare.length){bar.classList.add('h');document.body.classList.remove('with-cbar');return}
+  bar.classList.remove('h');
+  document.body.classList.add('with-cbar');
+  $('cCount').textContent=S.compare.length;
+  $('cChips').innerHTML=S.compare.map((c,i)=>{
+    const icon=c.type==='alliance'?'🛡':'👤';
+    return`<span class="cChip">${icon} ${esc(c.name)} <button class="cChip-rm" data-i="${i}" aria-label="Usuń">×</button></span>`;
+  }).join('');
+  $('cChips').querySelectorAll('.cChip-rm').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const i=+b.dataset.i,c=S.compare[i];
+    S.compare.splice(i,1);
+    updateCompareBar();
+    const tr=document.querySelector(`.dr[data-rk="${c.data.rank}"]`);
+    if(tr&&c.server===S.server){tr.classList.remove('sel');const ck=tr.querySelector('.ck');if(ck)ck.checked=false}
+  }));
+}
+
+function openCompareModal(){
+  if(!S.compare.length){toast('Brak elementów do porównania');return}
+  const body=$('cmpBody');
+  const isAl=S.compare[0].type==='alliance';
+  const stats=isAl
+    ?[['rank','Pozycja','asc'],['score','Wynik','desc'],['members','Członkowie','desc']]
+    :[['rank','Pozycja','asc'],['score','Wynik','desc'],['honor','Honor','desc'],['might','Moc','desc'],['glory','Chwała','desc'],['legendLevel','Lv legendarny','desc'],['level','Poziom','desc'],['avp','Atak','desc'],['hf','Obrona','desc'],['rpt','Rabunek','desc']];
+
+  body.innerHTML=`<div class="cmp-grid">${
+    S.compare.map((c,idx)=>{
+      const r=c.data,srv=srvInfo(c.server);
+      const rowsHtml=stats.map(([key,label,dir])=>{
+        const val=r[key];
+        if(val==null)return'';
+        const vals=S.compare.map(x=>x.data[key]).filter(v=>v!=null);
+        let cls='';
+        if(vals.length>1){
+          const sorted=[...vals].sort((a,b)=>dir==='asc'?a-b:b-a);
+          if(val===sorted[0])cls='best';
+          else if(val===sorted[sorted.length-1])cls='worst';
+        }
+        const display=key==='rank'?'#'+val:(key==='legendLevel'||key==='level'?fmtN(val):fmtN(val));
+        return`<div class="cmp-row ${cls}"><span class="l">${label}</span><span class="v">${display}</span></div>`;
+      }).join('');
+      return`<div class="cmp-col">
+        <div class="cmp-name">${(c.type==='alliance'?'🛡 ':'👤 ')+esc(c.name)} <button class="cmp-rm" data-i="${idx}" aria-label="Usuń">×</button></div>
+        <div class="cmp-srv">${srv?srv.flag+' '+srv.name:esc(c.server)}${c.data.al?' · '+esc(c.data.al):''}</div>
+        ${rowsHtml||'<div class="cmp-row"><span class="l">Brak danych</span></div>'}
+      </div>`;
+    }).join('')
+  }</div>`;
+
+  body.querySelectorAll('.cmp-rm').forEach(b=>b.addEventListener('click',e=>{
+    const i=+b.dataset.i,c=S.compare[i];
+    S.compare.splice(i,1);
+    updateCompareBar();
+    if(c?.server===S.server){
+      const tr=document.querySelector(`.dr[data-rk="${c.data.rank}"]`);
+      if(tr){tr.classList.remove('sel');const ck=tr.querySelector('.ck');if(ck)ck.checked=false}
+    }
+    if(!S.compare.length){$('cmpBackdrop').classList.add('h');return}
+    openCompareModal();
+  }));
+
+  $('cmpBackdrop').classList.remove('h');
+}
+
+async function renderAllianceDetail(r,panel){
   panel.innerHTML=`<div class="dp"><div class="st" style="padding:20px"><div class="spin"></div></div></div>`;
-  if(!r.allianceId){panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Brak ID sojuszu</span></div>';return;}
+  if(!r.allianceId){panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Brak ID sojuszu</span></div>';return}
   try{
     const url=`${GGE_API}/${S.server}/ain/%22AID%22:${r.allianceId}`;
     const d=await timeout(ggeGet(url),8000);
-    if(!d||d.return_code!==0){panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Brak danych</span></div>';return;}
+    if(!d||d.return_code!==0){panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Brak danych</span></div>';return}
     const al=d.content.A||d.content;
     const members=Array.isArray(d.content.M)?d.content.M:[];
     const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
-
     const stats=[];
-    if(al.MP!=null) stats.push({v:fmtN(al.MP),l:'Moc',link:null});
-    if(al.CF!=null) stats.push({v:fmtN(al.CF),l:'Punkty chwały',link:null});
-    if(al.IS!=null) stats.push({v:al.IS?'Tak':'Nie',l:'Otwarty',link:null});
+    if(al.MP!=null)stats.push({v:fmtN(al.MP),l:'Moc'});
+    if(al.CF!=null)stats.push({v:fmtN(al.CF),l:'Punkty chwały'});
+    if(al.IS!=null)stats.push({v:al.IS?'Tak':'Nie',l:'Otwarty'});
     const memberCount=sorted.length||(al.M&&Array.isArray(al.M)?al.M.length:0)||(al.MC??al.NM??0);
-    stats.push({v:fmtN(memberCount),l:'Członkowie',link:null});
+    stats.push({v:fmtN(memberCount),l:'Członkowie'});
     if(sorted.length){
       const totalAvp=sorted.reduce((s,m)=>s+(m.AVP??0),0);
       const totalRpt=sorted.reduce((s,m)=>s+(m.RPT??0),0);
       const totalHf=sorted.reduce((s,m)=>s+(m.HF??0),0);
-      if(totalAvp>0) stats.push({v:fmtN(totalAvp),l:'Punkty ataku',link:null});
-      if(totalRpt>0) stats.push({v:fmtN(totalRpt),l:'Punkty rabunku',link:null});
-      if(totalHf>0)  stats.push({v:fmtN(totalHf),l:'Punkty obrony',link:null});
+      if(totalAvp>0)stats.push({v:fmtN(totalAvp),l:'Punkty ataku'});
+      if(totalRpt>0)stats.push({v:fmtN(totalRpt),l:'Punkty rabunku'});
+      if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Punkty obrony'});
     }
     if(al.D&&al.D!=='Opisz swój sojusz.'){
       const descHtml=al.D.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/&lt;br\s*\/?&gt;/gi,'<br>').replace(/&lt;\/?(b|i|u)&gt;/gi,'');
-      stats.push({v:descHtml,l:'Opis',link:null,html:true});
+      stats.push({v:descHtml,l:'Opis',html:true});
     }
-
     const statHtml=stats.map(st=>{
-      if(st.html) return`<div class="db db-plain" style="flex:1 1 200px;min-width:160px"><div class="db-v" style="font-size:12px;font-weight:400;line-height:1.5">${st.v}</div><div class="db-l">${st.l}</div></div>`;
+      if(st.html)return`<div class="db db-plain" style="flex:1 1 200px;min-width:160px"><div class="db-v" style="font-size:12px;font-weight:400;line-height:1.5">${st.v}</div><div class="db-l">${st.l}</div></div>`;
       return`<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${st.l}</div></div>`;
     }).join('');
-
     let membersHtml='';
     if(sorted.length){
       membersHtml=`<div style="width:100%;margin-top:10px;border-top:1px solid var(--c-border);padding-top:10px">
         <div style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Członkowie (${sorted.length})</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px">
-        ${sorted.map((m,i)=>{
+        ${sorted.map(m=>{
           const lvl=m.LL>0?`✦${m.LL}`:(m.L>=70?`✦${m.L}`:(m.L>0?`${m.L}`:'?'));
           return`<div class="db db-plain" style="min-width:0;padding:5px 8px;cursor:pointer" data-search-player="${esc(m.N||'')}">
             <div class="db-v" style="font-size:12px">${esc(m.N||'—')}</div>
@@ -452,7 +681,6 @@ async function renderAllianceDetail(r, panel){
         }).join('')}
         </div></div>`;
     }
-
     const favAl=isFavAl(r.name,S.server);
     panel.innerHTML=`<div class="dp" style="flex-direction:column;gap:8px">
       <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
@@ -465,11 +693,8 @@ async function renderAllianceDetail(r, panel){
     </div>`;
     $(`dfaval_${r.rank}`)?.addEventListener('click',e=>{
       e.stopPropagation();
-      const btn=$(`dfaval_${r.rank}`);
-      toggleFavAl(r.name,S.server,r.allianceId,btn);
+      toggleFavAl(r.name,S.server,r.allianceId,$(`dfaval_${r.rank}`));
     });
-
-    // Click on member → search for them in player ranking
     panel.querySelectorAll('[data-search-player]').forEach(el=>{
       el.addEventListener('click',async e=>{
         e.stopPropagation();
@@ -481,7 +706,7 @@ async function renderAllianceDetail(r, panel){
         await loadRanking(name);
       });
     });
-  }catch(e){console.warn('renderAllianceDetail:',e);panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Błąd pobierania danych</span></div>';}
+  }catch(e){console.warn('renderAllianceDetail:',e);panel.innerHTML='<div class="dp"><span style="color:var(--c-muted);font-size:12px">Błąd pobierania danych</span></div>'}
 }
 
 function toggleDetail(rank){
@@ -489,7 +714,7 @@ function toggleDetail(rank){
   const xtr=document.querySelector(`.xr[data-for="${rank}"]`);
   const dtr=document.querySelector(`.dr[data-rk="${rank}"]`);
   if(!xtr)return;
-  if(S.expandedRank===rank){xtr.style.display='none';dtr?.classList.remove('exp');S.expandedRank=null;return;}
+  if(S.expandedRank===rank){xtr.style.display='none';dtr?.classList.remove('exp');S.expandedRank=null;return}
   if(S.expandedRank!=null){
     const px=document.querySelector(`.xr[data-for="${S.expandedRank}"]`);if(px)px.style.display='none';
     document.querySelector(`.dr[data-rk="${S.expandedRank}"]`)?.classList.remove('exp');
@@ -498,33 +723,41 @@ function toggleDetail(rank){
   const panel=$(`dp_${rank}`);if(!panel)return;
   const game=srvGame(S.server);
   const fv=isFav(r.name,game,S.server);
-  if(S.allianceMode){renderAllianceDetail(r,panel);return;}
+  if(S.allianceMode){renderAllianceDetail(r,panel);return}
   const stats=[];
-  const pn=r.name; // player name for search links
-  if(r.honor!==undefined&&r.honor!==null)  stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn});
-  if(r.might!==undefined&&r.might!==null)  stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player',search:pn});
-  if(r.glory!==undefined&&r.glory!==null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:null});
-  if(r.legendLevel!=null&&r.legendLevel>0) stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
-  else if(r.level!=null&&r.level>=70) stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
-  else if(r.level!=null&&r.level>0) stats.push({v:'Lv '+r.level,l:'Poziom',link:null});
-  if(r.avp!=null)    stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:null});
-  if(r.hf!=null)     stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:null});
-  if(r.rpt!=null)    stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:null});
-  if(r.rank2!=null)  stats.push({v:fmtN(r.rank2),l:'Ranga',link:null});
-  if(r.pre!=null&&r.pre>0) stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:null});
-  if(r.suf!=null&&r.suf>0) stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:null});
-  if(r.score!=null)  stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:null});
-  if(r.al)           stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
-  if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:null});
+  const pn=r.name;
+  if(r.honor!=null)stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn});
+  if(r.might!=null)stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player',search:pn});
+  if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały'});
+  if(r.legendLevel!=null&&r.legendLevel>0)stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
+  else if(r.level!=null&&r.level>=70)stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
+  else if(r.level!=null&&r.level>0)stats.push({v:'Lv '+r.level,l:'Poziom'});
+  if(r.avp!=null)stats.push({v:fmtN(r.avp),l:'Punkty ataku'});
+  if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Punkty obrony'});
+  if(r.rpt!=null)stats.push({v:fmtN(r.rpt),l:'Punkty rabunku'});
+  if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga'});
+  if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)'});
+  if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)'});
+  if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu'});
+  if(r.al)stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
+  if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie'});
   const statHtml=stats.map(st=>{
     if(st.link)return`<div class="db" title="Otwórz ranking: ${evname(st.link)}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div><div class="db-hint">→ ${evname(st.link)}</div></div>`;
     return`<div class="db db-plain"><div class="db-v">${st.v}</div><div class="db-l">${st.l}</div></div>`;
   }).join('');
+  // Mini-sparkline of historical rank (current ranking only)
+  const series=getRankSeriesForKey(r.name,histKey(),12);
+  const spkHtml=series.length>=2?`
+    <div class="spk-wrap" style="width:100%">
+      <div class="spk-lbl"><span>📈 Historia pozycji (${series.length} pkt)</span><span>#${series[0].rk} → #${r.rank}</span></div>
+      ${renderSparklineSVG(series)}
+    </div>`:'';
   panel.innerHTML=`
     <div class="ds">${statHtml||'<span style="color:var(--c-muted);font-size:12px">Brak szczegółowych danych</span>'}</div>
     <div class="da">
-<button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?'⭐ Obserwowany':'☆ Obserwuj'}</button>
-    </div>`;
+      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?'⭐ Obserwowany':'☆ Obserwuj'}</button>
+    </div>
+    ${spkHtml}`;
   panel.querySelectorAll('.db[data-link]').forEach(el=>{
     el.addEventListener('click',async()=>{
       const linkKey=el.dataset.link,linkMode=el.dataset.mode,searchVal=el.dataset.search;
@@ -537,29 +770,48 @@ function toggleDetail(rank){
       }
       if(evList()[linkKey]){S.eventKey=linkKey;buildEventSel();}
       S.catIdx=0;S.curPage=1;S.expandedRank=null;
-      if(searchVal){$('searchInput').value=searchVal;await loadRanking(searchVal);}
-      else{$('searchInput').value='';await loadRanking('1');}
+      if(searchVal){$('searchInput').value=searchVal;await loadRanking(searchVal)}
+      else{$('searchInput').value='';await loadRanking('1')}
     });
   });
   $(`dfav_${rank}`)?.addEventListener('click',e=>{
     e.stopPropagation();toggleFav(r.name,game,S.server,null);
-    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now);}
+    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now)}
   });
+}
+
+function renderSparklineSVG(series,w=240,h=40){
+  if(series.length<2)return`<div class="spk-empty">Za mało danych historycznych</div>`;
+  const ranks=series.map(s=>s.rk);
+  const min=Math.min(...ranks),max=Math.max(...ranks);
+  const range=max-min||1;
+  const pad=3;
+  const points=series.map((s,i)=>{
+    const x=pad+(i/(series.length-1))*(w-pad*2);
+    const y=pad+((s.rk-min)/range)*(h-pad*2);
+    return[x.toFixed(1),y.toFixed(1)];
+  });
+  const last=points[points.length-1];
+  const polyPts=points.map(p=>p.join(',')).join(' ');
+  return`<svg class="spk" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:${h}px">
+    <polyline class="spk-line" points="${polyPts}"/>
+    <circle class="spk-dot" cx="${last[0]}" cy="${last[1]}" r="2.5"/>
+  </svg>`;
 }
 
 function renderPg(){
   const pg=$('pgBar');const total=Math.max(1,Math.ceil(S.totalRows/PAGE_SIZE));
-  if(total<=1){pg.style.display='none';return;}
+  if(total<=1){pg.style.display='none';return}
   pg.style.display='flex';
   const cur=S.curPage;
-  let h=`<button class="pgb" onclick="goPage(1)" ${cur===1?'disabled':''}>«</button>`;
-  h+=`<button class="pgb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''}>‹</button>`;
+  let h=`<button class="pgb" onclick="goPage(1)" ${cur===1?'disabled':''} aria-label="Pierwsza strona">«</button>`;
+  h+=`<button class="pgb" onclick="goPage(${cur-1})" ${cur===1?'disabled':''} aria-label="Poprzednia">‹</button>`;
   const s=Math.max(1,cur-2),e=Math.min(total,cur+2);
   if(s>1)h+=`<span class="pgi">…</span>`;
-  for(let i=s;i<=e;i++)h+=`<button class="pgb${i===cur?' cur':''}" onclick="goPage(${i})">${i}</button>`;
+  for(let i=s;i<=e;i++)h+=`<button class="pgb${i===cur?' cur':''}" onclick="goPage(${i})" aria-label="Strona ${i}">${i}</button>`;
   if(e<total)h+=`<span class="pgi">…</span>`;
-  h+=`<button class="pgb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''}>›</button>`;
-  h+=`<button class="pgb" onclick="goPage(${total})" ${cur===total?'disabled':''}>»</button>`;
+  h+=`<button class="pgb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''} aria-label="Następna">›</button>`;
+  h+=`<button class="pgb" onclick="goPage(${total})" ${cur===total?'disabled':''} aria-label="Ostatnia">»</button>`;
   h+=`<span class="pgi">Str. ${cur} z ${total} · ${fmtN(S.totalRows)} graczy</span>`;
   pg.innerHTML=h;
 }
@@ -567,72 +819,73 @@ function renderPg(){
 // ── Event select & cats ──
 function buildEventSel(){
   const sel=$('eventSelect');const list=evList();const keys=Object.keys(list);
-  if(!keys.length){sel.innerHTML='<option>Brak</option>';return;}
+  if(!keys.length){sel.innerHTML='<option>Brak</option>';return}
   sel.innerHTML=keys.map(k=>`<option value="${k}">${evname(k)}</option>`).join('');
   if(!(S.eventKey in list))S.eventKey=keys[0];
   sel.value=S.eventKey;buildCats();
 }
-
 function buildCats(){
   const cb=$('catBar');const cats=curEv().categories;
-  if(!cats?.length||cats.length<=1){cb.style.display='none';return;}
+  if(!cats?.length||cats.length<=1){cb.style.display='none';return}
   cb.style.display='flex';
   cb.innerHTML=cats.map((c,i)=>{const n=catname(c);return n?`<button class="cat${i===S.catIdx?' on':''}" data-i="${i}">${n}</button>`:''}).join('');
-  cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;buildCats();await loadRanking();}));
+  cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;buildCats();await loadRanking()}));
 }
-
-function updateTypeSeg(){$('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.classList.toggle('on',b.dataset.v===(S.allianceMode?'alliance':'player')))}
+function updateTypeSeg(){
+  $('typeSeg').querySelectorAll('.seg-b').forEach(b=>{
+    const active=b.dataset.v===(S.allianceMode?'alliance':'player');
+    b.classList.toggle('on',active);
+    b.setAttribute('aria-selected',active);
+  });
+}
 
 // ── Favorites ──
 function updFavCnt(){const n=S.favs.length+S.favAls.length;$('favCnt').textContent=n;$('favBtn').classList.toggle('primary',n>0)}
-
 function isFavAl(name,server){return S.favAls.some(f=>f.name===name&&f.server===server)}
 function saveFavAls(){localStorage.setItem('gge_favAls_v1',JSON.stringify(S.favAls))}
-
 function toggleFavAl(name,server,allianceId,btn){
   if(isFavAl(name,server)){
     S.favAls=S.favAls.filter(f=>!(f.name===name&&f.server===server));
     toast('Usunięto sojusz z obserwowanych');
-  } else {
+  }else{
     S.favAls.push({name,server,allianceId,game:srvGame(server)});
-    toast(`Obserwujesz sojusz ${name} ⭐`);
+    toast(`Obserwujesz sojusz ${name} ⭐`,'success');
   }
   saveFavAls();updFavCnt();
-  if(btn){const now=isFavAl(name,server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now);}
+  if(btn){const now=isFavAl(name,server);btn.textContent=now?'⭐ Obserwowany':'☆ Obserwuj';btn.classList.toggle('primary',now)}
 }
-
 function toggleFav(name,game,server,tr){
-  if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast('Usunięto z obserwowanych');}
-  else{S.favs.push({name,game,server});toast(`Obserwujesz ${name} ⭐`);}
+  if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast('Usunięto z obserwowanych')}
+  else{S.favs.push({name,game,server});toast(`Obserwujesz ${name} ⭐`,'success')}
   saveFavs();updFavCnt();
-  document.querySelectorAll(`.sb[data-n="${esc(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.textContent=isFav(name,game,server)?'⭐':'☆';});
+  document.querySelectorAll(`.sb[data-n="${esc(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.textContent=isFav(name,game,server)?'⭐':'☆'});
   if(tr)tr.classList.toggle('fav',isFav(name,game,server));
 }
 
 function renderFavPage(){
   const grid=$('favGrid');
-  if(!S.favs.length&&!S.favAls.length){grid.innerHTML='<div class="fe">Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.</div>';return;}
+  if(!S.favs.length&&!S.favAls.length){grid.innerHTML='<div class="fe">Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.</div>';return}
   grid.innerHTML='';
-
-  // Players
   S.favs.forEach(fav=>{
     const card=document.createElement('div');card.className='fc';
     const si=srvInfo(fav.server);
     const label=si?`${si.flag} ${si.name}`:fav.server;
-    card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}">×</button></div><div class="frr" id="fr_${esc(fav.name).replace(/\W/g,'_')}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
-    card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast('Usunięto');});
+    const cid='fr_'+fav.name.replace(/\W/g,'_');
+    const spkId='spk_'+fav.name.replace(/\W/g,'_')+'_'+fav.server;
+    card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="Usuń">×</button></div>
+      <div class="frr" id="${cid}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>
+      <div id="${spkId}"></div>`;
+    card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast('Usunięto')});
     grid.appendChild(card);
-    loadFavRanks(fav,card);
+    loadFavRanks(fav,card,spkId);
   });
-
-  // Alliances
   S.favAls.forEach(fav=>{
     const card=document.createElement('div');card.className='fc';
     const si=srvInfo(fav.server);
     const label=si?`${si.flag} ${si.name}`:fav.server;
     const cid='fral_'+fav.name.replace(/\W/g,'_');
-    card.innerHTML=`<div class="fch"><div><div class="fcn">🛡 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-s="${fav.server}">×</button></div><div class="frr" id="${cid}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
-    card.querySelector('.fcd').addEventListener('click',function(){S.favAls=S.favAls.filter(f=>!(f.name===this.dataset.n&&f.server===this.dataset.s));saveFavAls();updFavCnt();renderFavPage();toast('Usunięto');});
+    card.innerHTML=`<div class="fch"><div><div class="fcn">🛡 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-s="${fav.server}" aria-label="Usuń">×</button></div><div class="frr" id="${cid}"><div class="fr"><span class="fl">⏳ Pobieranie...</span></div></div>`;
+    card.querySelector('.fcd').addEventListener('click',function(){S.favAls=S.favAls.filter(f=>!(f.name===this.dataset.n&&f.server===this.dataset.s));saveFavAls();updFavCnt();renderFavPage();toast('Usunięto')});
     grid.appendChild(card);
     loadFavAlStats(fav,card,cid);
   });
@@ -644,12 +897,12 @@ async function loadFavAlStats(fav,card,cid){
     const url=`${GGE_API}/${fav.server}/ain/%22AID%22:${fav.allianceId}`;
     const d=await ggeGet(url);
     if(!el.isConnected)return;
-    if(!d||d.return_code!==0){el.innerHTML='<div class="fr"><span class="fl" style="color:var(--c-muted)">Brak danych</span></div>';return;}
+    if(!d||d.return_code!==0){el.innerHTML='<div class="fr"><span class="fl" style="color:var(--c-muted)">Brak danych</span></div>';return}
     const al=d.content.A||d.content;
     const members=Array.isArray(d.content.M)?d.content.M:[];
     const rows=[];
-    if(al.MP!=null) rows.push({l:'Moc',v:fmtN(al.MP)});
-    if(al.CF!=null) rows.push({l:'Punkty chwały',v:fmtN(al.CF)});
+    if(al.MP!=null)rows.push({l:'Moc',v:fmtN(al.MP)});
+    if(al.CF!=null)rows.push({l:'Punkty chwały',v:fmtN(al.CF)});
     rows.push({l:'Członkowie',v:fmtN(members.length)});
     el.innerHTML=rows.map(r=>`<div class="fr"><span class="fl">${r.l}</span><span class="fp2">${r.v}</span></div>`).join('');
   }catch{
@@ -657,10 +910,9 @@ async function loadFavAlStats(fav,card,cid){
   }
 }
 
-async function loadFavRanks(fav,card){
+async function loadFavRanks(fav,card,spkId){
   const cid='fr_'+fav.name.replace(/\W/g,'_');const el=card.querySelector('#'+CSS.escape(cid));if(!el)return;
   const evs=S.events?.player||{};const res=[];
-  // Use hgh with player name as SV — correct encoding
   for(const[key,ev]of Object.entries(evs)){
     if(!ev.id)continue;
     try{
@@ -675,11 +927,143 @@ async function loadFavRanks(fav,card){
   if(!el.isConnected)return;
   el.innerHTML=res.length?res.map(r=>`<div class="fr"><span class="fl">${esc(evname(r.key))}</span><span class="fp2${r.rank<=3?' g':''}">#${r.rank}</span><span class="fs">${fmtN(r.score)}</span></div>`).join('')
     :'<div class="fr"><span class="fl" style="color:var(--c-muted)">Nie znaleziono</span></div>';
+  // Sparkline (best key for this player)
+  const spkEl=card.querySelector('#'+CSS.escape(spkId));
+  if(spkEl){
+    const series=getBestRankSeries(fav.name,fav.server,12);
+    if(series.length>=2){
+      spkEl.innerHTML=`<div class="spk-wrap">
+        <div class="spk-lbl"><span>📈 Historia (${series.length} pkt)</span><span>#${series[0].rk} → #${series[series.length-1].rk}</span></div>
+        ${renderSparklineSVG(series,260,32)}
+      </div>`;
+    }
+  }
+}
+
+// ── Export ──
+function downloadFile(name,content,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},100);
+  toast(`📥 Pobrano ${name}`,'success');
+}
+function exportData(fmt){
+  const rows=visibleRows();
+  if(!rows.length){toast('Brak danych do eksportu','error');return}
+  const stamp=new Date().toISOString().slice(0,16).replace(/[T:]/g,'-');
+  const srv=srvInfo(S.server)?.code||S.server;
+  const baseName=`gge_${srv}_${S.eventKey}_p${S.curPage}_${stamp}`;
+  if(fmt==='csv'){
+    const headers=S.allianceMode
+      ?['rank','name','allianceId','members','score']
+      :['rank','name','al','alTag','members','score','honor','might','glory','level','legendLevel','avp','hf','rpt'];
+    const csv=[headers.join(',')];
+    rows.forEach(r=>{
+      const cells=headers.map(h=>{
+        const v=r[h]??'';const s=String(v);
+        return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;
+      });
+      csv.push(cells.join(','));
+    });
+    downloadFile(`${baseName}.csv`,csv.join('\n'),'text/csv;charset=utf-8');
+  }else if(fmt==='json'){
+    const data={
+      server:srv,serverName:srvInfo(S.server)?.name,game:srvGame(S.server),
+      event:S.eventKey,eventName:evname(S.eventKey),category:catname(curCat()),
+      type:S.allianceMode?'alliance':'player',
+      page:S.curPage,total:S.totalRows,
+      timestamp:new Date().toISOString(),
+      filters:S.filter,
+      rows
+    };
+    downloadFile(`${baseName}.json`,JSON.stringify(data,null,2),'application/json');
+  }else if(fmt==='link'){
+    writeHash();
+    setTimeout(()=>{
+      const url=location.href;
+      if(navigator.clipboard?.writeText){
+        navigator.clipboard.writeText(url).then(()=>toast('🔗 Link skopiowany do schowka','success')).catch(()=>toast('Skopiuj URL ręcznie','error'));
+      }else toast('Skopiuj URL ręcznie','error');
+    },200);
+  }
+}
+
+// ── Auto-refresh ──
+let _arTimer=null,_arCount=0;
+function fmtCountdown(s){const m=Math.floor(s/60),ss=s%60;return m?`${m}:${String(ss).padStart(2,'0')}`:`${s}s`}
+function stopAutoRef(){if(_arTimer)clearInterval(_arTimer);_arTimer=null;$('sAutoR').style.display='none'}
+function startAutoRef(){
+  stopAutoRef();
+  if(!S.autoRef)return;
+  _arCount=S.autoRef;
+  $('sAutoR').style.display='';
+  $('sAutoRT').textContent=fmtCountdown(_arCount);
+  _arTimer=setInterval(()=>{
+    _arCount--;
+    $('sAutoRT').textContent=fmtCountdown(_arCount);
+    if(_arCount<=0){_arCount=S.autoRef;const sv=S.lastSearch||String((S.curPage-1)*PAGE_SIZE+1);loadRanking(sv)}
+  },1000);
+}
+function updateAutoRefUI(){
+  $('autoRefBtn').classList.toggle('on',S.autoRef>0);
+  $('autoRefBtn').textContent=S.autoRef>0?`⏱ ${fmtCountdown(S.autoRef)}`:'⏱ Auto';
+  $('autoRefDrop').querySelectorAll('.mini-opt').forEach(o=>o.classList.toggle('on',+o.dataset.v===S.autoRef));
+}
+
+// ── Filters ──
+function setupFilters(){
+  $('filterBtn').addEventListener('click',()=>{
+    const bar=$('fBar');
+    const hiding=!bar.classList.contains('h');
+    bar.classList.toggle('h');
+    $('filterBtn').setAttribute('aria-expanded',!hiding);
+    $('filterBtn').classList.toggle('on',!hiding);
+  });
+  $('fAlSeg').querySelectorAll('.seg-b').forEach(b=>b.addEventListener('click',()=>{
+    $('fAlSeg').querySelectorAll('.seg-b').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    S.filter.alliance=b.dataset.f;
+    renderTable();
+  }));
+  $('fAlName').addEventListener('input',()=>{S.filter.alName=$('fAlName').value.trim();renderTable()});
+  $('fMinScore').addEventListener('input',()=>{S.filter.minScore=+$('fMinScore').value||0;renderTable()});
+  $('fClear').addEventListener('click',()=>{
+    S.filter={alliance:'all',alName:'',minScore:0};
+    $('fAlSeg').querySelectorAll('.seg-b').forEach(x=>x.classList.toggle('on',x.dataset.f==='all'));
+    $('fAlName').value='';$('fMinScore').value='';
+    renderTable();
+  });
+}
+
+// ── Keyboard shortcuts ──
+function setupKeyboard(){
+  document.addEventListener('keydown',e=>{
+    const inInput=e.target.matches('input, textarea, select');
+    if(e.key==='Escape'){
+      document.querySelectorAll('.mini-drop:not(.h),.srv-drop:not(.h)').forEach(d=>d.classList.add('h'));
+      document.querySelectorAll('.srv-btn.open').forEach(b=>b.classList.remove('open'));
+      if(!$('cmpBackdrop').classList.contains('h'))$('cmpBackdrop').classList.add('h');
+      else if(!$('mBackdrop').classList.contains('h'))$('mBackdrop').classList.add('h');
+      else if(S.expandedRank!=null)toggleDetail(S.expandedRank);
+      if(inInput)e.target.blur();
+      return;
+    }
+    if(inInput)return;
+    if(e.key==='/'){e.preventDefault();$('searchInput').focus();return}
+    if(e.key==='r'||e.key==='R'){if(!e.ctrlKey&&!e.metaKey){$('refreshBtn').click()}return}
+    if(e.key==='f'||e.key==='F'){$('filterBtn').click();return}
+    if(e.key==='e'||e.key==='E'){$('exportBtn').click();return}
+    if(e.shiftKey&&(e.key==='D'||e.key==='d')){toggleTheme();return}
+    if(e.key==='ArrowLeft'){if(S.curPage>1)goPage(S.curPage-1);return}
+    if(e.key==='ArrowRight'){const t=Math.ceil(S.totalRows/PAGE_SIZE);if(S.curPage<t)goPage(S.curPage+1);return}
+  });
 }
 
 // ── Wiring ──
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});
+  b.classList.add('on');b.setAttribute('aria-selected','true');
   S.page=b.dataset.p;
   $('mainView').style.display=S.page==='ranking'?'block':'none';
   $('pgBar').style.display=S.page==='ranking'&&S.rows.length?'flex':'none';
@@ -688,46 +1072,39 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
 }));
 
 $('favBtn').addEventListener('click',()=>{
-  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('on'));
-  document.querySelector('[data-p="favorites"]').classList.add('on');
+  document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});
+  const tab=document.querySelector('[data-p="favorites"]');tab.classList.add('on');tab.setAttribute('aria-selected','true');
   S.page='favorites';$('mainView').style.display='none';$('pgBar').style.display='none';$('favView').style.display='block';renderFavPage();
 });
 
-// Main server dropdown
-const mainDrop = buildSrvDropdown('srvList','srvBtn','srvSearch', async h=>{
+$('themeBtn').addEventListener('click',toggleTheme);
+
+const mainDrop=buildSrvDropdown('srvList','srvBtn','srvSearch',async h=>{
   if(h===S.server)return;
   const prevGame=srvGame(S.server);
-  S.server=h;
-  mainDrop.setActive(h);
-  // reload events if game changed
-  if(srvGame(h)!==prevGame){
-    S.eventKey='';S.events={};
-    await loadEvents();
-  }
-  S.curPage=1;await loadRanking();
-}, S.server);
+  S.server=h;mainDrop.setActive(h);
+  if(srvGame(h)!==prevGame){S.eventKey='';S.events={};await loadEvents()}
+  S.curPage=1;S.compare=[];updateCompareBar();
+  await loadRanking();
+},S.server);
 
-// Modal server dropdown
-let modalServer = S.server;
-const modalDrop = buildSrvDropdown('mSrvList','mSrvBtn','mSrvSearch', h=>{
-  modalServer=h;
-  modalDrop.setActive(h);
-}, modalServer);
+let modalServer=S.server;
+const modalDrop=buildSrvDropdown('mSrvList','mSrvBtn','mSrvSearch',h=>{modalServer=h;modalDrop.setActive(h)},modalServer);
 
-$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;buildCats();await loadRanking();});
+$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();buildCats();await loadRanking()});
 
 $('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.addEventListener('click',async()=>{
   if((b.dataset.v==='alliance')===S.allianceMode)return;
-  S.allianceMode=b.dataset.v==='alliance';S.catIdx=0;S.curPage=1;
+  S.allianceMode=b.dataset.v==='alliance';S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();
   const pair=S.events.player_to_alliance?.find(e=>e[+!S.allianceMode]===S.eventKey);
   if(pair)S.eventKey=pair[+S.allianceMode];
   updateTypeSeg();buildEventSel();await loadRanking();
 }));
 
-const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;S.curPage=1;await loadRanking(v);};
+const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;S.curPage=1;await loadRanking(v)};
 $('goSearch').addEventListener('click',doSearch);
-$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
-$('refreshBtn').addEventListener('click',()=>{S.curPage=1;loadRanking();});
+$('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+$('refreshBtn').addEventListener('click',()=>{S.curPage=1;loadRanking()});
 
 $('addBtn').addEventListener('click',()=>{
   $('mName').value='';$('mErr').style.display='none';
@@ -735,33 +1112,70 @@ $('addBtn').addEventListener('click',()=>{
   $('mBackdrop').classList.remove('h');$('mName').focus();
 });
 $('mCancel').addEventListener('click',()=>$('mBackdrop').classList.add('h'));
-$('mBackdrop').addEventListener('click',e=>{if(e.target===$('mBackdrop'))$('mBackdrop').classList.add('h');});
+$('mBackdrop').addEventListener('click',e=>{if(e.target===$('mBackdrop'))$('mBackdrop').classList.add('h')});
 $('mOk').addEventListener('click',()=>{
   const name=$('mName').value.trim();
   const server=modalServer;
   const game=srvGame(server);
   const err=$('mErr');err.style.display='none';
-  if(!name){err.textContent='Wpisz nick!';err.style.display='block';return;}
-  if(isFav(name,game,server)){err.textContent='Już obserwujesz!';err.style.display='block';return;}
+  if(!name){err.textContent='Wpisz nick!';err.style.display='block';return}
+  if(isFav(name,game,server)){err.textContent='Już obserwujesz!';err.style.display='block';return}
   S.favs.push({name,game,server});saveFavs();updFavCnt();
-  $('mBackdrop').classList.add('h');toast(`Obserwujesz ${name} ⭐`);
+  $('mBackdrop').classList.add('h');toast(`Obserwujesz ${name} ⭐`,'success');
   if(S.page==='favorites')renderFavPage();
 });
-$('mName').addEventListener('keydown',e=>{if(e.key==='Enter')$('mOk').click();});
-$('clearFavBtn').addEventListener('click',()=>{if(confirm('Usunąć wszystkich obserwowanych?')){S.favs=[];saveFavs();updFavCnt();renderFavPage();}});
+$('mName').addEventListener('keydown',e=>{if(e.key==='Enter')$('mOk').click()});
+$('clearFavBtn').addEventListener('click',()=>{if(confirm('Usunąć wszystkich obserwowanych?')){S.favs=[];S.favAls=[];saveFavs();saveFavAls();updFavCnt();renderFavPage()}});
+
+// Compare
+$('cOpenBtn').addEventListener('click',openCompareModal);
+$('cClearBtn').addEventListener('click',()=>{
+  S.compare=[];updateCompareBar();
+  document.querySelectorAll('.dr.sel').forEach(tr=>{tr.classList.remove('sel');const ck=tr.querySelector('.ck');if(ck)ck.checked=false});
+});
+$('cmpClose').addEventListener('click',()=>$('cmpBackdrop').classList.add('h'));
+$('cmpBackdrop').addEventListener('click',e=>{if(e.target===$('cmpBackdrop'))$('cmpBackdrop').classList.add('h')});
+
+// Mini dropdowns
+setupMiniDrop('exportBtn','expDrop',opt=>exportData(opt.dataset.fmt));
+setupMiniDrop('autoRefBtn','autoRefDrop',opt=>{
+  S.autoRef=+opt.dataset.v;
+  localStorage.setItem('gge_autoref',S.autoRef);
+  updateAutoRefUI();
+  startAutoRef();
+  toast(S.autoRef?`Auto-odświeżanie: co ${fmtCountdown(S.autoRef)}`:'Auto-odświeżanie wyłączone');
+});
+
+setupFilters();
+setupKeyboard();
 
 // ── Init ──
 let initDone=false;
-setTimeout(()=>{if(!initDone){setSt('err','Przekroczono czas');showSt('⏱','Ładowanie trwało zbyt długo','Odśwież stronę (F5).');}},20000);
+setTimeout(()=>{if(!initDone){setSt('err','Przekroczono czas');showSt('⏱','Ładowanie trwało zbyt długo','Odśwież stronę (F5).')}},20000);
 
 async function init(){
+  loadHistory();
+  applyTheme(S.theme);
+  updateAutoRefUI();
+
+  // Read URL hash params
+  const h=readHash();
+  if(h.server&&ALL_SERVERS.find(s=>s.h===h.server)){S.server=h.server;mainDrop.setActive(h.server)}
+  if(h.type==='a')S.allianceMode=true;
+  if(h.event)S.eventKey=h.event;
+  if(h.cat!=null)S.catIdx=+h.cat;
+  if(h.page)S.curPage=h.page;
+  if(h.q)$('searchInput').value=h.q;
+
   updFavCnt();updateTypeSeg();showSpin();setSt('spin','Ładowanie...');
-  try{setSt('spin','Tłumaczenia...');await timeout(loadTexts(),4500).catch(()=>{});}catch{}
-  try{setSt('spin','Eventy...');await timeout(loadEvents(),6000).catch(()=>{});}catch{}
+  try{setSt('spin','Tłumaczenia...');await timeout(loadTexts(),4500).catch(()=>{})}catch{}
+  try{setSt('spin','Eventy...');await timeout(loadEvents(),6000).catch(()=>{})}catch{}
+  updateTypeSeg();
   initDone=true;
   setSt('spin','Pobieranie rankingu...');
-  S.curPage=1;
-  await loadRanking();
+  const initSv=h.q||(S.curPage>1?String((S.curPage-1)*PAGE_SIZE+1):'1');
+  await loadRanking(initSv);
+  startAutoRef();
 }
 
 init();
