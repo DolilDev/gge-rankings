@@ -90,7 +90,8 @@ th.sort-asc,th.sort-desc{color:var(--c-blue)}
 th.sort-asc::after{content:' ▲';font-size:8px}
 th.sort-desc::after{content:' ▼';font-size:8px}
 
-tr.dr{border-bottom:1px solid var(--c-border2);cursor:pointer;transition:background .1s}
+tr.dr{border-bottom:1px solid var(--c-border2);cursor:pointer;transition:background .1s;height:44px}
+tr.dr td{height:44px}
 
 tr.dr:hover{background:var(--c-hover)}tr.dr.fav{background:var(--c-fav-bg)}tr.dr.exp{background:var(--c-exp-bg)}tr.dr.sel{background:rgba(88,166,255,.1);outline:1px solid rgba(88,166,255,.3)}
 
