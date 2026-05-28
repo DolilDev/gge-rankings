@@ -327,6 +327,13 @@ body.with-cbar{padding-bottom:78px}
 .al-link{background:none;border:none;cursor:pointer;font-family:var(--font);font-weight:500;font-size:13px;color:var(--c-bright);padding:0;text-align:left;transition:color .15s}
 .al-link:hover{color:var(--c-blue);text-decoration:underline}
 
+/* Clickable alliance tag → filter the ranking to that alliance */
+.b-al.al-tag{cursor:pointer;font-family:var(--font);line-height:1.4}
+.b-al.al-tag:hover{background:rgba(88,166,255,.22);text-decoration:underline}
+
+/* Alliance aggregates banner (count / total / average score) */
+.al-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 16px;background:rgba(88,166,255,.08);border-bottom:1px solid var(--c-border);font-size:12px;font-weight:500;color:var(--c-text)}
+
 /* Search highlight */
 tr.dr.match{background:var(--c-match-bg)!important;outline:1px solid var(--c-match-bd)}
 tr.dr.match .pn{color:var(--c-blue)}

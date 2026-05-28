@@ -799,6 +799,19 @@ function resetFilterUI(){
 }
 async function reloadCtx(){invalidatePool();if(filterActive())await runFilter();else await loadRanking()}
 
+// Click an alliance tag → list that alliance's players in the current ranking (via the name filter).
+function filterByAlliance(name){
+  if(!name)return;
+  resetFilterUI();
+  S.filter.alName=name;
+  const inp=$('fAlName');if(inp)inp.value=name;
+  const bar=$('fBar');
+  if(bar&&bar.classList.contains('h')){bar.classList.remove('h');$('filterBtn').setAttribute('aria-expanded','true');$('filterBtn').classList.add('on')}
+  S.curPage=1;
+  runFilter();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function chgIndicator(name,curRk){
   const prev=getPrevRank(name);
   if(prev==null||prev===curRk)return'';
@@ -865,7 +878,7 @@ function renderTable(){
     const scd=scoreChgIndicator(r.name,r.score);
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
-      :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<span class="badge b-al">${esc(r.alTag||r.al.slice(0,5))}</span>`:'—'}</td>`;
+      :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.alTag||r.al.slice(0,5))}</button>`:'—'}</td>`;
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
@@ -880,11 +893,19 @@ function renderTable(){
       </tr>`;
   });
   h+='</tbody></table></div>';
+  // Alliance aggregates banner — shown when filtering players by a single alliance
+  let banner='';
+  if(filt&&S.filter.alName&&!S.allianceMode&&full.length){
+    const sum=full.reduce((s,x)=>s+(x.score||0),0);
+    const avg=Math.round(sum/full.length);
+    banner=`<div class="al-summary">📊 ${L('Sojusz {n}: {c} graczy · suma {sum} · śr. {avg}',{n:esc(S.filter.alName),c:full.length,sum:fmtN(sum),avg:fmtN(avg)})}</div>`;
+  }
   if(!rows.length&&(filt||S.rows.length)){
     const sub=filt?L('Wśród {n} pobranych graczy nikt nie pasuje do filtrów.',{n:fmtN((S.pool||[]).length)}):L('Spróbuj wyczyścić filtry lub zmienić kryteria.');
     h=`<div class="st"><div class="si">🔍</div><div class="sm">${L('Brak wyników po filtrach')}</div><div class="ss">${sub}</div></div>`;
+    banner='';
   }
-  $('mainView').innerHTML=h;
+  $('mainView').innerHTML=banner+h;
 
   $('mainView').querySelectorAll('th.sortable').forEach(th=>{
     th.addEventListener('click',()=>{
@@ -903,6 +924,8 @@ function renderTable(){
     if(sb)sb.addEventListener('click',e=>{e.stopPropagation();const n=e.currentTarget.dataset.n;toggleFav(n,game,S.server,tr)});
     const ck=tr.querySelector('.ck');
     if(ck)ck.addEventListener('change',e=>{e.stopPropagation();toggleCompare(rk,ck.checked)});
+    const alTag=tr.querySelector('.al-tag');
+    if(alTag)alTag.addEventListener('click',e=>{e.stopPropagation();filterByAlliance(alTag.dataset.al)});
     tr.addEventListener('click',()=>toggleDetail(rk));
   });
 }
@@ -1119,6 +1142,7 @@ function toggleDetail(rank){
     <div class="ds">${statHtml||`<span style="color:var(--c-muted);font-size:12px">${L('Brak szczegółowych danych')}</span>`}</div>
     <div class="da">
       <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
+      <button class="btn" id="dpng_${rank}">${L('📷 Karta PNG')}</button>
     </div>
     ${noteHtml}
     ${spkHtml}`;
@@ -1142,6 +1166,7 @@ function toggleDetail(rank){
     e.stopPropagation();toggleFav(r.name,game,S.server,null);
     const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.textContent=now?L('⭐ Obserwowany'):L('☆ Obserwuj');btn.classList.toggle('primary',now)}
   });
+  $(`dpng_${rank}`)?.addEventListener('click',e=>{e.stopPropagation();exportPlayerCard(r)});
 }
 
 function renderSparklineSVG(series,w=240,h=40){
@@ -1360,6 +1385,74 @@ function exportData(fmt){
       }else toast(L('Skopiuj URL ręcznie'),'error');
     },200);
   }
+}
+
+// ── Export player card as a PNG image (nicer than a link for Discord) ──
+function _rr(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
+function _fit(ctx,text,maxW){
+  text=String(text);
+  if(ctx.measureText(text).width<=maxW)return text;
+  let t=text;
+  while(t.length>1&&ctx.measureText(t+'…').width>maxW)t=t.slice(0,-1);
+  return t+'…';
+}
+function exportPlayerCard(r){
+  const FONT=`-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif`;
+  const dark=S.theme!=='light';
+  const C=dark
+    ?{bg:'#0d1117',surface:'#161b22',border:'#30363d',bright:'#e6edf3',muted:'#8b949e',blue:'#58a6ff'}
+    :{bg:'#ffffff',surface:'#f6f8fa',border:'#d0d7de',bright:'#0d1117',muted:'#656d76',blue:'#0969da'};
+  const W=640,H=360,scale=2;
+  const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
+  const ctx=cv.getContext('2d');if(!ctx){toast(L('Brak danych do eksportu'),'error');return}
+  ctx.scale(scale,scale);ctx.textBaseline='alphabetic';
+  ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=C.blue;ctx.fillRect(0,0,W,6);
+  ctx.fillStyle=C.muted;ctx.font=`600 14px ${FONT}`;ctx.textAlign='left';
+  ctx.fillText('🏰 GGE Rankings',24,40);
+  const srv=srvInfo(S.server);
+  ctx.textAlign='right';ctx.font=`13px ${FONT}`;
+  ctx.fillText(_fit(ctx,srv?`${srv.flag} ${srv.name}`:S.server,260),W-24,40);
+  ctx.textAlign='left';ctx.fillStyle=C.bright;ctx.font=`700 30px ${FONT}`;
+  ctx.fillText(_fit(ctx,r.name,W-220),24,92);
+  ctx.fillStyle=C.blue;ctx.font=`600 14px ${FONT}`;
+  const catTxt=catname(curCat());
+  ctx.fillText(_fit(ctx,evname(S.eventKey)+(catTxt?` · ${catTxt}`:''),W-220),24,118);
+  const medal=r.rank===1?'#f0c030':r.rank===2?'#b0b8c8':r.rank===3?'#c07828':C.bright;
+  ctx.textAlign='right';ctx.fillStyle=medal;ctx.font=`800 56px ${FONT}`;
+  ctx.fillText('#'+r.rank,W-24,100);ctx.textAlign='left';
+  ctx.strokeStyle=C.border;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(24,140);ctx.lineTo(W-24,140);ctx.stroke();
+  const stats=[[L('Wynik'),fmtN(r.score)]];
+  if(r.honor!=null)stats.push(['Honor',fmtN(r.honor)]);
+  if(r.might!=null)stats.push([L('Moc'),fmtN(r.might)]);
+  if(r.legendLevel>0)stats.push([L('Poziom legendarny'),'✦ '+r.legendLevel]);
+  else if(r.level!=null)stats.push([L('Poziom'),fmtN(r.level)]);
+  if(r.glory!=null)stats.push([L('Punkty chwały'),fmtN(r.glory)]);
+  if(r.al)stats.push([L('Sojusz'),r.al]);
+  const cells=stats.slice(0,6),cols=3,gap=12,gx=24,gy=160,bw=(W-gx*2-gap*(cols-1))/cols,bh=78;
+  cells.forEach((st,i)=>{
+    const cx=gx+(i%cols)*(bw+gap),cy=gy+Math.floor(i/cols)*(bh+gap);
+    ctx.fillStyle=C.surface;_rr(ctx,cx,cy,bw,bh,8);ctx.fill();
+    ctx.strokeStyle=C.border;ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=C.muted;ctx.font=`600 10px ${FONT}`;ctx.textAlign='left';
+    ctx.fillText(_fit(ctx,String(st[0]).toUpperCase(),bw-24),cx+12,cy+26);
+    ctx.fillStyle=C.bright;ctx.font=`700 22px ${FONT}`;
+    ctx.fillText(_fit(ctx,String(st[1]),bw-24),cx+12,cy+56);
+  });
+  ctx.fillStyle=C.muted;ctx.font=`12px ${FONT}`;ctx.textAlign='right';
+  ctx.fillText(new Date().toLocaleString(curLocale()),W-24,H-16);
+  ctx.textAlign='left';ctx.fillStyle=C.blue;ctx.font=`600 12px ${FONT}`;
+  ctx.fillText('dolildev.github.io/gge-rankings',24,H-16);
+  cv.toBlob(blob=>{
+    if(!blob){toast(L('Brak danych do eksportu'),'error');return}
+    const safe=r.name.replace(/[^\w-]+/g,'_').slice(0,40)||'player';
+    downloadFile(`gge_${safe}_${new Date().toISOString().slice(0,10)}.png`,blob,'image/png');
+  },'image/png');
 }
 
 // ── Auto-refresh ──
