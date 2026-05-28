@@ -7,6 +7,8 @@ const GGE_API = 'https://empire-api.fly.dev';
 const EVENTS_URL = game => `https://raw.githubusercontent.com/danadum/ggs-assets/main/${game}/events.json`;
 const TEXTS_URL = lang => `https://translations-api-test.public.ggs-ep.com/12/${lang}`;
 const PAGE_SIZE = 10;
+const FILTER_POOL_MAX = 2000;
+const FILTER_FETCH_CONC = 10;
 const MAX_COMPARE = 4;
 const HIST_MAX_PER_PLAYER = 12;
 const HIST_DEDUPE_MS = 60 * 1000;
@@ -90,6 +92,7 @@ const S = {
   eventKey:'', catIdx:0, allianceMode:false,
   curPage:1, totalRows:0,
   rows:[], expandedRank:null, loading:false, reqId:0, lastSearch:'',
+  pool:null, poolCtx:null, filtered:null, _poolPromise:null,
   events:{}, texts:{},
   favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
   favAls: JSON.parse(localStorage.getItem('gge_favAls_v1')||'[]'),
@@ -430,6 +433,14 @@ function detectFavMovements(rows){
 }
 
 async function goPage(page){
+  if(filterActive()&&S.filtered){
+    const totalPgs=Math.max(1,Math.ceil(S.filtered.length/PAGE_SIZE));
+    S.curPage=Math.min(Math.max(1,page),totalPgs);
+    S.expandedRank=null;
+    renderFilteredStatus();renderTable();renderPg();writeHash();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   S.curPage=page;
   await loadRanking(String((page-1)*PAGE_SIZE+1));
   window.scrollTo({top:0,behavior:'smooth'});
@@ -465,6 +476,67 @@ function applySort(rows){
 }
 function visibleRows(){return applySort(applyFilter(S.rows))}
 
+// ── Filter pool (client-side filtering across many players) ──
+function filterActive(){const f=S.filter;return f.alliance!=='all'||!!f.alName||!!f.minScore}
+function poolCtx(){return `${S.server}|${S.eventKey}|${S.catIdx}|${S.allianceMode?'a':'p'}|${isGlobal()?'g':'n'}`}
+function invalidatePool(){S.pool=null;S.poolCtx=null;S._poolPromise=null}
+function activeRows(){return (filterActive()&&S.filtered)?S.filtered:S.rows}
+function findRow(rank){return activeRows().find(x=>x.rank===rank)}
+async function ensurePool(){
+  const ctx=poolCtx();
+  if(S.pool&&S.poolCtx===ctx)return S.pool;
+  if(S._poolPromise)return S._poolPromise;
+  S._poolPromise=(async()=>{
+    const all=[];
+    for(let sv=1;sv<=FILTER_POOL_MAX;){
+      const batch=[];
+      for(let j=0;j<FILTER_FETCH_CONC&&sv<=FILTER_POOL_MAX;j++,sv+=PAGE_SIZE)batch.push(sv);
+      const res=await Promise.all(batch.map(s=>fetchRanking(String(s)).then(d=>d?parseRows(d).rows:[]).catch(()=>[])));
+      let got=0;res.forEach(rows=>{got+=rows.length;all.push(...rows)});
+      if(poolCtx()!==ctx){S._poolPromise=null;return S.pool||[]}
+      setSt('spin',`Pobieranie graczy do filtrów… ${all.length}`);
+      if(got===0)break;
+    }
+    const map=new Map();all.forEach(r=>{if(r&&r.rank!=null)map.set(r.rank,r)});
+    const pool=[...map.values()].sort((a,b)=>a.rank-b.rank);
+    S.pool=pool;S.poolCtx=ctx;S._poolPromise=null;
+    return pool;
+  })();
+  return S._poolPromise;
+}
+function applyFiltered(){S.filtered=applySort(applyFilter(S.pool||[]))}
+function renderFilteredStatus(){
+  const n=S.filtered.length,poolN=(S.pool||[]).length;
+  const totalPgs=Math.max(1,Math.ceil(n/PAGE_SIZE));
+  $('sTotal').textContent=fmtN(n);
+  $('sPage').textContent=`${Math.min(S.curPage,totalPgs)} / ${totalPgs}`;
+  setSt('live',`Filtr: ${fmtN(n)} z ${fmtN(poolN)} pobranych`);
+}
+async function runFilter(){
+  if(!filterActive()){S.filtered=null;await loadRanking('1');return}
+  const ctx=poolCtx();
+  if(!(S.pool&&S.poolCtx===ctx)){S.loading=true;showSpin();setSt('spin','Pobieranie graczy do filtrów…')}
+  const pool=await ensurePool();
+  S.loading=false;
+  if(poolCtx()!==ctx)return;
+  if(!filterActive()){S.filtered=null;await loadRanking('1');return}
+  S.pool=pool;
+  applyFiltered();
+  const totalPgs=Math.max(1,Math.ceil(S.filtered.length/PAGE_SIZE));
+  if(S.curPage>totalPgs)S.curPage=1;
+  renderFilteredStatus();
+  renderTable();renderPg();
+  writeHash();
+}
+function resetFilterUI(){
+  S.filter={alliance:'all',alName:'',minScore:0};
+  const seg=$('fAlSeg');if(seg)seg.querySelectorAll('.seg-b').forEach(x=>x.classList.toggle('on',x.dataset.f==='all'));
+  if($('fAlName'))$('fAlName').value='';
+  if($('fMinScore'))$('fMinScore').value='';
+  S.filtered=null;
+}
+async function reloadCtx(){invalidatePool();if(filterActive())await runFilter();else await loadRanking()}
+
 function chgIndicator(name,curRk){
   const prev=getPrevRank(name);
   if(prev==null||prev===curRk)return'';
@@ -474,8 +546,11 @@ function chgIndicator(name,curRk){
 
 function renderTable(){
   const isAl=S.allianceMode;
-  const rows=visibleRows();
-  const max=S.rows[0]?.score||1;
+  const filt=filterActive()&&!!S.pool;
+  const full=filt?applySort(applyFilter(S.pool)):visibleRows();
+  if(filt)S.filtered=full;
+  const rows=filt?full.slice((S.curPage-1)*PAGE_SIZE,S.curPage*PAGE_SIZE):full;
+  const max=(filt?S.pool[0]?.score:S.rows[0]?.score)||rows[0]?.score||1;
   const sortCol=S.sort?.col, sortDir=S.sort?.dir;
   const sortable=(col,extraClass='')=>{
     let cls=`sortable ${extraClass}`;
@@ -521,8 +596,9 @@ function renderTable(){
       </tr>`;
   });
   h+='</tbody></table></div>';
-  if(!rows.length&&S.rows.length){
-    h=`<div class="st"><div class="si">🔍</div><div class="sm">Brak wyników po filtrach</div><div class="ss">Spróbuj wyczyścić filtry lub zmienić kryteria.</div></div>`;
+  if(!rows.length&&(filt||S.rows.length)){
+    const sub=filt?`Wśród ${fmtN((S.pool||[]).length)} pobranych graczy nikt nie pasuje do filtrów.`:'Spróbuj wyczyścić filtry lub zmienić kryteria.';
+    h=`<div class="st"><div class="si">🔍</div><div class="sm">Brak wyników po filtrach</div><div class="ss">${sub}</div></div>`;
   }
   $('mainView').innerHTML=h;
 
@@ -548,7 +624,7 @@ function renderTable(){
 }
 
 function toggleCompare(rank,checked){
-  const r=S.rows.find(x=>x.rank===rank);if(!r)return;
+  const r=findRow(rank);if(!r)return;
   const existingIdx=S.compare.findIndex(c=>c.name===r.name&&c.server===S.server);
   if(checked){
     if(existingIdx>=0)return;
@@ -709,7 +785,7 @@ async function renderAllianceDetail(r,panel){
 }
 
 function toggleDetail(rank){
-  const r=S.rows.find(x=>x.rank===rank);if(!r)return;
+  const r=findRow(rank);if(!r)return;
   const xtr=document.querySelector(`.xr[data-for="${rank}"]`);
   const dtr=document.querySelector(`.dr[data-rk="${rank}"]`);
   if(!xtr)return;
@@ -799,7 +875,10 @@ function renderSparklineSVG(series,w=240,h=40){
 }
 
 function renderPg(){
-  const pg=$('pgBar');const total=Math.max(1,Math.ceil(S.totalRows/PAGE_SIZE));
+  const pg=$('pgBar');
+  const filt=filterActive()&&S.filtered;
+  const totalItems=filt?S.filtered.length:S.totalRows;
+  const total=Math.max(1,Math.ceil(totalItems/PAGE_SIZE));
   if(total<=1){pg.style.display='none';return}
   pg.style.display='flex';
   const cur=S.curPage;
@@ -811,7 +890,7 @@ function renderPg(){
   if(e<total)h+=`<span class="pgi">…</span>`;
   h+=`<button class="pgb" onclick="goPage(${cur+1})" ${cur===total?'disabled':''} aria-label="Następna">›</button>`;
   h+=`<button class="pgb" onclick="goPage(${total})" ${cur===total?'disabled':''} aria-label="Ostatnia">»</button>`;
-  h+=`<span class="pgi">Str. ${cur} z ${total} · ${fmtN(S.totalRows)} graczy</span>`;
+  h+=`<span class="pgi">Str. ${cur} z ${total} · ${fmtN(totalItems)} ${filt?'po filtrach':'graczy'}</span>`;
   pg.innerHTML=h;
 }
 
@@ -828,7 +907,7 @@ function buildCats(){
   if(!cats?.length||cats.length<=1){cb.style.display='none';return}
   cb.style.display='flex';
   cb.innerHTML=cats.map((c,i)=>{const n=catname(c);return n?`<button class="cat${i===S.catIdx?' on':''}" data-i="${i}">${n}</button>`:''}).join('');
-  cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;buildCats();await loadRanking()}));
+  cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;buildCats();await reloadCtx()}));
 }
 function updateTypeSeg(){
   $('typeSeg').querySelectorAll('.seg-b').forEach(b=>{
@@ -1001,7 +1080,7 @@ function startAutoRef(){
   _arTimer=setInterval(()=>{
     _arCount--;
     $('sAutoRT').textContent=fmtCountdown(_arCount);
-    if(_arCount<=0){_arCount=S.autoRef;const sv=S.lastSearch||String((S.curPage-1)*PAGE_SIZE+1);loadRanking(sv)}
+    if(_arCount<=0){_arCount=S.autoRef;if(filterActive()){reloadCtx()}else{const sv=S.lastSearch||String((S.curPage-1)*PAGE_SIZE+1);loadRanking(sv)}}
   },1000);
 }
 function updateAutoRefUI(){
@@ -1023,15 +1102,15 @@ function setupFilters(){
     $('fAlSeg').querySelectorAll('.seg-b').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');
     S.filter.alliance=b.dataset.f;
-    renderTable();
+    S.curPage=1;runFilter();
   }));
-  $('fAlName').addEventListener('input',()=>{S.filter.alName=$('fAlName').value.trim();renderTable()});
-  $('fMinScore').addEventListener('input',()=>{S.filter.minScore=+$('fMinScore').value||0;renderTable()});
+  let _fdeb;
+  const debFilter=()=>{clearTimeout(_fdeb);_fdeb=setTimeout(()=>{S.curPage=1;runFilter()},300)};
+  $('fAlName').addEventListener('input',()=>{S.filter.alName=$('fAlName').value.trim();debFilter()});
+  $('fMinScore').addEventListener('input',()=>{S.filter.minScore=+$('fMinScore').value||0;debFilter()});
   $('fClear').addEventListener('click',()=>{
-    S.filter={alliance:'all',alName:'',minScore:0};
-    $('fAlSeg').querySelectorAll('.seg-b').forEach(x=>x.classList.toggle('on',x.dataset.f==='all'));
-    $('fAlName').value='';$('fMinScore').value='';
-    renderTable();
+    resetFilterUI();
+    S.curPage=1;loadRanking('1');
   });
 }
 
@@ -1090,20 +1169,20 @@ const mainDrop=buildSrvDropdown('srvList','srvBtn','srvSearch',async h=>{
 let modalServer=S.server;
 const modalDrop=buildSrvDropdown('mSrvList','mSrvBtn','mSrvSearch',h=>{modalServer=h;modalDrop.setActive(h)},modalServer);
 
-$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();buildCats();await loadRanking()});
+$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();buildCats();await reloadCtx()});
 
 $('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.addEventListener('click',async()=>{
   if((b.dataset.v==='alliance')===S.allianceMode)return;
   S.allianceMode=b.dataset.v==='alliance';S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();
   const pair=S.events.player_to_alliance?.find(e=>e[+!S.allianceMode]===S.eventKey);
   if(pair)S.eventKey=pair[+S.allianceMode];
-  updateTypeSeg();buildEventSel();await loadRanking();
+  updateTypeSeg();buildEventSel();await reloadCtx();
 }));
 
-const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;S.curPage=1;await loadRanking(v)};
+const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;if(filterActive())resetFilterUI();S.curPage=1;await loadRanking(v)};
 $('goSearch').addEventListener('click',doSearch);
 $('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
-$('refreshBtn').addEventListener('click',()=>{S.curPage=1;loadRanking()});
+$('refreshBtn').addEventListener('click',()=>{S.curPage=1;reloadCtx()});
 
 $('addBtn').addEventListener('click',()=>{
   $('mName').value='';$('mErr').style.display='none';
