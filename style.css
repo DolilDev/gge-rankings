@@ -81,6 +81,8 @@ select:focus,input:focus{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(88
 /* On wider screens drop the horizontal scroll container so the page becomes the
    scroller and the sticky <thead> can pin to the viewport below the app header. */
 @media(min-width:769px){.twrap{overflow:visible}}
+/* While refreshing, keep the previous table visible but dimmed until new data arrives */
+#mainView.stale{opacity:.5;pointer-events:none;transition:opacity .12s ease}
 
 table{width:100%;border-collapse:collapse;min-width:480px}
 

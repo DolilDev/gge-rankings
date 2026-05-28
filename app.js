@@ -165,6 +165,7 @@ const EN={
   // Loading / status
   'Ładowanie...':'Loading...',
   'Pobieranie...':'Fetching...',
+  'Odświeżanie...':'Refreshing...',
   'Pobieranie danych...':'Fetching data...',
   'Wybierz serwer lub ranking':'Choose a server or ranking',
   'Wybierz serwer z listy':'Choose a server from the list',
@@ -633,12 +634,20 @@ async function fetchRankingPage(sv){
 async function loadRanking(sv='1'){
   const rid=++S.reqId;S.loading=true;S.expandedRank=null;
   S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
-  setSt('spin',L('Pobieranie...'));showSpin();
+  // Keep the current table on screen (dimmed) while refreshing, so there is no blank gap.
+  const keep=S.rows.length>0;
+  setSt('spin',L(keep?'Odświeżanie...':'Pobieranie...'));
+  if(keep)$('mainView').classList.add('stale');else showSpin();
   if(!S.server||!curLT()){S.loading=false;setSt('err',L('Wybierz serwer lub ranking'));showSt('⚙️',L('Wybierz serwer z listy'),'');return}
   const res=await fetchRankingPage(sv);
   if(rid!==S.reqId)return;
   S.loading=false;
-  if(!res){setSt('err',L('Błąd API'));showSt('🔌',L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));return}
+  if(!res){
+    setSt('err',L('Błąd API'));
+    if(keep)$('mainView').classList.remove('stale'); // keep showing the previous data
+    else showSt('🔌',L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));
+    return;
+  }
   const{rows,total}=res;
 
   // Detect fav movements before capturing new snapshot
@@ -710,8 +719,8 @@ async function goPage(page){
 window.goPage=goPage;
 
 // ── Render ──
-function showSpin(){$('mainView').innerHTML=`<div class="st"><div class="spin"></div><div class="sm">${L('Pobieranie danych...')}</div></div>`;$('pgBar').style.display='none'}
-function showSt(icon,msg,sub){$('mainView').innerHTML=`<div class="st"><div class="si">${icon}</div><div class="sm">${esc(msg)}</div>${sub?`<div class="ss">${esc(sub)}</div>`:''}</div>`;$('pgBar').style.display='none'}
+function showSpin(){$('mainView').classList.remove('stale');$('mainView').innerHTML=`<div class="st"><div class="spin"></div><div class="sm">${L('Pobieranie danych...')}</div></div>`;$('pgBar').style.display='none'}
+function showSt(icon,msg,sub){$('mainView').classList.remove('stale');$('mainView').innerHTML=`<div class="st"><div class="si">${icon}</div><div class="sm">${esc(msg)}</div>${sub?`<div class="ss">${esc(sub)}</div>`:''}</div>`;$('pgBar').style.display='none'}
 
 function applyFilter(rows){
   let r=rows;
@@ -777,7 +786,7 @@ function renderFilteredStatus(){
 async function runFilter(){
   if(!filterActive()){S.filtered=null;await loadRanking('1');return}
   const ctx=poolCtx();
-  if(!(S.pool&&S.poolCtx===ctx)){S.loading=true;showSpin();setSt('spin',L('Pobieranie graczy do filtrów…'))}
+  if(!(S.pool&&S.poolCtx===ctx)){S.loading=true;setSt('spin',L('Pobieranie graczy do filtrów…'));if(S.rows.length)$('mainView').classList.add('stale');else showSpin()}
   const pool=await ensurePool();
   S.loading=false;
   if(poolCtx()!==ctx)return;
@@ -905,6 +914,7 @@ function renderTable(){
     h=`<div class="st"><div class="si">🔍</div><div class="sm">${L('Brak wyników po filtrach')}</div><div class="ss">${sub}</div></div>`;
     banner='';
   }
+  $('mainView').classList.remove('stale');
   $('mainView').innerHTML=banner+h;
 
   $('mainView').querySelectorAll('th.sortable').forEach(th=>{
