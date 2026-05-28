@@ -261,6 +261,9 @@ const EN={
   'Obserwujesz sojusz {n} ⭐':'Watching alliance {n} ⭐',
   'Usunięto z obserwowanych':'Removed from watched',
   'Obserwujesz {n} ⭐':'Watching {n} ⭐',
+  '🚀 {n} wszedł do TOP 10 (#{r})':'🚀 {n} entered the TOP 10 (#{r})',
+  '📉 {n} wypadł z TOP 10 (#{r})':'📉 {n} dropped out of the TOP 10 (#{r})',
+  '🏅 {n} wszedł do TOP 3 (#{r})':'🏅 {n} entered the TOP 3 (#{r})',
   '🔗 Link skopiowany do schowka':'🔗 Link copied to clipboard',
   'Skopiuj URL ręcznie':'Copy the URL manually',
   '📥 Pobrano {name}':'📥 Downloaded {name}',
@@ -662,10 +665,33 @@ function detectFavMovements(rows){
     if(!cur)return;
     const prev=getPrevRank(fav.name);
     if(prev==null)return;
-    if(prev>10&&cur.rank<=10) toast(`🚀 ${fav.name} wszedł do TOP 10 (#${cur.rank})`,'success');
-    else if(prev<=10&&cur.rank>10) toast(`📉 ${fav.name} wypadł z TOP 10 (#${cur.rank})`,'error');
-    else if(prev>3&&cur.rank<=3) toast(`🏅 ${fav.name} wszedł do TOP 3 (#${cur.rank})`,'success');
+    let msg=null,kind='';
+    if(prev>10&&cur.rank<=10){msg=L('🚀 {n} wszedł do TOP 10 (#{r})',{n:fav.name,r:cur.rank});kind='success'}
+    else if(prev<=10&&cur.rank>10){msg=L('📉 {n} wypadł z TOP 10 (#{r})',{n:fav.name,r:cur.rank});kind='error'}
+    else if(prev>3&&cur.rank<=3){msg=L('🏅 {n} wszedł do TOP 3 (#{r})',{n:fav.name,r:cur.rank});kind='success'}
+    if(msg){toast(msg,kind);pushNotify(msg)}
   });
+}
+
+// ── Browser notifications (Notification API; works even with the tab in the background) ──
+function notifySupported(){return typeof Notification!=='undefined'}
+function updateNotifyUI(){const b=$('notifBtn');if(b)b.classList.toggle('on',S.notify&&notifySupported()&&Notification.permission==='granted')}
+async function toggleNotify(){
+  if(!notifySupported()){toast(L('Twoja przeglądarka nie obsługuje powiadomień'),'error');return}
+  if(S.notify){S.notify=false;localStorage.setItem('gge_notify','0');updateNotifyUI();toast(L('Powiadomienia wyłączone'));return}
+  let perm=Notification.permission;
+  if(perm==='default'){try{perm=await Notification.requestPermission()}catch{}}
+  if(perm!=='granted'){toast(L('Powiadomienia zablokowane w ustawieniach przeglądarki'),'error');S.notify=false;localStorage.setItem('gge_notify','0');updateNotifyUI();return}
+  S.notify=true;localStorage.setItem('gge_notify','1');updateNotifyUI();toast(L('Powiadomienia włączone'),'success');
+}
+function pushNotify(body){
+  if(!S.notify||!notifySupported()||Notification.permission!=='granted')return;
+  const opts={body,icon:'icon.svg',badge:'icon.svg',tag:'gge-rankings'};
+  try{
+    if(navigator.serviceWorker&&navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(reg=>reg.showNotification('GGE Rankings',opts)).catch(()=>{try{new Notification('GGE Rankings',opts)}catch{}});
+    }else{new Notification('GGE Rankings',opts)}
+  }catch(e){console.warn('notify failed:',e)}
 }
 
 async function goPage(page){
@@ -831,6 +857,8 @@ function renderTable(){
     const rkCls=r.rank<=3?'rk'+r.rank:'';
     const exp=S.expandedRank===r.rank;
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
+    const favNote=fv?(S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server)||{}).note:'';
+    const noteBadge=favNote?`<span class="badge b-note" title="${esc(favNote)}">📝</span>`:'';
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
     const inCmp=S.compare.some(c=>c.name===r.name&&c.server===S.server);
     const chg=chgIndicator(r.name,r.rank);
@@ -842,7 +870,7 @@ function renderTable(){
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
-      <td><span class="pn">${esc(r.name)}</span>${fvb}</td>
+      <td><span class="pn">${esc(r.name)}</span>${fvb}${noteBadge}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       <td></td>
@@ -1085,11 +1113,14 @@ function toggleDetail(rank){
       <div class="spk-lbl"><span>${L('📈 Historia pozycji ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${r.rank}</span></div>
       ${renderSparklineSVG(series)}
     </div>`:'';
+  const favObj=S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server);
+  const noteHtml=favObj&&favObj.note?`<div class="dnote">📝 ${esc(favObj.note)}</div>`:'';
   panel.innerHTML=`
     <div class="ds">${statHtml||`<span style="color:var(--c-muted);font-size:12px">${L('Brak szczegółowych danych')}</span>`}</div>
     <div class="da">
       <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
     </div>
+    ${noteHtml}
     ${spkHtml}`;
   panel.querySelectorAll('.db[data-link]').forEach(el=>{
     el.addEventListener('click',async()=>{
@@ -1213,8 +1244,11 @@ function renderFavPage(){
     const spkId='spk_'+fav.name.replace(/\W/g,'_')+'_'+fav.server;
     card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="${L('Usuń')}">×</button></div>
       <div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('⏳ Pobieranie...')}</span></div></div>
+      <input type="text" class="fnote" placeholder="${L('Notatka (np. wróg / sojusznik / cel)')}" value="${esc(fav.note||'')}" aria-label="${L('Notatka (np. wróg / sojusznik / cel)')}">
       <div id="${spkId}"></div>`;
     card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast(L('Usunięto'))});
+    const noteEl=card.querySelector('.fnote');
+    if(noteEl)noteEl.addEventListener('change',()=>{fav.note=noteEl.value.trim();saveFavs()});
     grid.appendChild(card);
     loadFavRanks(fav,card,spkId);
   });
@@ -1438,6 +1472,9 @@ function setPageSize(n){
 }
 $('pageSizeSel').addEventListener('change',e=>setPageSize(+e.target.value));
 
+// ── Notifications toggle ──
+$('notifBtn').addEventListener('click',toggleNotify);
+
 const mainDrop=buildSrvDropdown('srvList','srvBtn','srvSearch',async h=>{
   if(h===S.server)return;
   const prevGame=srvGame(S.server);
@@ -1519,6 +1556,8 @@ async function init(){
   applyI18n();
   applyCompact(S.compact);
   const ps=$('pageSizeSel');if(ps)ps.value=String(S.pageSize);
+  if(S.notify&&(!notifySupported()||Notification.permission!=='granted')){S.notify=false;localStorage.setItem('gge_notify','0')}
+  updateNotifyUI();
   updateAutoRefUI();
 
   // Read URL hash params

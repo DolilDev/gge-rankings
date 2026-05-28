@@ -119,6 +119,7 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 .b-fav{background:rgba(210,153,34,.1);border-color:rgba(210,153,34,.3);color:var(--c-yellow)}
 .b-ban{background:rgba(248,81,73,.1);border-color:rgba(248,81,73,.3);color:var(--c-red)}
 .b-prot{background:rgba(63,185,80,.1);border-color:rgba(63,185,80,.3);color:var(--c-green)}
+.b-note{background:rgba(139,148,158,.12);border-color:rgba(139,148,158,.35);color:var(--c-muted)}
 
 /* Change indicators (rank delta) */
 .chg{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;margin-left:6px;font-variant-numeric:tabular-nums;vertical-align:middle}
@@ -211,6 +212,11 @@ body.compact .sc{gap:5px}
 .fr .fl{flex:1;color:var(--c-muted)}.fr .fp2{font-weight:600;color:var(--c-text);min-width:32px;text-align:right}.fr .fp2.g{color:var(--c-yellow)}.fr .fs{font-size:10px;color:var(--c-muted);min-width:58px;text-align:right}
 
 .fe{grid-column:1/-1;text-align:center;padding:40px;color:var(--c-muted);font-size:13px}
+
+/* Favorite note + detail note */
+.fph-actions{display:flex;gap:8px;flex-wrap:wrap}
+.fnote{width:100%;margin-top:8px;height:30px;font-size:12px;background:var(--c-canvas)}
+.dnote{width:100%;font-size:12px;color:var(--c-text);background:var(--c-canvas);border:1px solid var(--c-border);border-radius:var(--r);padding:6px 10px;margin-top:4px}
 
 /* Sparkline */
 .spk-wrap{margin-top:8px;padding-top:8px;border-top:1px dashed var(--c-border)}
