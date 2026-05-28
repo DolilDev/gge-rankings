@@ -57,6 +57,7 @@ select:focus,input:focus{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(88
 .fbar.h{display:none}
 .fbar input{height:32px}
 .fgrp{display:flex;align-items:center;gap:6px}
+.fhint{margin-left:auto;font-size:11px;color:var(--c-muted);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 
 /* Mini dropdowns (export, auto-refresh) */
 .dwrap{position:relative}
