@@ -53,9 +53,10 @@ select:focus,input:focus{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(88
 .cat:hover{color:var(--c-text)}.cat.on{color:var(--c-blue);border-color:var(--c-blue);background:rgba(88,166,255,.1)}
 
 /* Filter bar */
-.fbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 16px;background:var(--c-surface);border-bottom:1px solid var(--c-border)}
+.fbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px 16px;background:var(--c-surface);border-bottom:1px solid var(--c-border)}
 .fbar.h{display:none}
-.fbar input{height:30px}
+.fbar input{height:32px}
+.fgrp{display:flex;align-items:center;gap:6px}
 
 /* Mini dropdowns (export, auto-refresh) */
 .dwrap{position:relative}

@@ -70,16 +70,22 @@
 </div>
 
 <div class="fbar h" id="fBar">
-  <span class="tlbl">Sojusz:</span>
-  <div class="seg" id="fAlSeg">
-    <button class="seg-b on" data-f="all">Wszyscy</button>
-    <button class="seg-b" data-f="with">Z sojuszem</button>
-    <button class="seg-b" data-f="without">Bez sojuszu</button>
+  <div class="fgrp">
+    <span class="tlbl">Sojusz:</span>
+    <div class="seg" id="fAlSeg">
+      <button class="seg-b on" data-f="all">Wszyscy</button>
+      <button class="seg-b" data-f="with">Z sojuszem</button>
+      <button class="seg-b" data-f="without">Bez sojuszu</button>
+    </div>
   </div>
-  <span class="tlbl">Nazwa sojuszu:</span>
-  <div class="sw"><input type="text" id="fAlName" placeholder="Filtruj po sojuszu..." aria-label="Filtruj po nazwie sojuszu"></div>
-  <span class="tlbl">Min. wynik:</span>
-  <input type="number" id="fMinScore" placeholder="0" min="0" style="width:110px" aria-label="Minimalny wynik">
+  <div class="fgrp">
+    <span class="tlbl">Nazwa sojuszu:</span>
+    <div class="sw"><input type="text" id="fAlName" placeholder="Filtruj po sojuszu..." aria-label="Filtruj po nazwie sojuszu"></div>
+  </div>
+  <div class="fgrp">
+    <span class="tlbl">Min. wynik:</span>
+    <input type="number" id="fMinScore" placeholder="0" min="0" style="width:110px" aria-label="Minimalny wynik">
+  </div>
   <button class="btn" id="fClear" aria-label="Wyczyść filtry">× Wyczyść</button>
 </div>
 
