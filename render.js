@@ -106,7 +106,7 @@ function renderTable(){
   // Data columns carry no width: with table-layout:fixed the leftover space is split
   // equally among them, so they spread evenly across the full width (and stay put per page).
   const gloryTh=hasGlory?`<th class="${sortable('glory','r')}" data-sort="glory">${L('Chwała')}</th>`:'';
-  let h=`<div class="twrap"><table><thead><tr>
+  let h=`<div class="twrap${isAl?' al-mode':''}"><table><thead><tr>
     <th style="width:34px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
     <th style="width:26px"></th>

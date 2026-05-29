@@ -89,6 +89,8 @@ select:focus,input:focus{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(88
 table{width:100%;border-collapse:collapse;min-width:480px;table-layout:fixed}
 /* Long names/alliances clip with an ellipsis instead of widening their column. */
 td.c-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Alliance table: show the full name (wrap within the column) instead of clipping. */
+.al-mode td.c-name{overflow:visible;text-overflow:clip;white-space:normal;overflow-wrap:anywhere}
 
 thead th{padding:8px 12px;text-align:left;background:var(--c-surface);font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border);white-space:nowrap;position:sticky;top:52px;z-index:3}
 
