@@ -311,7 +311,7 @@ const S = {
   server: localStorage.getItem('server') || 'EmpireEx_5',
   eventKey:'', catIdx:0, allianceMode:false,
   curPage:1, totalRows:0,
-  rows:[], expandedRank:null, loading:false, reqId:0, lastSearch:'',
+  rows:[], expandedRank:null, expandedName:null, loading:false, reqId:0, lastSearch:'',
   pool:null, poolCtx:null, filtered:null, _poolPromise:null,
   events:{}, texts:{},
   favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
@@ -632,7 +632,9 @@ async function fetchRankingPage(sv){
 }
 
 async function loadRanking(sv='1'){
-  const rid=++S.reqId;S.loading=true;S.expandedRank=null;
+  const rid=++S.reqId;S.loading=true;
+  // Don't drop the open detail panel here — renderTable() re-attaches it by player
+  // name, so it survives refreshes. Context navigations clear it explicitly.
   S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
   // Keep the current table on screen (dimmed) while refreshing, so there is no blank gap.
   const keep=S.rows.length>0;
@@ -707,7 +709,7 @@ async function goPage(page){
   if(filterActive()&&S.filtered){
     const totalPgs=Math.max(1,Math.ceil(S.filtered.length/S.pageSize));
     S.curPage=Math.min(Math.max(1,page),totalPgs);
-    S.expandedRank=null;
+    clearExpanded();
     renderFilteredStatus();renderTable();renderPg();writeHash();
     window.scrollTo({top:0,behavior:'smooth'});
     return;
@@ -816,7 +818,7 @@ function filterByAlliance(name){
   const inp=$('fAlName');if(inp)inp.value=name;
   const bar=$('fBar');
   if(bar&&bar.classList.contains('h')){bar.classList.remove('h');$('filterBtn').setAttribute('aria-expanded','true');$('filterBtn').classList.add('on')}
-  S.curPage=1;
+  S.curPage=1;clearExpanded();
   runFilter();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -853,6 +855,13 @@ function renderTable(){
   const full=filt?applySort(applyFilter(S.pool)):visibleRows();
   if(filt)S.filtered=full;
   const rows=filt?full.slice((S.curPage-1)*S.pageSize,S.curPage*S.pageSize):full;
+  // Keep the open detail panel pinned to its player/alliance by name (rank can shift
+  // between refreshes), so it survives re-renders instead of vanishing.
+  if(S.expandedName!=null){
+    const m=rows.find(r=>r.name===S.expandedName);
+    S.expandedRank=m?m.rank:null;
+    if(!m)S.expandedName=null;
+  }
   const max=(filt?S.pool[0]?.score:S.rows[0]?.score)||rows[0]?.score||1;
   const sortCol=S.sort?.col, sortDir=S.sort?.dir;
   const sortable=(col,extraClass='')=>{
@@ -943,6 +952,8 @@ function renderTable(){
     if(alTag)alTag.addEventListener('click',e=>{e.stopPropagation();filterByAlliance(alTag.dataset.al)});
     tr.addEventListener('click',()=>toggleDetail(rk));
   });
+  // Re-attach the open detail panel (e.g. after a refresh/sort re-render).
+  if(S.expandedRank!=null)renderDetailContent(S.expandedRank);
 }
 
 function toggleCompare(rank,checked){
@@ -1100,7 +1111,7 @@ async function renderAllianceDetail(r,panel){
         const name=el.dataset.searchPlayer;if(!name)return;
         S.allianceMode=false;updateTypeSeg();
         validateEv();buildEventSel();
-        S.catIdx=0;S.curPage=1;S.expandedRank=null;
+        S.catIdx=0;S.curPage=1;clearExpanded();
         $('searchInput').value=name;
         await loadRanking(name);
       });
@@ -1108,17 +1119,31 @@ async function renderAllianceDetail(r,panel){
   }catch(e){console.warn('renderAllianceDetail:',e);panel.innerHTML=`<div class="dp"><span style="color:var(--c-muted);font-size:12px">${L('Błąd pobierania danych')}</span></div>`}
 }
 
+// Close the open detail panel (used by context navigations that change the dataset).
+function clearExpanded(){S.expandedRank=null;S.expandedName=null;}
+
 function toggleDetail(rank){
   const r=findRow(rank);if(!r)return;
   const xtr=document.querySelector(`.xr[data-for="${rank}"]`);
   const dtr=document.querySelector(`.dr[data-rk="${rank}"]`);
   if(!xtr)return;
-  if(S.expandedRank===rank){xtr.style.display='none';dtr?.classList.remove('exp');S.expandedRank=null;return}
+  if(S.expandedRank===rank){xtr.style.display='none';dtr?.classList.remove('exp');S.expandedRank=null;S.expandedName=null;return}
   if(S.expandedRank!=null){
     const px=document.querySelector(`.xr[data-for="${S.expandedRank}"]`);if(px)px.style.display='none';
     document.querySelector(`.dr[data-rk="${S.expandedRank}"]`)?.classList.remove('exp');
   }
-  S.expandedRank=rank;xtr.style.display='';dtr?.classList.add('exp');
+  S.expandedRank=rank;S.expandedName=r.name;
+  renderDetailContent(rank);
+}
+
+// Fill the detail panel for a row (split out of toggleDetail so it can be re-run
+// after a re-render to restore the open panel without re-toggling state).
+function renderDetailContent(rank){
+  const r=findRow(rank);if(!r)return;
+  const xtr=document.querySelector(`.xr[data-for="${rank}"]`);
+  const dtr=document.querySelector(`.dr[data-rk="${rank}"]`);
+  if(xtr)xtr.style.display='';
+  dtr?.classList.add('exp');
   const panel=$(`dp_${rank}`);if(!panel)return;
   const game=srvGame(S.server);
   const fv=isFav(r.name,game,S.server);
@@ -1172,7 +1197,7 @@ function toggleDetail(rank){
         updateTypeSeg();buildEventSel();
       }
       if(evList()[linkKey]){S.eventKey=linkKey;buildEventSel();}
-      S.catIdx=0;S.curPage=1;S.expandedRank=null;
+      S.catIdx=0;S.curPage=1;clearExpanded();
       if(searchVal){$('searchInput').value=searchVal;await loadRanking(searchVal)}
       else{$('searchInput').value='';await loadRanking('1')}
     });
@@ -1239,7 +1264,7 @@ function buildCats(){
   if(!cats?.length||cats.length<=1){cb.style.display='none';return}
   cb.style.display='flex';
   cb.innerHTML=cats.map((c,i)=>{const n=catname(c);return n?`<button class="cat${i===S.catIdx?' on':''}" data-i="${i}">${n}</button>`:''}).join('');
-  cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;buildCats();await reloadCtx()}));
+  cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;clearExpanded();buildCats();await reloadCtx()}));
 }
 function updateTypeSeg(){
   $('typeSeg').querySelectorAll('.seg-b').forEach(b=>{
@@ -1513,7 +1538,7 @@ function setupFilters(){
   $('fMinScore').addEventListener('input',()=>{S.filter.minScore=+$('fMinScore').value||0;debFilter()});
   $('fClear').addEventListener('click',()=>{
     resetFilterUI();
-    S.curPage=1;loadRanking('1');
+    S.curPage=1;clearExpanded();loadRanking('1');
   });
 }
 
@@ -1588,24 +1613,24 @@ const mainDrop=buildSrvDropdown('srvList','srvBtn','srvSearch',async h=>{
   const prevGame=srvGame(S.server);
   S.server=h;mainDrop.setActive(h);
   if(srvGame(h)!==prevGame){S.eventKey='';S.events={};await loadEvents()}
-  S.curPage=1;S.compare=[];updateCompareBar();
+  S.curPage=1;S.compare=[];updateCompareBar();clearExpanded();
   await loadRanking();
 },S.server);
 
 let modalServer=S.server;
 const modalDrop=buildSrvDropdown('mSrvList','mSrvBtn','mSrvSearch',h=>{modalServer=h;modalDrop.setActive(h)},modalServer);
 
-$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();buildCats();await reloadCtx()});
+$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();clearExpanded();buildCats();await reloadCtx()});
 
 $('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.addEventListener('click',async()=>{
   if((b.dataset.v==='alliance')===S.allianceMode)return;
-  S.allianceMode=b.dataset.v==='alliance';S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();
+  S.allianceMode=b.dataset.v==='alliance';S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();clearExpanded();
   const pair=S.events.player_to_alliance?.find(e=>e[+!S.allianceMode]===S.eventKey);
   if(pair)S.eventKey=pair[+S.allianceMode];
   updateTypeSeg();buildEventSel();await reloadCtx();
 }));
 
-const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;if(filterActive())resetFilterUI();S.curPage=1;await loadRanking(v)};
+const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;if(filterActive())resetFilterUI();S.curPage=1;clearExpanded();await loadRanking(v)};
 $('goSearch').addEventListener('click',doSearch);
 $('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
 $('refreshBtn').addEventListener('click',()=>{S.curPage=1;reloadCtx()});
