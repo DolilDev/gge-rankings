@@ -291,7 +291,7 @@ function exportPlayerCard(r){
   const FONT=`-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif`;
   const dark=S.theme!=='light';
   const C=dark
-    ?{bg:'#15120d',surface:'#1f1a12',border:'#3a3328',bright:'#f0ebe2',muted:'#9c9384',blue:'#f59e0b'}
+    ?{bg:'#150e0f',surface:'#1e1417',border:'#3a2a2d',bright:'#f2e9ea',muted:'#a0898d',blue:'#d36a6a'}
     :{bg:'#ffffff',surface:'#f6f8fa',border:'#d0d7de',bright:'#0d1117',muted:'#656d76',blue:'#0969da'};
   const W=640,H=360,scale=2;
   const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
