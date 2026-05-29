@@ -860,13 +860,17 @@ function renderTable(){
     if(sortCol===col)cls+=' sort-'+sortDir;
     return cls.trim();
   };
+  // Glory (Chwała) column — shown & sortable only when the current data provides it
+  const hasGlory=!isAl&&full.some(r=>r.glory!=null);
+  const ncols=hasGlory?8:7;
+  const gloryTh=hasGlory?`<th class="${sortable('glory','r')}" data-sort="glory" style="min-width:90px">${L('Chwała')}</th>`:'';
   let h=`<div class="twrap"><table><thead><tr>
     <th style="width:34px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
     <th style="width:26px"></th>
     <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
     <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    <th class="${sortable('score','r')}" data-sort="score" style="min-width:150px">${L('Wynik')}</th>
+    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score" style="min-width:150px">${L('Wynik')}</th>
     <th style="width:75px"></th>
     </tr></thead><tbody>`;
 
@@ -888,17 +892,18 @@ function renderTable(){
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
       :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.alTag||r.al.slice(0,5))}</button>`:'—'}</td>`;
+    const gloryCell=hasGlory?`<td class="r" style="font-size:12px;color:var(--c-muted);font-variant-numeric:tabular-nums">${r.glory!=null?fmtN(r.glory):'—'}</td>`:'';
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
       <td><span class="pn">${esc(r.name)}</span>${fvb}${noteBadge}</td>
       ${alCell}
-      <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
+      ${gloryCell}<td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       <td></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
-      <td colspan="7"><div class="dp" id="dp_${r.rank}"></div></td>
+      <td colspan="${ncols}"><div class="dp" id="dp_${r.rank}"></div></td>
       </tr>`;
   });
   h+='</tbody></table></div>';
