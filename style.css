@@ -86,7 +86,7 @@ select:focus,input:focus{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(88
 
 /* Fixed layout = column widths come from the header, not the per-page content,
    so columns stay put when paging instead of jumping around. */
-table{width:100%;border-collapse:collapse;min-width:560px;table-layout:fixed}
+table{width:100%;border-collapse:collapse;min-width:480px;table-layout:fixed}
 /* Long names/alliances clip with an ellipsis instead of widening their column. */
 td.c-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 

@@ -871,15 +871,16 @@ function renderTable(){
   };
   // Glory (Chwała) column — shown & sortable only when the current data provides it
   const hasGlory=!isAl&&full.some(r=>r.glory!=null);
-  const ncols=hasGlory?7:6;
-  const gloryTh=hasGlory?`<th class="${sortable('glory','r')}" data-sort="glory" style="width:100px">${L('Chwała')}</th>`:'';
+  const ncols=hasGlory?8:7;
+  const gloryTh=hasGlory?`<th class="${sortable('glory','r')}" data-sort="glory" style="width:110px">${L('Chwała')}</th>`:'';
   let h=`<div class="twrap"><table><thead><tr>
     <th style="width:34px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
     <th style="width:26px"></th>
-    <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
-    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'112px':'96px'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score" style="width:150px">${L('Wynik')}</th>
+    <th class="${sortable('name')}" data-sort="name" style="width:260px">${isAl?L('Sojusz'):L('Gracz')}</th>
+    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'120px':'100px'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
+    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score" style="width:170px">${L('Wynik')}</th>
+    <th></th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
@@ -908,6 +909,7 @@ function renderTable(){
       <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
       ${alCell}
       ${gloryCell}<td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
+      <td></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
       <td colspan="${ncols}"><div class="dp" id="dp_${r.rank}"></div></td>
