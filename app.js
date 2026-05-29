@@ -871,16 +871,15 @@ function renderTable(){
   };
   // Glory (Chwała) column — shown & sortable only when the current data provides it
   const hasGlory=!isAl&&full.some(r=>r.glory!=null);
-  const ncols=hasGlory?8:7;
-  const gloryTh=hasGlory?`<th class="${sortable('glory','r')}" data-sort="glory" style="min-width:90px">${L('Chwała')}</th>`:'';
+  const ncols=hasGlory?7:6;
+  const gloryTh=hasGlory?`<th class="${sortable('glory','r')}" data-sort="glory" style="width:100px">${L('Chwała')}</th>`:'';
   let h=`<div class="twrap"><table><thead><tr>
     <th style="width:34px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
     <th style="width:26px"></th>
     <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
-    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score" style="min-width:150px">${L('Wynik')}</th>
-    <th style="width:75px"></th>
+    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'112px':'96px'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
+    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score" style="width:150px">${L('Wynik')}</th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
@@ -906,10 +905,9 @@ function renderTable(){
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
-      <td><span class="pn">${esc(r.name)}</span>${fvb}${noteBadge}</td>
+      <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
       ${alCell}
       ${gloryCell}<td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
-      <td></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
       <td colspan="${ncols}"><div class="dp" id="dp_${r.rank}"></div></td>

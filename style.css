@@ -84,7 +84,11 @@ select:focus,input:focus{border-color:var(--c-blue);box-shadow:0 0 0 3px rgba(88
 /* While refreshing, keep the previous table visible but dimmed until new data arrives */
 #mainView.stale{opacity:.5;pointer-events:none;transition:opacity .12s ease}
 
-table{width:100%;border-collapse:collapse;min-width:480px}
+/* Fixed layout = column widths come from the header, not the per-page content,
+   so columns stay put when paging instead of jumping around. */
+table{width:100%;border-collapse:collapse;min-width:560px;table-layout:fixed}
+/* Long names/alliances clip with an ellipsis instead of widening their column. */
+td.c-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 thead th{padding:8px 12px;text-align:left;background:var(--c-surface);font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);border-bottom:1px solid var(--c-border);white-space:nowrap;position:sticky;top:52px;z-index:3}
 
@@ -133,11 +137,12 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 
 .sc{display:flex;align-items:center;gap:7px;justify-content:flex-end}
 
-.sbar2{width:56px;height:4px;background:var(--c-border);border-radius:2px;flex-shrink:0}
+/* In a fixed-width score column the bar yields space so the full number stays visible. */
+.sbar2{width:56px;height:4px;background:var(--c-border);border-radius:2px;flex-shrink:1;min-width:0}
 
 .sbf{height:100%;background:var(--c-blue);border-radius:2px}
 
-.sv{font-size:12px;color:var(--c-muted);min-width:62px;text-align:right;font-variant-numeric:tabular-nums}
+.sv{font-size:12px;color:var(--c-muted);min-width:62px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0;white-space:nowrap}
 
 .tl{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--c-blue);text-decoration:none;padding:3px 7px;border:1px solid var(--c-border);border-radius:var(--r);transition:all .15s;white-space:nowrap}
 
