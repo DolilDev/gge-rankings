@@ -146,7 +146,9 @@ const EN={
   'Za mało danych historycznych':'Not enough history',
   '☆ Obserwuj':'☆ Watch',
   '⭐ Obserwowany':'⭐ Watching',
-  '📷 Karta PNG':'📷 PNG card',
+  '📋 Kopiuj kartę':'📋 Copy card',
+  '📋 Karta skopiowana do schowka':'📋 Card copied to clipboard',
+  'Schowek niedostępny — karta pobrana':'Clipboard unavailable — card downloaded',
   // Alliance detail
   'Brak ID sojuszu':'No alliance ID',
   'Otwarty':'Open',

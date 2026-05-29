@@ -334,11 +334,19 @@ function exportPlayerCard(r){
   ctx.fillText(new Date().toLocaleString(curLocale()),W-24,H-16);
   ctx.textAlign='left';ctx.fillStyle=C.blue;ctx.font=`600 12px ${FONT}`;
   ctx.fillText('dolildev.github.io/gge-rankings',24,H-16);
-  cv.toBlob(blob=>{
-    if(!blob){toast(L('Brak danych do eksportu'),'error');return}
-    const safe=r.name.replace(/[^\w-]+/g,'_').slice(0,40)||'player';
-    downloadFile(`gge_${safe}_${new Date().toISOString().slice(0,10)}.png`,blob,'image/png');
-  },'image/png');
+  const safe=r.name.replace(/[^\w-]+/g,'_').slice(0,40)||'player';
+  const fname=`gge_${safe}_${new Date().toISOString().slice(0,10)}.png`;
+  // Pass the blob-producing promise straight to ClipboardItem so Safari/Firefox keep the user gesture.
+  const blobPromise=new Promise(res=>cv.toBlob(res,'image/png'));
+  const download=()=>blobPromise.then(b=>{
+    if(!b){toast(L('Brak danych do eksportu'),'error');return false}
+    downloadFile(fname,b,'image/png');return true;
+  });
+  if(navigator.clipboard?.write&&window.ClipboardItem){
+    navigator.clipboard.write([new ClipboardItem({'image/png':blobPromise})])
+      .then(()=>toast(L('📋 Karta skopiowana do schowka'),'success'))
+      .catch(()=>download().then(ok=>{if(ok)toast(L('Schowek niedostępny — karta pobrana'),'error')}));
+  }else download();
 }
 
 // ── Auto-refresh ──

@@ -506,7 +506,7 @@ function renderDetailContent(rank){
     <div class="ds">${statHtml||`<span style="color:var(--c-muted);font-size:12px">${L('Brak szczegółowych danych')}</span>`}</div>
     <div class="da">
       <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
-      <button class="btn" id="dpng_${rank}">${L('📷 Karta PNG')}</button>
+      <button class="btn" id="dpng_${rank}">${L('📋 Kopiuj kartę')}</button>
     </div>
     ${noteHtml}
     ${spkHtml}`;
