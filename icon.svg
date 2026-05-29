@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="GGE Rankings">
-  <rect width="512" height="512" fill="#2a2424"/>
+  <rect width="512" height="512" fill="#1b1717"/>
   <g fill="#cf7676">
     <!-- battlements -->
     <rect x="120" y="196" width="16" height="20"/>
@@ -20,7 +20,7 @@
     <!-- wall -->
     <rect x="120" y="300" width="272" height="100"/>
   </g>
-  <g fill="#2a2424">
+  <g fill="#1b1717">
     <!-- gate -->
     <path d="M240 400 L240 358 Q240 340 256 340 Q272 340 272 358 L272 400 Z"/>
     <!-- windows -->
