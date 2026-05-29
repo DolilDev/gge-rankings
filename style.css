@@ -362,7 +362,7 @@ body.with-cbar{padding-bottom:78px}
 .al-link:hover{color:var(--c-blue);text-decoration:underline}
 
 /* Clickable alliance tag → filter the ranking to that alliance */
-.b-al.al-tag{cursor:pointer;font-family:var(--font);line-height:1.4;display:inline-block;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left}
+.b-al.al-tag{cursor:pointer;font-family:var(--font);line-height:1.4;display:inline-block;max-width:100%;margin-left:0;white-space:normal;overflow-wrap:anywhere;text-align:left}
 .b-al.al-tag:hover{background:rgba(88,166,255,.22);text-decoration:underline}
 
 /* Alliance aggregates banner (count / total / average score) */

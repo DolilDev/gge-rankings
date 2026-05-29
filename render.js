@@ -111,7 +111,7 @@ function renderTable(){
     <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
     <th style="width:26px"></th>
     <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
-    <th class="${sortable(isAl?'members':'al','r')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
+    <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
     ${gloryTh}<th class="${sortable('score','r')}" data-sort="score">${L('Wynik')}</th>
     </tr></thead><tbody>`;
 
@@ -132,7 +132,7 @@ function renderTable(){
     const scd=scoreChgIndicator(r.name,r.score);
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
-      :`<td class="r" style="font-size:11px;color:var(--c-muted)">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.al)}</button>`:'—'}</td>`;
+      :`<td style="font-size:11px;color:var(--c-muted)">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.al)}</button>`:'—'}</td>`;
     const gloryCell=hasGlory?`<td class="r" style="font-size:12px;color:var(--c-muted);font-variant-numeric:tabular-nums">${r.glory!=null?fmtN(r.glory):'—'}</td>`:'';
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
