@@ -1,0 +1,222 @@
+// gge-rankings — i18n.js (split from app.js; classic script, shared global scope).
+// Load order: config → i18n → state → api → render → features → main. All wiring + init() live in main.js (loaded last).
+
+// ── i18n (UI strings; Polish is the source language, English overrides below; missing key → Polish) ──
+const EN={
+  // Header / nav
+  '⚔️ Ranking':'⚔️ Ranking',
+  '⭐ Ulubieni':'⭐ Favorites',
+  'Zmień motyw (Shift+D)':'Toggle theme (Shift+D)',
+  'Zmień motyw':'Toggle theme',
+  'Tryb kompaktowy (Shift+C)':'Compact mode (Shift+C)',
+  'Język / Language':'Language / Język',
+  'Pokaż ulubionych':'Show favorites',
+  '+ Śledź':'+ Track',
+  'Dodaj gracza do śledzenia':'Track a player',
+  // Toolbar
+  'Serwer':'Server',
+  'Wybierz serwer':'Choose server',
+  'Szukaj serwera...':'Search server...',
+  'Szukaj serwera':'Search server',
+  'Wybierz typ rankingu':'Choose ranking type',
+  '👤 Gracze':'👤 Players',
+  '🛡 Sojusze':'🛡 Alliances',
+  'Rank lub nick... (/)':'Rank or name... (/)',
+  'Wyszukaj rank lub nick':'Search rank or name',
+  'Szukaj (Enter)':'Search (Enter)',
+  'Szukaj':'Search',
+  'Odśwież (R)':'Refresh (R)',
+  'Odśwież':'Refresh',
+  '⚙ Filtry':'⚙ Filters',
+  'Filtry (F)':'Filters (F)',
+  'Pokaż filtry':'Show filters',
+  '⬇ Eksport':'⬇ Export',
+  'Eksport (E)':'Export (E)',
+  'Eksportuj':'Export',
+  '🔗 Kopiuj link':'🔗 Copy link',
+  'Auto-odświeżanie':'Auto-refresh',
+  '⏹ Wyłącz':'⏹ Off',
+  '30 sekund':'30 seconds',
+  '1 minuta':'1 minute',
+  '5 minut':'5 minutes',
+  '10 minut':'10 minutes',
+  'Wierszy':'Rows',
+  'Wierszy na stronę':'Rows per page',
+  // Filter bar
+  'Sojusz:':'Alliance:',
+  'Wszyscy':'All',
+  'Z sojuszem':'With alliance',
+  'Bez sojuszu':'Without alliance',
+  'Nazwa sojuszu:':'Alliance name:',
+  'Filtruj po sojuszu...':'Filter by alliance...',
+  'Filtruj po nazwie sojuszu':'Filter by alliance name',
+  'Min. wynik:':'Min. score:',
+  'Minimalny wynik':'Minimum score',
+  '× Wyczyść':'× Clear',
+  'Wyczyść filtry':'Clear filters',
+  'ℹ Filtry obejmują do 2000 graczy':'ℹ Filters cover up to 2000 players',
+  'Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich':'When a filter is enabled we fetch up to the top 2000 players and filter among them',
+  // Status bar
+  'Razem:':'Total:',
+  'Strona:':'Page:',
+  // Favorites
+  '⭐ Obserwowani gracze':'⭐ Watched players',
+  '🗑 Wyczyść':'🗑 Clear',
+  '🔔 Powiadomienia':'🔔 Notifications',
+  // Compare
+  '📊 Porównaj':'📊 Compare',
+  'Porównaj →':'Compare →',
+  'Wyczyść':'Clear',
+  '📊 Porównanie':'📊 Comparison',
+  'Pasek porównania':'Comparison bar',
+  // Modal
+  '⭐ Śledź gracza':'⭐ Track player',
+  'Nick gracza':'Player name',
+  'Wpisz nick...':'Enter name...',
+  'Anuluj':'Cancel',
+  '⭐ Śledź':'⭐ Track',
+  'Dodaj gracza':'Add player',
+  'Porównanie':'Comparison',
+  'Zamknij':'Close',
+  // Loading / status
+  'Ładowanie...':'Loading...',
+  'Pobieranie...':'Fetching...',
+  'Odświeżanie...':'Refreshing...',
+  'Pobieranie danych...':'Fetching data...',
+  'Wybierz serwer lub ranking':'Choose a server or ranking',
+  'Wybierz serwer z listy':'Choose a server from the list',
+  'Błąd API':'API error',
+  'Błąd połączenia z API':'API connection error',
+  'Sprawdź połączenie z internetem i spróbuj ponownie.':'Check your internet connection and try again.',
+  'Brak danych':'No data',
+  'Brak danych dla tego rankingu':'No data for this ranking',
+  'Ten event może nie być aktywny na wybranym serwerze.':'This event may not be active on the selected server.',
+  'Dane LIVE · {t}':'LIVE data · {t}',
+  'Pobieranie graczy do filtrów… {n}':'Fetching players for filters… {n}',
+  'Pobieranie graczy do filtrów…':'Fetching players for filters…',
+  'Filtr: {n} z {pool} pobranych':'Filter: {n} of {pool} fetched',
+  'Tłumaczenia...':'Translations...',
+  'Eventy...':'Events...',
+  'Pobieranie rankingu...':'Fetching ranking...',
+  'Przekroczono czas':'Timed out',
+  'Ładowanie trwało zbyt długo':'Loading took too long',
+  'Odśwież stronę (F5).':'Refresh the page (F5).',
+  'Brak':'None',
+  'Brak wyników':'No results',
+  // Table
+  'Członkowie':'Members',
+  'Sojusz':'Alliance',
+  'Gracz':'Player',
+  'Wynik':'Score',
+  'Zaznacz do porównania':'Select to compare',
+  'Usuń z ulubionych':'Remove from favorites',
+  'Dodaj do ulubionych':'Add to favorites',
+  'Awansował z #{p}':'Up from #{p}',
+  'Spadł z #{p}':'Down from #{p}',
+  'Wśród {n} pobranych graczy nikt nie pasuje do filtrów.':'None of the {n} fetched players match the filters.',
+  'Spróbuj wyczyścić filtry lub zmienić kryteria.':'Try clearing filters or changing the criteria.',
+  'Brak wyników po filtrach':'No results after filtering',
+  'Pokaż graczy tego sojuszu':'Show players of this alliance',
+  'Sojusz {n}: {c} graczy · suma {sum} · śr. {avg}':'Alliance {n}: {c} players · total {sum} · avg {avg}',
+  // Compare modal
+  'Maksymalnie {n} elementów do porównania':'Maximum {n} items to compare',
+  'Usuń':'Remove',
+  'Brak elementów do porównania':'No items to compare',
+  'Pozycja':'Position',
+  'Moc':'Might',
+  'Chwała':'Glory',
+  'Lv legendarny':'Legend Lv',
+  'Poziom':'Level',
+  'Atak':'Attack',
+  'Obrona':'Defense',
+  'Rabunek':'Loot',
+  // Detail panel
+  'Punkty chwały':'Glory points',
+  'Poziom legendarny':'Legendary level',
+  'Punkty ataku':'Attack points',
+  'Punkty obrony':'Defense points',
+  'Punkty rabunku':'Loot points',
+  'Ranga':'Rank',
+  'Tytuł (prefix)':'Title (prefix)',
+  'Tytuł (suffix)':'Title (suffix)',
+  'Wynik rankingu':'Ranking score',
+  'Brak szczegółowych danych':'No detailed data',
+  'Otwórz ranking: {x}':'Open ranking: {x}',
+  '📈 Historia pozycji ({n} pkt)':'📈 Position history ({n} pts)',
+  'Za mało danych historycznych':'Not enough history',
+  '☆ Obserwuj':'☆ Watch',
+  '⭐ Obserwowany':'⭐ Watching',
+  '📷 Karta PNG':'📷 PNG card',
+  // Alliance detail
+  'Brak ID sojuszu':'No alliance ID',
+  'Otwarty':'Open',
+  'Tak':'Yes',
+  'Nie':'No',
+  'Opis':'Description',
+  'Członkowie ({n})':'Members ({n})',
+  'Błąd pobierania danych':'Error fetching data',
+  'Śr. moc':'Avg. might',
+  // Favorites cards
+  'Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.':'No watched players or alliances.<br>Click ☆ on any player or alliance.',
+  '⏳ Pobieranie...':'⏳ Fetching...',
+  'Usunięto':'Removed',
+  'Nie znaleziono':'Not found',
+  'Błąd':'Error',
+  'Notatka (np. wróg / sojusznik / cel)':'Note (e.g. enemy / ally / target)',
+  // Pagination
+  'Pierwsza strona':'First page',
+  'Poprzednia':'Previous',
+  'Następna':'Next',
+  'Ostatnia':'Last',
+  'Strona {i}':'Page {i}',
+  'Skocz do strony':'Jump to page',
+  'Str. {cur} z {total} · {n} {kind}':'Page {cur} of {total} · {n} {kind}',
+  'po filtrach':'after filters',
+  'graczy':'players',
+  // Toasts
+  'Usunięto sojusz z obserwowanych':'Alliance removed from watched',
+  'Obserwujesz sojusz {n} ⭐':'Watching alliance {n} ⭐',
+  'Usunięto z obserwowanych':'Removed from watched',
+  'Obserwujesz {n} ⭐':'Watching {n} ⭐',
+  '🚀 {n} wszedł do TOP 10 (#{r})':'🚀 {n} entered the TOP 10 (#{r})',
+  '📉 {n} wypadł z TOP 10 (#{r})':'📉 {n} dropped out of the TOP 10 (#{r})',
+  '🏅 {n} wszedł do TOP 3 (#{r})':'🏅 {n} entered the TOP 3 (#{r})',
+  '🔗 Link skopiowany do schowka':'🔗 Link copied to clipboard',
+  'Skopiuj URL ręcznie':'Copy the URL manually',
+  '📥 Pobrano {name}':'📥 Downloaded {name}',
+  '📥 Zapisano kartę PNG':'📥 Saved PNG card',
+  'Brak danych do eksportu':'No data to export',
+  'Wpisz nick!':'Enter a name!',
+  'Już obserwujesz!':'Already watching!',
+  'Usunąć wszystkich obserwowanych?':'Remove all watched?',
+  'Auto-odświeżanie: co {t}':'Auto-refresh: every {t}',
+  'Auto-odświeżanie wyłączone':'Auto-refresh disabled',
+  'Powiadomienia włączone':'Notifications enabled',
+  'Powiadomienia wyłączone':'Notifications disabled',
+  'Powiadomienia zablokowane w ustawieniach przeglądarki':'Notifications are blocked in browser settings',
+  'Twoja przeglądarka nie obsługuje powiadomień':'Your browser does not support notifications',
+};
+function curLocale(){return S.lang==='en'?'en-US':'pl-PL'}
+function L(s,p){
+  let o=(S.lang==='en'&&EN[s]!=null)?EN[s]:s;
+  if(p)for(const k in p)o=o.split('{'+k+'}').join(p[k]);
+  return o;
+}
+function applyI18n(){
+  try{document.documentElement.lang=S.lang}catch{}
+  document.querySelectorAll('[data-t]').forEach(el=>el.textContent=L(el.getAttribute('data-t')));
+  document.querySelectorAll('[data-tph]').forEach(el=>el.setAttribute('placeholder',L(el.getAttribute('data-tph'))));
+  document.querySelectorAll('[data-ttl]').forEach(el=>el.setAttribute('title',L(el.getAttribute('data-ttl'))));
+  document.querySelectorAll('[data-tar]').forEach(el=>el.setAttribute('aria-label',L(el.getAttribute('data-tar'))));
+}
+async function setLang(lang){
+  if(lang===S.lang)return;
+  S.lang=lang;localStorage.setItem('gge_lang',lang);
+  const lb=$('langBtn');if(lb)lb.textContent=lang.toUpperCase();
+  applyI18n();
+  await loadTexts().catch(()=>{});
+  buildEventSel();updateAutoRefUI();
+  if(filterActive()&&S.filtered){renderFilteredStatus();renderTable();renderPg();}
+  else if(S.rows.length){renderTable();renderPg();}
+  if(S.page==='favorites')renderFavPage();
+}
