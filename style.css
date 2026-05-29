@@ -155,6 +155,9 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 
 .db{background:var(--c-canvas);border:1px solid var(--c-border);border-radius:var(--r);padding:8px 12px;min-width:88px;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
 
+/* Stat tiles share one fixed width so the panel reads as an even grid (the "Opis" box keeps its own inline flex). */
+.ds>.db{flex:0 0 150px;width:150px}
+
 .db:hover{border-color:var(--c-blue);background:rgba(88,166,255,.06)}
 
 .db-v{font-size:15px;font-weight:600;color:var(--c-bright)}
