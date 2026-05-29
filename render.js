@@ -295,14 +295,18 @@ function renderGgtMembers(box,res){
   if(res.notFound||!players.length){box.innerHTML=msg(L('Nie znaleziono sojuszu w gge-tracker'));return}
   const rows=players.map((p,i)=>{
     const ll=p.legendary_level>0?`✦${p.legendary_level}`:(p.level>=70?`✦${p.level}`:`${p.level||'?'}`);
-    return`<div class="db db-plain" style="min-width:0;padding:5px 8px;cursor:pointer" data-search-player="${esc(p.player_name||'')}">
-      <div class="db-v" style="font-size:12px">${i+1}. ${esc(p.player_name||'—')}</div>
-      <div class="db-l">Lv ${ll} · 💪 ${fmtAbbr(p.might_current)} · 🏆 ${fmtAbbr(p.current_fame)} · ❤ ${fmtN(p.honor)}</div>
+    const rkCls=i<3?` rk${i+1}`:'';
+    return`<div class="gtm-row" data-search-player="${esc(p.player_name||'')}">
+      <div class="gtm-rk${rkCls}">${i+1}</div>
+      <div class="gtm-nm">${esc(p.player_name||'—')}<span class="gtm-lv">Lv ${ll}</span></div>
+      <div class="gtm-sub"><span>💪 <b>${fmtN(p.might_current)}</b></span><span>🏆 <b>${fmtN(p.current_fame)}</b></span><span>❤ <b>${fmtN(p.honor)}</b></span></div>
     </div>`;
   }).join('');
-  box.innerHTML=`<div style="width:100%;margin-top:10px;border-top:1px solid var(--c-border);padding-top:10px">
-    <div style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${L('Członkowie wg gge-tracker ({n})',{n:players.length})}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:340px;overflow:auto">${rows}</div></div>`;
+  const upd=players.map(p=>p.updated_at).filter(Boolean).sort().pop();
+  const updHtml=upd?`<span class="gtm-upd">${L('Zaktualizowano {t}',{t:new Date(upd).toLocaleDateString(curLocale())})}</span>`:'';
+  box.innerHTML=`<div class="gtm">
+    <div class="gtm-h"><span class="gtm-t">${L('Członkowie wg gge-tracker ({n})',{n:players.length})}</span>${updHtml}</div>
+    <div class="gtm-list">${rows}</div></div>`;
   box.querySelectorAll('[data-search-player]').forEach(el=>{
     el.addEventListener('click',async e=>{
       e.stopPropagation();

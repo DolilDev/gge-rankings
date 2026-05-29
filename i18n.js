@@ -163,6 +163,7 @@ const EN={
   'Serwer nieobsługiwany przez gge-tracker':'Server not tracked by gge-tracker',
   'Nie znaleziono sojuszu w gge-tracker':'Alliance not found in gge-tracker',
   'Członkowie wg gge-tracker ({n})':'Members per gge-tracker ({n})',
+  'Zaktualizowano {t}':'Updated {t}',
   // Favorites cards
   'Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.':'No watched players or alliances.<br>Click ☆ on any player or alliance.',
   '⏳ Pobieranie...':'⏳ Fetching...',
