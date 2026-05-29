@@ -156,6 +156,13 @@ const EN={
   'Członkowie ({n})':'Members ({n})',
   'Błąd pobierania danych':'Error fetching data',
   'Śr. moc':'Avg. might',
+  // Alliance members via gge-tracker
+  '👥 Pokaż członków (gge-tracker)':'👥 Show members (gge-tracker)',
+  'Ładowanie członków…':'Loading members…',
+  'Błąd pobierania z gge-tracker':'Error fetching from gge-tracker',
+  'Serwer nieobsługiwany przez gge-tracker':'Server not tracked by gge-tracker',
+  'Nie znaleziono sojuszu w gge-tracker':'Alliance not found in gge-tracker',
+  'Członkowie wg gge-tracker ({n})':'Members per gge-tracker ({n})',
   // Favorites cards
   'Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.':'No watched players or alliances.<br>Click ☆ on any player or alliance.',
   '⏳ Pobieranie...':'⏳ Fetching...',

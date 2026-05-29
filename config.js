@@ -7,6 +7,9 @@
 
 // ── Config ──
 const GGE_API = 'https://empire-api.fly.dev';
+// gge-tracker public API (https://docs.gge-tracker.com) — used to list alliance members.
+// Server is selected via the `gge-server` request header (CORS-enabled, allows that header).
+const GGE_TRACKER_API = 'https://api.gge-tracker.com/api/v1';
 const EVENTS_URL = game => `https://raw.githubusercontent.com/danadum/ggs-assets/main/${game}/events.json`;
 const TEXTS_URL = lang => `https://translations-api-test.public.ggs-ep.com/12/${lang}`;
 const API_PAGE = 10; // GGE highscore endpoint returns 10 entries per request; the UI page size is S.pageSize

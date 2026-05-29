@@ -36,6 +36,40 @@ function ggeGlobalUrl(server,lt,rank,lid){
   return`${GGE_API}/${server}/llsp/${p.replace(/"/g,'%22')}`;
 }
 
+// ── gge-tracker API (alliance members) ──
+// Maps our server code (ALL_SERVERS[].code) to gge-tracker's `gge-server` header value.
+// Returns null when gge-tracker doesn't track that server (e.g. the NET* / Sieć worlds).
+function ggtServer(code){
+  if(!code)return null;
+  const alias={AR1:'SA1',LATAM1:'HIS1',W1:'WORLD1',W2:'WORLD2'};
+  const supported=new Set(['INT1','INT2','INT3','ASIA','AU1','BR1','BG1','CN1','HANT1','CZ1','DE1','EG1','FR1','GB1','GR1','ES1','ES2','NL1','IN1','IT1','JP1','ARAB1','LT1','SKN1','PL1','PT1','RO1','RU1','SK1','US1','TR1','HU1','HU2','AE1','SA1','HIS1','WORLD1','WORLD2','GLOBAL','KR1','E4K_BR1','E4K_HANT1','E4K_FR1','E4K_DE1','E4K_DE2','E4K_US1','E4K_INT2','E4K_CN1','E4K_GB1','E4K_RU1']);
+  const s=alias[code]||code;
+  return supported.has(s)?s:null;
+}
+async function ggtGet(path,srv){
+  const key=`ggt:${srv}:${path}`;
+  const hit=cGet(key);if(hit)return hit;
+  try{
+    const r=await timeout(fetch(`${GGE_TRACKER_API}/${path}`,{headers:{'gge-server':srv}}),10000);
+    if(!r||!r.ok)return null;
+    const d=await r.json();cSet(key,d,60000);return d;
+  }catch(e){console.warn('ggtGet failed:',e.message);return null}
+}
+// Resolve an alliance by name (→ gge-tracker id) then fetch its member list.
+// Returns {players,name} | {unsupported} | {notFound} | {error}.
+async function ggtAllianceMembers(name,code){
+  const srv=ggtServer(code);
+  if(!srv)return{unsupported:true};
+  if(!name)return{notFound:true};
+  const byName=await ggtGet(`alliances/name/${encodeURIComponent(name)}`,srv);
+  if(byName===null)return{error:true};
+  if(byName.error||byName.alliance_id==null)return{notFound:true};
+  const det=await ggtGet(`alliances/id/${encodeURIComponent(byName.alliance_id)}`,srv);
+  if(det===null)return{error:true};
+  if(det.error||!Array.isArray(det.players))return{notFound:true};
+  return{name:det.alliance_name||name,players:det.players};
+}
+
 // ── Events ──
 function evname(k){return S.texts[k]||EV_LABELS[k]||k.replace(/_/g,' ')}
 function catname(c){

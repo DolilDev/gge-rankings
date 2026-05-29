@@ -273,13 +273,63 @@ function openCompareModal(){
   $('cmpBackdrop').classList.remove('h');
 }
 
+// ── Alliance members via gge-tracker (opt-in button in the alliance detail panel) ──
+function ggtMembersBtn(rank){return `<button class="btn" id="ggtm_btn_${rank}">${L('👥 Pokaż członków (gge-tracker)')}</button>`}
+function wireGgtMembers(rank,allianceName){
+  const btn=$(`ggtm_btn_${rank}`),box=$(`ggtm_${rank}`);
+  if(!btn||!box)return;
+  btn.addEventListener('click',async e=>{
+    e.stopPropagation();
+    btn.disabled=true;
+    box.innerHTML=`<div class="st" style="padding:14px"><div class="spin"></div><div class="sm" style="font-size:12px">${L('Ładowanie członków…')}</div></div>`;
+    const res=await ggtAllianceMembers(allianceName,srvInfo(S.server)?.code);
+    btn.disabled=false;
+    renderGgtMembers(box,res);
+  });
+}
+function renderGgtMembers(box,res){
+  const msg=t=>`<div style="color:var(--c-muted);font-size:12px;padding:8px 0">${esc(t)}</div>`;
+  if(!res||res.error){box.innerHTML=msg(L('Błąd pobierania z gge-tracker'));return}
+  if(res.unsupported){box.innerHTML=msg(L('Serwer nieobsługiwany przez gge-tracker'));return}
+  const players=res.players||[];
+  if(res.notFound||!players.length){box.innerHTML=msg(L('Nie znaleziono sojuszu w gge-tracker'));return}
+  const rows=players.map((p,i)=>{
+    const ll=p.legendary_level>0?`✦${p.legendary_level}`:(p.level>=70?`✦${p.level}`:`${p.level||'?'}`);
+    return`<div class="db db-plain" style="min-width:0;padding:5px 8px;cursor:pointer" data-search-player="${esc(p.player_name||'')}">
+      <div class="db-v" style="font-size:12px">${i+1}. ${esc(p.player_name||'—')}</div>
+      <div class="db-l">Lv ${ll} · 💪 ${fmtAbbr(p.might_current)} · 🏆 ${fmtAbbr(p.current_fame)} · ❤ ${fmtN(p.honor)}</div>
+    </div>`;
+  }).join('');
+  box.innerHTML=`<div style="width:100%;margin-top:10px;border-top:1px solid var(--c-border);padding-top:10px">
+    <div style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${L('Członkowie wg gge-tracker ({n})',{n:players.length})}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:340px;overflow:auto">${rows}</div></div>`;
+  box.querySelectorAll('[data-search-player]').forEach(el=>{
+    el.addEventListener('click',async e=>{
+      e.stopPropagation();
+      const name=el.dataset.searchPlayer;if(!name)return;
+      S.allianceMode=false;updateTypeSeg();validateEv();buildEventSel();
+      S.catIdx=0;S.curPage=1;clearExpanded();
+      $('searchInput').value=name;await loadRanking(name);
+    });
+  });
+}
+// Minimal panel used when empire-api has no data — still offers the gge-tracker member list.
+function allianceFallbackPanel(panel,r,msgText){
+  panel.innerHTML=`<div class="dp" style="flex-direction:column;gap:8px">
+    <span style="color:var(--c-muted);font-size:12px">${esc(msgText)}</span>
+    <div class="da">${ggtMembersBtn(r.rank)}</div>
+    <div id="ggtm_${r.rank}"></div>
+  </div>`;
+  wireGgtMembers(r.rank,r.name);
+}
+
 async function renderAllianceDetail(r,panel){
   panel.innerHTML=`<div class="dp"><div class="st" style="padding:20px"><div class="spin"></div></div></div>`;
-  if(!r.allianceId){panel.innerHTML=`<div class="dp"><span style="color:var(--c-muted);font-size:12px">${L('Brak ID sojuszu')}</span></div>`;return}
+  if(!r.allianceId){allianceFallbackPanel(panel,r,L('Brak ID sojuszu'));return}
   try{
     const url=`${GGE_API}/${S.server}/ain/%22AID%22:${r.allianceId}`;
     const d=await timeout(ggeGet(url),8000);
-    if(!d||d.return_code!==0){panel.innerHTML=`<div class="dp"><span style="color:var(--c-muted);font-size:12px">${L('Brak danych')}</span></div>`;return}
+    if(!d||d.return_code!==0){allianceFallbackPanel(panel,r,L('Brak danych'));return}
     const al=d.content.A||d.content;
     const members=Array.isArray(d.content.M)?d.content.M:[];
     const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
@@ -328,14 +378,17 @@ async function renderAllianceDetail(r,panel){
         <div class="ds">${statHtml}</div>
         <div class="da">
           <button class="btn${favAl?' primary':''}" id="dfaval_${r.rank}">${favAl?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
+          ${ggtMembersBtn(r.rank)}
         </div>
       </div>
       ${membersHtml}
+      <div id="ggtm_${r.rank}"></div>
     </div>`;
     $(`dfaval_${r.rank}`)?.addEventListener('click',e=>{
       e.stopPropagation();
       toggleFavAl(r.name,S.server,r.allianceId,$(`dfaval_${r.rank}`));
     });
+    wireGgtMembers(r.rank,r.name);
     panel.querySelectorAll('[data-search-player]').forEach(el=>{
       el.addEventListener('click',async e=>{
         e.stopPropagation();
@@ -347,7 +400,7 @@ async function renderAllianceDetail(r,panel){
         await loadRanking(name);
       });
     });
-  }catch(e){console.warn('renderAllianceDetail:',e);panel.innerHTML=`<div class="dp"><span style="color:var(--c-muted);font-size:12px">${L('Błąd pobierania danych')}</span></div>`}
+  }catch(e){console.warn('renderAllianceDetail:',e);allianceFallbackPanel(panel,r,L('Błąd pobierania danych'))}
 }
 
 // Close the open detail panel (used by context navigations that change the dataset).
