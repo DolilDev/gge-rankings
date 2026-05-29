@@ -383,15 +383,20 @@ async function renderAllianceDetail(r,panel){
       if(totalRpt>0)stats.push({v:fmtN(totalRpt),l:'Punkty rabunku'});
       if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Punkty obrony'});
     }
+    // Description lives in its own full-width block below the tiles — inside .ds it would
+    // stretch the stat tiles sharing its flex row to its (tall) height.
+    let descBlock='';
     if(al.D&&al.D!=='Opisz swój sojusz.'){
       const descHtml=al.D.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/&lt;br\s*\/?&gt;/gi,'<br>').replace(/&lt;\/?(b|i|u)&gt;/gi,'');
-      stats.push({v:descHtml,l:'Opis',html:true});
+      descBlock=`<div class="db db-plain" style="width:100%;cursor:default">
+        <div class="db-l" style="margin:0 0 3px">${L('Opis')}</div>
+        <div style="font-size:12px;line-height:1.5;color:var(--c-text)">${descHtml}</div>
+      </div>`;
     }
-    const statHtml=stats.map(st=>{
-      if(st.html)return`<div class="db db-plain" style="flex:1 1 200px;min-width:160px"><div class="db-v" style="font-size:12px;font-weight:400;line-height:1.5">${st.v}</div><div class="db-l">${L(st.l)}</div></div>`;
-      return`<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${L(st.l)}</div></div>`;
-    }).join('');
+    const statHtml=stats.map(st=>
+      `<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${L(st.l)}</div></div>`
+    ).join('');
     let membersHtml='';
     if(sorted.length){
       membersHtml=`<div style="width:100%;margin-top:10px;border-top:1px solid var(--c-border);padding-top:10px">
@@ -415,6 +420,7 @@ async function renderAllianceDetail(r,panel){
           ${ggtMembersBtn(r.rank)}
         </div>
       </div>
+      ${descBlock}
       ${membersHtml}
       <div id="ggtm_${r.rank}"></div>
     </div>`;
