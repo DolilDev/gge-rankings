@@ -157,7 +157,7 @@ const EN={
   'Błąd pobierania danych':'Error fetching data',
   'Śr. moc':'Avg. might',
   // Alliance members via gge-tracker
-  '👥 Pokaż członków (gge-tracker)':'👥 Show members (gge-tracker)',
+  '👥 Pokaż członków':'👥 Show members',
   'Ładowanie członków…':'Loading members…',
   'Błąd pobierania z gge-tracker':'Error fetching from gge-tracker',
   'Serwer nieobsługiwany przez gge-tracker':'Server not tracked by gge-tracker',

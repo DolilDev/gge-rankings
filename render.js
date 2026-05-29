@@ -274,7 +274,7 @@ function openCompareModal(){
 }
 
 // ── Alliance members via gge-tracker (opt-in button in the alliance detail panel) ──
-function ggtMembersBtn(rank){return `<button class="btn" id="ggtm_btn_${rank}">${L('👥 Pokaż członków (gge-tracker)')}</button>`}
+function ggtMembersBtn(rank){return `<button class="btn" id="ggtm_btn_${rank}">${L('👥 Pokaż członków')}</button>`}
 function wireGgtMembers(rank,allianceName){
   const btn=$(`ggtm_btn_${rank}`),box=$(`ggtm_${rank}`);
   if(!btn||!box)return;
