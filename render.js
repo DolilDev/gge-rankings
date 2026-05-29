@@ -287,13 +287,30 @@ function wireGgtMembers(rank,allianceName){
     renderGgtMembers(box,res);
   });
 }
+// Sortable columns for the gge-tracker member list — rendered as clickable headers.
+const GGT_SORTS=[
+  {k:'might',l:'Moc',ic:'💪',get:p=>p.might_current??0},
+  {k:'glory',l:'Chwała',ic:'🏆',get:p=>p.current_fame??0},
+  {k:'honor',l:'Honor',ic:'❤',get:p=>p.honor??0},
+  {k:'level',l:'Poziom',ic:'',get:p=>(p.legendary_level>0?1e6+p.legendary_level:(p.level??0))},
+];
 function renderGgtMembers(box,res){
   const msg=t=>`<div style="color:var(--c-muted);font-size:12px;padding:8px 0">${esc(t)}</div>`;
   if(!res||res.error){box.innerHTML=msg(L('Błąd pobierania z gge-tracker'));return}
   if(res.unsupported){box.innerHTML=msg(L('Serwer nieobsługiwany przez gge-tracker'));return}
   const players=res.players||[];
   if(res.notFound||!players.length){box.innerHTML=msg(L('Nie znaleziono sojuszu w gge-tracker'));return}
-  const rows=players.map((p,i)=>{
+  box._players=players;box._sortK='might';box._sortD=-1;
+  paintGgtMembers(box);
+}
+function paintGgtMembers(box){
+  const players=box._players||[];
+  const col=GGT_SORTS.find(s=>s.k===box._sortK)||GGT_SORTS[0],dir=box._sortD;
+  const sorted=[...players].sort((a,b)=>{
+    const d=col.get(a)-col.get(b);
+    return d?d*dir:(a.player_name||'').localeCompare(b.player_name||'');
+  });
+  const rows=sorted.map((p,i)=>{
     const ll=p.legendary_level>0?`✦${p.legendary_level}`:(p.level>=70?`✦${p.level}`:`${p.level||'?'}`);
     const rkCls=i<3?` rk${i+1}`:'';
     return`<div class="gtm-row" data-search-player="${esc(p.player_name||'')}">
@@ -302,11 +319,24 @@ function renderGgtMembers(box,res){
       <div class="gtm-sub"><span>💪 <b>${fmtN(p.might_current)}</b></span><span>🏆 <b>${fmtN(p.current_fame)}</b></span><span>❤ <b>${fmtN(p.honor)}</b></span></div>
     </div>`;
   }).join('');
+  const headHtml=GGT_SORTS.map(s=>{
+    const on=s.k===box._sortK,arr=on?(dir<0?' ▼':' ▲'):'';
+    return`<button class="gtm-sb${on?' active':''}" data-gsort="${s.k}">${s.ic?s.ic+' ':''}${L(s.l)}${arr}</button>`;
+  }).join('');
   const upd=players.map(p=>p.updated_at).filter(Boolean).sort().pop();
   const updHtml=upd?`<span class="gtm-upd">${L('Zaktualizowano {t}',{t:new Date(upd).toLocaleDateString(curLocale())})}</span>`:'';
   box.innerHTML=`<div class="gtm">
     <div class="gtm-h"><span class="gtm-t">${L('Członkowie wg gge-tracker ({n})',{n:players.length})}</span>${updHtml}</div>
+    <div class="gtm-sort">${headHtml}</div>
     <div class="gtm-list">${rows}</div></div>`;
+  box.querySelectorAll('[data-gsort]').forEach(b=>{
+    b.addEventListener('click',e=>{
+      e.stopPropagation();
+      const k=b.dataset.gsort;
+      if(box._sortK===k)box._sortD=-box._sortD;else{box._sortK=k;box._sortD=-1;}
+      paintGgtMembers(box);
+    });
+  });
   box.querySelectorAll('[data-search-player]').forEach(el=>{
     el.addEventListener('click',async e=>{
       e.stopPropagation();

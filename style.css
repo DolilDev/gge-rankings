@@ -172,6 +172,10 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 .gtm-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
 .gtm-h .gtm-t{font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px}
 .gtm-h .gtm-upd{font-size:10px;color:var(--c-muted);opacity:.8;white-space:nowrap}
+.gtm-sort{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.gtm-sb{font-family:var(--font);font-size:11px;font-weight:500;color:var(--c-muted);background:var(--c-canvas);border:1px solid var(--c-border2);border-radius:var(--r);padding:3px 8px;cursor:pointer;user-select:none;font-variant-numeric:tabular-nums;transition:color .1s,background .1s,border-color .1s}
+.gtm-sb:hover{color:var(--c-text);background:var(--c-hover)}
+.gtm-sb.active{color:var(--c-blue);border-color:var(--c-blue);background:rgba(88,166,255,.1)}
 .gtm-list{max-height:340px;overflow:auto;border:1px solid var(--c-border2);border-radius:var(--r);background:var(--c-canvas)}
 .gtm-row{display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:10px;align-items:center;padding:7px 11px;border-bottom:1px solid var(--c-border2);cursor:pointer;transition:background .1s}
 .gtm-row:last-child{border-bottom:none}
