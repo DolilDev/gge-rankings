@@ -110,20 +110,18 @@ function renderTable(){
     if(sortCol===col)cls+=' sort-'+sortDir;
     return cls.trim();
   };
-  // Glory (Chwała) column — shown & sortable only when the current data provides it. In the
-  // synthetic glory ranking the score column already *is* glory, so the extra column is dropped.
-  const hasGlory=!isAl&&!synth&&full.some(r=>r.glory!=null);
-  const ncols=hasGlory?7:6;
+  // Glory lives in its own ranking (the "Chwała" dropdown entry) and in the player detail panel,
+  // so it is no longer shown as a permanent extra column in the table.
   // Data columns carry no width: with table-layout:fixed the leftover space is split
   // equally among them, so they spread evenly across the full width (and stay put per page).
-  const gloryTh=hasGlory?`<th class="${sortable('glory','r')}" data-sort="glory">${L('Chwała')}</th>`:'';
+  const ncols=6;
   let h=`<div class="twrap${isAl?' al-mode':''}"><table><thead><tr>
     <th style="width:34px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
     <th style="width:26px"></th>
     <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
     <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score">${synth?L('Chwała'):L('Wynik')}</th>
+    <th class="${sortable('score','r')}" data-sort="score">${synth?L('Chwała'):L('Wynik')}</th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
@@ -144,14 +142,13 @@ function renderTable(){
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
       :`<td style="font-size:11px;color:var(--c-muted)">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.al)}</button>`:'—'}</td>`;
-    const gloryCell=hasGlory?`<td class="r" style="font-size:12px;color:var(--c-muted);font-variant-numeric:tabular-nums">${r.glory!=null?fmtN(r.glory):'—'}</td>`:'';
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
       <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
       ${alCell}
-      ${gloryCell}<td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
+      <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
       <td colspan="${ncols}"><div class="dp" id="dp_${r.rank}"></div></td>

@@ -17,6 +17,7 @@ At the top of the page, choose a server from the list — servers are grouped (G
 From the **Ranking** dropdown, choose the leaderboard you want, e.g.:
 - **Honor** — player honor ranking
 - **Might** — player might ranking
+- **Glory** — player glory/fame ranking. GGE has no server-side glory board, so this one is assembled client-side: it pools the server's top ~2000 players and sorts them by glory (a banner notes this). GGE only.
 - **League** — league ranking
 - **Achievement points**, plus many seasonal events
 
