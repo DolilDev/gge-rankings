@@ -8,7 +8,7 @@ const S = {
   eventKey:'', catIdx:0, allianceMode:false,
   curPage:1, totalRows:0,
   rows:[], expandedRank:null, expandedName:null, loading:false, reqId:0, lastSearch:'',
-  pool:null, poolCtx:null, filtered:null, _poolPromise:null,
+  pool:null, poolCtx:null, filtered:null, _poolPromise:null, synthRows:null,
   events:{}, texts:{},
   favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
   favAls: JSON.parse(localStorage.getItem('gge_favAls_v1')||'[]'),

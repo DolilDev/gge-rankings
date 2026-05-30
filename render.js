@@ -80,12 +80,22 @@ function scoreChgIndicator(name,curScore){
   return`<span class="chg sd ${up?'up':'dn'}" title="Δ ${up?'+':'−'}${fmtN(Math.abs(d))}">Δ${up?'+':'−'}${fmtAbbr(d)}</span>`;
 }
 
+function buildSynthRows(pool){
+  const f=synthField();
+  const valid=(pool||[]).filter(r=>r[f]!=null);
+  const sorted=valid.sort((a,b)=>(b[f]||0)-(a[f]||0));
+  // Re-rank by the chosen field and surface it as the row's score (the table's "score" column).
+  return sorted.map((r,i)=>({...r,rank:i+1,score:r[f]}));
+}
 function renderTable(){
   const isAl=S.allianceMode;
-  const filt=filterActive()&&!!S.pool;
-  const full=filt?applySort(applyFilter(S.pool)):visibleRows();
+  const synth=synthActive()&&!!S.synthRows;
+  const filt=!synth&&filterActive()&&!!S.pool;
+  const full=synth?(S.sort?applySort(S.synthRows):S.synthRows)
+            :filt?applySort(applyFilter(S.pool)):visibleRows();
   if(filt)S.filtered=full;
-  const rows=filt?full.slice((S.curPage-1)*S.pageSize,S.curPage*S.pageSize):full;
+  const local=synth||filt;
+  const rows=local?full.slice((S.curPage-1)*S.pageSize,S.curPage*S.pageSize):full;
   // Keep the open detail panel pinned to its player/alliance by name (rank can shift
   // between refreshes), so it survives re-renders instead of vanishing.
   if(S.expandedName!=null){
@@ -93,15 +103,16 @@ function renderTable(){
     S.expandedRank=m?m.rank:null;
     if(!m)S.expandedName=null;
   }
-  const max=(filt?S.pool[0]?.score:S.rows[0]?.score)||rows[0]?.score||1;
+  const max=(synth?S.synthRows[0]?.score:filt?S.pool[0]?.score:S.rows[0]?.score)||rows[0]?.score||1;
   const sortCol=S.sort?.col, sortDir=S.sort?.dir;
   const sortable=(col,extraClass='')=>{
     let cls=`sortable ${extraClass}`;
     if(sortCol===col)cls+=' sort-'+sortDir;
     return cls.trim();
   };
-  // Glory (Chwała) column — shown & sortable only when the current data provides it
-  const hasGlory=!isAl&&full.some(r=>r.glory!=null);
+  // Glory (Chwała) column — shown & sortable only when the current data provides it. In the
+  // synthetic glory ranking the score column already *is* glory, so the extra column is dropped.
+  const hasGlory=!isAl&&!synth&&full.some(r=>r.glory!=null);
   const ncols=hasGlory?7:6;
   // Data columns carry no width: with table-layout:fixed the leftover space is split
   // equally among them, so they spread evenly across the full width (and stay put per page).
@@ -112,7 +123,7 @@ function renderTable(){
     <th style="width:26px"></th>
     <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
     <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score">${L('Wynik')}</th>
+    ${gloryTh}<th class="${sortable('score','r')}" data-sort="score">${synth?L('Chwała'):L('Wynik')}</th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
@@ -149,6 +160,9 @@ function renderTable(){
   h+='</tbody></table></div>';
   // Alliance aggregates banner — shown when filtering players by a single alliance
   let banner='';
+  if(synth&&full.length){
+    banner=`<div class="al-summary">🏆 ${L('Ranking chwały złożony z {n} najlepszych graczy serwera (brak rankingu chwały w grze).',{n:fmtN(full.length)})}</div>`;
+  }
   if(filt&&S.filter.alName&&!S.allianceMode&&full.length){
     const sum=full.reduce((s,x)=>s+(x.score||0),0);
     const avg=Math.round(sum/full.length);

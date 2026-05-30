@@ -94,6 +94,10 @@ const EN={
   'Dane LIVE · {t}':'LIVE data · {t}',
   'Pobieranie graczy do filtrów… {n}':'Fetching players for filters… {n}',
   'Pobieranie graczy do filtrów…':'Fetching players for filters…',
+  'Pobieranie graczy…':'Fetching players…',
+  'Pobieranie graczy… {n}':'Fetching players… {n}',
+  'Chwała: top {n} graczy · {t}':'Glory: top {n} players · {t}',
+  'Ranking chwały złożony z {n} najlepszych graczy serwera (brak rankingu chwały w grze).':'Glory ranking assembled from the server\'s top {n} players (the game has no glory leaderboard).',
   'Filtr: {n} z {pool} pobranych':'Filter: {n} of {pool} fetched',
   'Tłumaczenia...':'Translations...',
   'Eventy...':'Events...',
@@ -231,7 +235,8 @@ async function setLang(lang){
   applyI18n();
   await loadTexts().catch(()=>{});
   buildEventSel();updateAutoRefUI();
-  if(filterActive()&&S.filtered){renderFilteredStatus();renderTable();renderPg();}
+  if(synthActive()&&S.synthRows){renderSynthStatus();renderTable();renderPg();}
+  else if(filterActive()&&S.filtered){renderFilteredStatus();renderTable();renderPg();}
   else if(S.rows.length){renderTable();renderPg();}
   if(S.page==='favorites')renderFavPage();
 }

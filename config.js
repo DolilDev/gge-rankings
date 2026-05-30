@@ -74,7 +74,7 @@ const ALL_SERVERS = [
 ];
 
 const EV_LABELS = {
-  honorPoints:'Honor', playerMight:'Moc', legendLevel:'Poziom legendy',
+  honorPoints:'Honor', playerMight:'Moc', playerGlory:'Chwała', legendLevel:'Poziom legendy',
   allianceHonor:'Honor sojuszu', allianceMight:'Siła sojuszu',
   dominionPoints:'Dominium', cargo_points:'Karawan',
   event_title_71:'Turniej 71', event_title_72:'Turniej 72',

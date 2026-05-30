@@ -71,7 +71,7 @@ async function ggtAllianceMembers(name,code){
 }
 
 // ── Events ──
-function evname(k){return S.texts[k]||EV_LABELS[k]||k.replace(/_/g,' ')}
+function evname(k){return S.texts[k]||L(EV_LABELS[k]||k.replace(/_/g,' '))}
 function catname(c){
   if(!c)return'';const v=c.value;
   if(v!=null&&v!==''){
@@ -90,6 +90,11 @@ function curEv(){return evList()[S.eventKey]||{}}
 function curCat(){const c=curEv().categories;if(!c?.length)return{};return c[Math.min(S.catIdx,c.length-1)]||{}}
 function curLT(){return curCat().eventid??curEv().id}
 function isGlobal(){return!!curEv().global}
+// Synthetic ranking: there is no server-side "player glory" board, so we build one client-side
+// by pooling the top players from a broad base board (nobility) and re-sorting by the chosen
+// field. curEv().synthetic holds that field name (e.g. 'glory').
+function synthActive(){return!S.allianceMode&&!!curEv().synthetic}
+function synthField(){return curEv().synthetic||null}
 
 // ── Parse ──
 function parseRows(data){
@@ -145,7 +150,21 @@ async function loadEvents(){
       player_to_alliance:[['honorPoints','allianceHonor'],['playerMight','allianceMight']]
     };
   }
+  injectSyntheticEvents();
   normalizeCats();validateEv();buildEventSel();
+}
+// Add the client-side "Chwała" (glory) player ranking right after Might. It reuses the nobility
+// board (a single, level-agnostic list of every player, each row carrying CF/glory) as its pool
+// source. GGE only — E4K isn't guaranteed to expose that board.
+function injectSyntheticEvents(){
+  const p=S.events.player;
+  if(srvGame(S.server)!=='gge'||!p||p.playerGlory)return;
+  const baseLT=p.dialog_BeggingKnights_nobilityPoints?.id??2;
+  const glory={id:baseLT,synthetic:'glory'};
+  const rebuilt={};
+  for(const k of Object.keys(p)){rebuilt[k]=p[k];if(k==='playerMight')rebuilt.playerGlory=glory}
+  if(!rebuilt.playerGlory)rebuilt.playerGlory=glory; // no Might key → just append
+  S.events.player=rebuilt;
 }
 function validateEv(){const l=evList();if(!(S.eventKey in l))S.eventKey=Object.keys(l)[0]||''}
 function normalizeCats(){
@@ -205,10 +224,11 @@ async function fetchRankingPage(sv){
 }
 
 async function loadRanking(sv='1'){
-  const rid=++S.reqId;S.loading=true;
   // Don't drop the open detail panel here — renderTable() re-attaches it by player
   // name, so it survives refreshes. Context navigations clear it explicitly.
   S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
+  if(synthActive())return loadSynth();
+  const rid=++S.reqId;S.loading=true;
   // Keep the current table on screen (dimmed) while refreshing, so there is no blank gap.
   const keep=S.rows.length>0;
   setSt('spin',L(keep?'Odświeżanie...':'Pobieranie...'));
@@ -241,6 +261,33 @@ async function loadRanking(sv='1'){
   writeHash();
 }
 
+// Build & render the synthetic glory ranking: pull the base-board pool, sort by the chosen field,
+// re-rank 1..N and paginate locally (the table/pager treat it like the filter path).
+async function loadSynth(){
+  const rid=++S.reqId;
+  const ctx=poolCtx();
+  const cached=S.pool&&S.poolCtx===ctx;
+  if(!cached){S.loading=true;setSt('spin',L('Pobieranie graczy…'));if(S.rows.length||S.synthRows)$('mainView').classList.add('stale');else showSpin()}
+  const pool=await ensurePool();
+  if(rid!==S.reqId||poolCtx()!==ctx)return;
+  S.loading=false;
+  let full=buildSynthRows(pool);
+  if(S.lastSearch){const q=S.lastSearch;full=full.filter(r=>(r.name||'').toLowerCase().includes(q))}
+  S.synthRows=full;S.totalRows=full.length;
+  if(S.server)localStorage.setItem('server',S.server);
+  if(!full.length){S.synthRows=[];S.rows=[];$('mainView').classList.remove('stale');setSt('live',L('Brak danych'));showSt('📭',L('Brak wyników'),'');renderPg();writeHash();return}
+  const totalPgs=Math.max(1,Math.ceil(full.length/S.pageSize));
+  if(S.curPage>totalPgs)S.curPage=1;
+  // Keep S.rows pointing at the visible page so "do we have data" checks (pager, tab switch,
+  // language re-render) still work — the table itself re-slices from S.synthRows.
+  const pageRows=full.slice((S.curPage-1)*S.pageSize,S.curPage*S.pageSize);
+  S.rows=pageRows;
+  renderSynthStatus();
+  renderTable();renderPg();
+  captureSnapshot(pageRows);
+  writeHash();
+}
+
 function detectFavMovements(rows){
   const game=srvGame(S.server);
   S.favs.forEach(fav=>{
@@ -258,6 +305,15 @@ function detectFavMovements(rows){
 }
 
 async function goPage(page){
+  // Locally-paginated views (synthetic glory ranking, active filter) just re-slice in place.
+  if(synthActive()&&S.synthRows){
+    const totalPgs=Math.max(1,Math.ceil(S.synthRows.length/S.pageSize));
+    S.curPage=Math.min(Math.max(1,page),totalPgs);
+    clearExpanded();
+    renderSynthStatus();renderTable();renderPg();writeHash();
+    window.scrollTo({top:0,behavior:'smooth'});
+    return;
+  }
   if(filterActive()&&S.filtered){
     const totalPgs=Math.max(1,Math.ceil(S.filtered.length/S.pageSize));
     S.curPage=Math.min(Math.max(1,page),totalPgs);
