@@ -18,8 +18,8 @@ async function fetchRetry(url,retries=2){
     }
   }
 }
-async function ggeGet(url){
-  const hit=cGet(url);if(hit)return hit;
+async function ggeGet(url,skipCache=false){
+  if(!skipCache){const hit=cGet(url);if(hit)return hit;}
   try{
     const r=await fetchRetry(url);if(!r||!r.ok)return null;
     const d=await r.json();cSet(url,d,60000);return d;
@@ -153,14 +153,14 @@ function normalizeCats(){
   });
 }
 
-async function fetchRanking(sv){
+async function fetchRanking(sv,skipCache=false){
   const isNameSearch=sv&&isNaN(+sv);
   const lt=isNameSearch?(curEv().id??curLT()):curLT();
   if(!lt||!S.server)return null;
   const lid=isNameSearch?'':curCat().id||'';
   try{
     const url=isGlobal()?ggeGlobalUrl(S.server,lt,sv,lid):ggeUrl(S.server,lt,sv,lid);
-    return await timeout(ggeGet(url),10000);
+    return await timeout(ggeGet(url,skipCache),10000);
   }catch(e){console.warn('fetchRanking:',e.message);return null}
 }
 
@@ -170,13 +170,29 @@ async function fetchRankingPage(sv){
   const isName=sv&&isNaN(+sv);
   if(isName){const d=await fetchRanking(sv);return d?parseRows(d):null}
   const start=Math.max(1,+sv||1);
-  const chunks=Math.max(1,Math.ceil(S.pageSize/API_PAGE));
-  const starts=[];for(let i=0;i<chunks;i++)starts.push(start+i*API_PAGE);
-  const results=await Promise.all(starts.map(s=>fetchRanking(String(s))));
-  if(!results.some(Boolean))return null;
   const map=new Map();let total=0;
-  results.forEach(d=>{if(!d)return;const pr=parseRows(d);if(pr.total>total)total=pr.total;pr.rows.forEach(r=>{if(r&&r.rank!=null)map.set(r.rank,r)})});
-  const rows=[...map.values()].sort((a,b)=>a.rank-b.rank).slice(0,S.pageSize);
+  const fetchInto=async(starts,skipCache)=>{
+    const results=await Promise.all(starts.map(s=>fetchRanking(String(s),skipCache)));
+    results.forEach(d=>{if(!d)return;const pr=parseRows(d);if(pr.total>total)total=pr.total;pr.rows.forEach(r=>{if(r&&r.rank!=null)map.set(r.rank,r)})});
+  };
+  const chunks=Math.max(1,Math.ceil(S.pageSize/API_PAGE));
+  const allStarts=[];for(let i=0;i<chunks;i++)allStarts.push(start+i*API_PAGE);
+  await fetchInto(allStarts,false);
+  // A flaky/timed-out/partial chunk request would otherwise shrink the page below the
+  // chosen size (e.g. 46 of 50). Re-fetch — cache-bypassed, so a cached partial response
+  // doesn't stick — the chunks covering any rank still missing in the requested window,
+  // a couple of times, before giving up. (`end` is capped by the real total so the last
+  // page doesn't retry for ranks that don't exist.)
+  for(let attempt=0;attempt<2;attempt++){
+    const end=total>0?Math.min(start+S.pageSize-1,total):start+S.pageSize-1;
+    const need=new Set();
+    for(let rank=start;rank<=end;rank++)if(!map.has(rank))need.add(start+Math.floor((rank-start)/API_PAGE)*API_PAGE);
+    if(!need.size)break;
+    await delay(300);
+    await fetchInto([...need],true);
+  }
+  if(!map.size)return null;
+  const rows=[...map.values()].filter(r=>r.rank>=start).sort((a,b)=>a.rank-b.rank).slice(0,S.pageSize);
   return{rows,total:total||rows.length};
 }
 
