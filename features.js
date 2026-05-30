@@ -251,7 +251,7 @@ function exportData(fmt){
   if(fmt==='csv'){
     const headers=S.allianceMode
       ?['rank','name','allianceId','members','score']
-      :['rank','name','al','alTag','members','score','honor','might','glory','level','legendLevel','avp','hf','rpt'];
+      :['rank','name','al','alTag','members','score','honor','might','glory','level','legendLevel','avp','hf','rpt','prot','banned'];
     const csv=[headers.join(',')];
     rows.forEach(r=>{
       const cells=headers.map(h=>{

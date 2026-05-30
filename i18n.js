@@ -140,6 +140,8 @@ const EN={
   'Punkty ataku':'Attack points',
   'Punkty obrony':'Defense points',
   'Punkty rabunku':'Loot points',
+  'Tryb ochrony':'Protection',
+  'Zbanowany':'Banned',
   'Ranga':'Rank',
   'Tytuł (prefix)':'Title (prefix)',
   'Tytuł (suffix)':'Title (suffix)',

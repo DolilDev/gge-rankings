@@ -126,7 +126,10 @@ function parseRows(data){
       avp=obj.AVP??null;hf=obj.HF??null;rpt=obj.RPT??null;
       rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
       ap=obj.AP??null;vp=obj.VP??null;
-      banned=false;prot=false;
+      // Protection: PF = peace mode, VF = vacation mode (both make the player unattackable).
+      // Ban: DUM marks a dummy/banned account (in practice GGE drops banned players from the
+      // highscore, so this is rarely — if ever — seen here).
+      prot=!!(obj.PF||obj.VF);banned=!!obj.DUM;
     }
     return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
   }).filter(Boolean);

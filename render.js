@@ -135,6 +135,8 @@ function renderTable(){
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
     const favNote=fv?(S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server)||{}).note:'';
     const noteBadge=favNote?`<span class="badge b-note" title="${esc(favNote)}">📝</span>`:'';
+    const protMark=r.prot?`<span class="badge b-prot" title="${L('Tryb ochrony')}">🛡</span>`:'';
+    const banMark=r.banned?`<span class="badge b-ban" title="${L('Zbanowany')}">🚫</span>`:'';
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
     const inCmp=S.compare.some(c=>c.name===r.name&&c.server===S.server);
     const chg=chgIndicator(r.name,r.rank);
@@ -146,7 +148,7 @@ function renderTable(){
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
-      <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
+      <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${banMark}${protMark}${fvb}${noteBadge}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       </tr>
@@ -513,6 +515,8 @@ function renderDetailContent(rank){
   if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)'});
   if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)'});
   if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu'});
+  if(r.prot)stats.push({v:'🛡 '+L('Tak'),l:'Tryb ochrony'});
+  if(r.banned)stats.push({v:'🚫 '+L('Tak'),l:'Zbanowany'});
   if(r.al)stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie'});
   const statHtml=stats.map(st=>{
