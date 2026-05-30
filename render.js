@@ -310,10 +310,10 @@ const GGT_SORTS=[
 ];
 function renderGgtMembers(box,res){
   const msg=t=>`<div style="color:var(--c-muted);font-size:12px;padding:8px 0">${esc(t)}</div>`;
-  if(!res||res.error){box.innerHTML=msg(L('Błąd pobierania z gge-tracker'));return}
-  if(res.unsupported){box.innerHTML=msg(L('Serwer nieobsługiwany przez gge-tracker'));return}
+  if(!res||res.error){box.innerHTML=msg(L('Błąd pobierania danych'));return}
+  if(res.unsupported){box.innerHTML=msg(L('Brak danych dla tego serwera'));return}
   const players=res.players||[];
-  if(res.notFound||!players.length){box.innerHTML=msg(L('Nie znaleziono sojuszu w gge-tracker'));return}
+  if(res.notFound||!players.length){box.innerHTML=msg(L('Nie znaleziono sojuszu'));return}
   box._players=players;box._sortK='might';box._sortD=-1;
   paintGgtMembers(box);
 }
@@ -352,7 +352,7 @@ function paintGgtMembers(box){
   const upd=players.map(p=>p.updated_at).filter(Boolean).sort().pop();
   const updHtml=upd?`<span class="gtm-upd">${L('Zaktualizowano {t}',{t:new Date(upd).toLocaleDateString(curLocale())})}</span>`:'';
   box.innerHTML=`<div class="gtm">
-    <div class="gtm-h"><span class="gtm-t">${L('Członkowie wg gge-tracker ({n})',{n:players.length})}</span>${updHtml}</div>
+    <div class="gtm-h"><span class="gtm-t">${L('Statystyki członków ({n})',{n:players.length})}</span>${updHtml}</div>
     <div class="gtm-sort">${headHtml}</div>
     <div class="gtm-list">${rows}</div></div>`;
   box.querySelectorAll('[data-gsort]').forEach(b=>{

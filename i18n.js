@@ -162,13 +162,12 @@ const EN={
   'Członkowie ({n})':'Members ({n})',
   'Błąd pobierania danych':'Error fetching data',
   'Śr. moc':'Avg. might',
-  // Alliance members via gge-tracker
+  // Alliance member stats
   '👥 Pokaż członków':'👥 Show members',
   'Ładowanie członków…':'Loading members…',
-  'Błąd pobierania z gge-tracker':'Error fetching from gge-tracker',
-  'Serwer nieobsługiwany przez gge-tracker':'Server not tracked by gge-tracker',
-  'Nie znaleziono sojuszu w gge-tracker':'Alliance not found in gge-tracker',
-  'Członkowie wg gge-tracker ({n})':'Members per gge-tracker ({n})',
+  'Brak danych dla tego serwera':'No data for this server',
+  'Nie znaleziono sojuszu':'Alliance not found',
+  'Statystyki członków ({n})':'Member stats ({n})',
   'Zaktualizowano {t}':'Updated {t}',
   'Lider':'Leader',
   'Lider sojuszu':'Alliance leader',
