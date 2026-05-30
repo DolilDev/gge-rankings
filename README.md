@@ -1,221 +1,225 @@
 # 🏰 GGE Rankings
 
-Strona rankingów dla **Goodgame Empire (GGE)** i **Empire Four Kingdoms (E4K)**.
+A live rankings site for **Goodgame Empire (GGE)** and **Empire Four Kingdoms (E4K)**.
 
-🌐 **[Otwórz ranking](https://dolildev.github.io/gge-rankings/)**
-
----
-
-## ✨ Co nowego
-
-- **📲 Instalacja (PWA)** — zainstaluj stronę jako aplikację („Dodaj do ekranu głównego"). Działa offline (cache statyków) i ładuje się szybciej.
-- **🇵🇱 / 🇬🇧 Język PL/EN** — przycisk `PL/EN` w nagłówku przełącza cały interfejs oraz teksty gry. Wybór jest zapamiętywany.
-- **Δ Zmiana wyniku** — obok wskaźnika zmiany pozycji (▲/▼) widać o ile zmienił się wynik od ostatniego snapshotu (pełna wartość w dymku).
-- **Rozmiar strony** — przełącznik **10 / 25 / 50** wierszy + pole „skocz do strony".
-- **Tryb kompaktowy** — gęstsze wiersze, więcej danych na ekranie (przycisk `≣` lub `Shift + C`).
-- **Sticky nagłówek tabeli** — nagłówek kolumn przykleja się przy przewijaniu (desktop).
-- **🔔 Powiadomienia przeglądarki** — prawdziwe alerty (nie tylko toasty), gdy obserwowany wejdzie/wypadnie z TOP 10/3 — także przy karcie w tle.
-- **📝 Notatki przy ulubionych** — krótki opis (np. „wróg / sojusznik / cel") na karcie obserwowanego; widoczny też jako 📝 w tabeli i w szczegółach.
-- **🛡 Klikalny tag sojuszu** — klik w tag w rankingu listuje graczy danego sojuszu i pokazuje agregaty (liczba graczy, suma i średni wynik).
-- **📷 Eksport karty gracza (PNG)** — ładny obrazek do wrzucenia na Discorda (przycisk w szczegółach gracza).
+🌐 **[Open the rankings](https://dolildev.github.io/gge-rankings/)**
 
 ---
 
-## 🚀 Jak zacząć
+## 🚀 Getting started
 
-### 1. Wybierz grę i serwer
+### 1. Pick a game and server
 
-Na górze strony wybierz serwer z listy — serwery są pogrupowane (GGE na górze, E4K na dole), z flagami i kodami.
+At the top of the page, choose a server from the list — servers are grouped (GGE first, E4K below), shown with flags and codes. The dropdown has a **search box**, so you can type part of a server's name or code to find it quickly.
 
-### 2. Wybierz rodzaj rankingu
+### 2. Pick a ranking type
 
-Z listy **Ranking** wybierz interesujący Cię event, np.:
-- **Honor** — ranking honorowy graczy
-- **Siła (Might)** — ranking siły
-- **Liga** — ranking ligowy
-- i wiele innych eventów sezonowych
+From the **Ranking** dropdown, choose the leaderboard you want, e.g.:
+- **Honor** — player honor ranking
+- **Might** — player might ranking
+- **League** — league ranking
+- **Achievement points**, plus many seasonal events
 
-### 3. Przełącz między graczami a sojuszami
+### 3. Switch between players and alliances
 
-Użyj przełącznika **👤 Gracze / 🛡 Sojusze**, aby zobaczyć rankingi indywidualne lub sojusznicze.
+Use the **👤 Players / 🛡 Alliances** toggle to switch between individual and alliance leaderboards.
 
-### 4. Filtruj według poziomu
+### 4. Filter by level
 
-Dla niektórych rankingów (np. Honor, Siła) pojawia się pasek kategorii — możesz filtrować graczy według przedziału poziomów:
+Some rankings (e.g. Honor, Might) show a category bar so you can filter players by level range:
 
-> `Lv 1-19` · `Lv 20-29` · `Lv 30-39` · ... · `✦ Legendy`
-
----
-
-## 🔍 Wyszukiwanie gracza
-
-W polu wyszukiwania możesz wpisać:
-- **Numer ranku** (np. `1`, `42`) — przeskoczysz do danej pozycji
-- **Nick gracza** (np. `Rycerz123`) — wyszuka gracza po nazwie
-
-Zatwierdź klawiszem **Enter** lub przyciskiem **↵**.
+> `Lv 1-19` · `Lv 20-29` · `Lv 30-39` · ... · `✦ Legends`
 
 ---
 
-## 📋 Tabela rankingowa
+## 🔍 Searching for a player
 
-Kliknij dowolny wiersz, aby rozwinąć szczegóły gracza. Każdy wiersz zawiera:
+In the search box you can enter:
+- **A rank number** (e.g. `1`, `42`) — jumps to that position
+- **A player name** (e.g. `Knight123`) — searches by name
 
-| Element | Opis |
+Confirm with **Enter** or the **↵** button.
+
+---
+
+## 📋 The ranking table
+
+Click any row to expand its details. Each row contains:
+
+| Element | Meaning |
 |---|---|
-| ☑ Checkbox | Dodaj do porównania (max 4) |
-| 🥇/🥈/🥉/# | Pozycja w rankingu + wskaźnik zmiany |
-| ▲5 / ▼3 | Zmiana pozycji od ostatniego sprawdzenia |
-| Δ+1.2k | **Zmiana wyniku** od ostatniego snapshotu (dymek = pełna wartość) |
-| ☆/⭐ | Dodaj/usuń z obserwowanych |
-| Nick | Klik → rozwiń szczegóły (📝 = masz notatkę o tym graczu) |
-| Sojusz | **Klikalny** tag — klik filtruje ranking do tego sojuszu |
-| Wynik | Z paskiem postępu (% top 1) |
+| ☑ Checkbox | Add to comparison (max 4) |
+| 🥇/🥈/🥉/# | Rank position + change indicator |
+| ▲5 / ▼3 | Position change since the last check |
+| Δ+1.2k | **Score change** since the last snapshot (tooltip = full value) |
+| ☆/⭐ | Add/remove from watchlist |
+| Name | Click → expand details (📝 = you have a note on this player) |
+| Alliance | The player's **full alliance name** — a clickable tag that filters the ranking to that alliance |
+| Score | With a progress bar (% of top 1) |
 
-### Sortowanie
+In **alliance** mode the "Alliance" column becomes **Members** (member count), and long alliance names wrap so the full name is always visible.
 
-Kliknij **nagłówek kolumny** (`#`, `Gracz`, `Sojusz`, `Wynik`), aby sortować:
-- 1. klik — sortowanie rosnące ▲
-- 2. klik — malejące ▼
-- 3. klik — domyślne
+### Sorting
 
-### Szczegóły gracza
+Click a **column header** (`#`, `Player`, `Alliance`, `Score`) to sort:
+- 1st click — ascending ▲
+- 2nd click — descending ▼
+- 3rd click — back to default
 
-Po rozwinięciu wiersza zobaczysz:
-- 🏅 Honor, ⚔️ Moc, 🏛 Chwała, 📊 Poziom (legendarny/zwykły)
-- Punkty ataku, obrony, rabunku
-- 📈 **Wykres historii pozycji** (sparkline) — jeśli mamy dane z poprzednich odświeżeń
-- Klikalne statystyki → przekierowanie do odpowiedniego rankingu
-- 📷 **Karta PNG** — pobierz ładny obrazek z danymi gracza (do wrzucenia na Discorda)
-- 📝 Twoja notatka o graczu (jeśli jest obserwowany i ma notatkę)
+### Player details
 
-Ikony przy nicku gracza:
-- 🚫 **Ban** — gracz zbanowany
-- 🛡 **Ochrona** — gracz pod ochroną
-- ★ **Ulubiony** — gracz jest na liście obserwowanych
+Expanding a player row shows:
+- 🏅 Honor, ⚔️ Might, 🏛 Glory, 📊 Level (legendary/regular)
+- Attack, defense and loot points
+- 📈 A **position-history chart** (sparkline) — when data from previous refreshes is available
+- Clickable stats → jump to the matching ranking
+- 📋 **Copy card** — copies a nicely formatted PNG card with the player's stats to the clipboard (great for pasting into Discord). If the browser doesn't support image clipboard access, the card is downloaded instead.
+- 📝 Your note about the player (if watched and a note exists)
 
----
+Icons next to a player's name:
+- 🚫 **Ban** — banned player
+- 🛡 **Protection** — player under protection
+- ★ **Favorite** — player is on your watchlist
 
-## ⭐ Obserwowanie graczy i sojuszów
+### Alliance details
 
-### Dodaj do obserwowanych
-- Klik **☆** przy nicku w tabeli — od razu doda
-- Lub **+ Śledź** w prawym górnym rogu — modal z wyborem serwera
+Expanding an alliance row shows:
+- Aggregate stats: might, glory points, whether the alliance is open, member count, average might, and total attack / defense / loot points
+- The alliance **description** (when set), in its own full-width block
+- A member list (name · level · might) — click a member to look them up
+- A **👥 Show members** button that pulls the member list from **gge-tracker** (where the server is supported). That list has **clickable sortable headers** — sort members by **💪 Might**, **🏆 Glory**, **❤ Honor** or **Level** (click a header again to flip the direction). Click a member to search for them.
 
-### Przeglądaj obserwowanych
-Zakładka **⭐ Ulubieni** — karty z aktualnymi pozycjami w dostępnych eventach + **wykres historii pozycji**. Na każdej karcie możesz dopisać **📝 notatkę** (np. „wróg / sojusznik / cel") — zapisuje się lokalnie i pokazuje w tabeli oraz w szczegółach gracza.
-
-### Powiadomienia
-Komunikat (toast) przy zmianie:
-- 🚀 Obserwowany gracz wszedł do TOP 10
-- 📉 Obserwowany gracz wypadł z TOP 10
-- 🏅 Obserwowany gracz wszedł do TOP 3
-
-Dodatkowo przycisk **🔔 Powiadomienia** (zakładka Ulubieni) włącza **prawdziwe powiadomienia przeglądarki** — docierają nawet przy karcie w tle. Najlepiej z włączonym auto-odświeżaniem na obserwowanym rankingu (strona musi działać — brak push z serwera).
-
-### Usuń z obserwowanych
-- × na karcie / ponownie ☆ w tabeli / 🗑 Wyczyść wszystkich
+You can also **watch an alliance** straight from its detail panel (☆ Watch / ⭐ Watching).
 
 ---
 
-## 📊 Porównywanie graczy / sojuszów
+## ⭐ Watching players and alliances
 
-1. Zaznacz checkbox przy 2-4 wierszach
-2. Pojawi się pasek u dołu z wybranymi
-3. Kliknij **Porównaj →** — otworzy się modal z statystykami side-by-side
-4. **Najlepsze wartości** (najwyższa moc, najniższa pozycja) — podświetlone na zielono
-5. **Najgorsze** — na czerwono
+### Add to your watchlist
+- Click **☆** next to a name in the table — adds instantly
+- Or **+ Track** in the top-right corner — a modal with server selection
+- For alliances, use the ☆ Watch button inside the alliance detail panel
 
----
+### Browse your watchlist
+The **⭐ Favorites** tab shows cards with current positions across available events, plus a **position-history chart**. On each card you can add a **📝 note** (e.g. "enemy / ally / target") — it's stored locally and also appears in the table and in player details.
 
-## ⚙️ Filtry
+### Notifications
+A toast pops up when:
+- 🚀 A watched player enters the TOP 10
+- 📉 A watched player drops out of the TOP 10
+- 🏅 A watched player enters the TOP 3
 
-Kliknij **⚙ Filtry** (lub `F`), aby pokazać pasek filtrów:
-- **Z sojuszem / Bez sojuszu / Wszyscy**
-- **Nazwa sojuszu** — szukaj po nazwie/tagu
-- **Min. wynik** — pokaż tylko z wynikiem ≥ X
+The **🔔 Notifications** button (Favorites tab) additionally enables **real browser notifications** — they arrive even when the tab is in the background. Best used with auto-refresh enabled on the watched ranking (the page must be running — there are no server-side pushes).
 
-Po włączeniu filtra pobieramy do **2000** najlepszych graczy i filtrujemy wśród nich (nie tylko bieżącą stronę). Wyczyść przyciskiem **× Wyczyść**.
-
-💡 Klik w **tag sojuszu** w tabeli automatycznie ustawia filtr na ten sojusz i pokazuje baner z agregatami: liczba graczy w rankingu, suma i średni wynik.
-
----
-
-## ⬇ Eksport danych
-
-Kliknij **⬇ Eksport** (lub `E`):
-- **📄 CSV** — pobierz aktualną stronę jako Excel/Google Sheets
-- **{} JSON** — surowe dane do dalszej obróbki
-- **🔗 Kopiuj link** — link z aktualnym stanem (serwer + ranking + strona + filtry) do udostępnienia
+### Remove from your watchlist
+- × on the card / click ☆ again in the table / 🗑 Clear all
 
 ---
 
-## ⏱ Auto-odświeżanie
+## 📊 Comparing players / alliances
 
-Kliknij **⏱ Auto** w toolbar, wybierz interwał (30s / 1 min / 5 min / 10 min). Licznik widoczny w pasku statusu.
-
----
-
-## 🌙 Motyw, język i widok
-
-W prawym górnym rogu:
-- **🌙 / ☀️** — ciemny / jasny motyw (`Shift + D`)
-- **PL / EN** — język interfejsu (PL/EN)
-- **≣** — tryb kompaktowy / gęstszy (`Shift + C`)
-
-Wszystkie preferencje są zapisywane lokalnie.
+1. Tick the checkbox on 2–4 rows
+2. A bar appears at the bottom with your selection
+3. Click **Compare →** — a modal opens with side-by-side stats
+4. **Best values** (highest might, best position) are highlighted green
+5. **Worst values** are highlighted red
 
 ---
 
-## ⌨️ Skróty klawiszowe
+## ⚙️ Filters
 
-| Klawisz | Akcja |
+Click **⚙ Filters** (or `F`) to show the filter bar:
+- **With alliance / Without alliance / All**
+- **Alliance name** — search by name/tag
+- **Min. score** — show only entries with a score ≥ X
+
+When a filter is active, up to **2000** top players are fetched and filtered across all of them (not just the current page). Clear with **× Clear**.
+
+💡 Clicking an **alliance tag** in the table automatically sets the filter to that alliance and shows a banner with aggregates: number of players in the ranking, total and average score.
+
+---
+
+## ⬇ Exporting data
+
+Click **⬇ Export** (or `E`):
+- **📄 CSV** — download the current page for Excel/Google Sheets
+- **{} JSON** — raw data for further processing
+- **🔗 Copy link** — a shareable link with the current state (server + ranking + page + filters)
+
+---
+
+## ⏱ Auto-refresh
+
+Click **⏱ Auto** in the toolbar and pick an interval (30s / 1 min / 5 min / 10 min). A countdown is shown in the status bar.
+
+---
+
+## 🌙 Theme, language and view
+
+In the top-right corner:
+- **🌙 / ☀️** — dark / light theme (`Shift + D`)
+- **PL / EN** — interface language, also switches in-game text labels (`PL`/`EN`)
+- **≣** — compact / denser mode (`Shift + C`)
+
+All preferences are saved locally.
+
+---
+
+## ⌨️ Keyboard shortcuts
+
+| Key | Action |
 |---|---|
-| `/` | Focus na pole wyszukiwania |
-| `Enter` | Zatwierdź wyszukiwanie |
-| `Esc` | Zamknij modal / dropdown / rozwinięty wiersz |
-| `R` | Odśwież ranking |
-| `F` | Pokaż/ukryj filtry |
-| `E` | Menu eksportu |
-| `Shift + D` | Przełącz motyw |
-| `Shift + C` | Tryb kompaktowy (gęstszy) |
-| `←` `→` | Poprzednia / następna strona |
+| `/` | Focus the search box |
+| `Enter` | Confirm search |
+| `Esc` | Close modal / dropdown / expanded row |
+| `R` | Refresh ranking |
+| `F` | Show/hide filters |
+| `E` | Export menu |
+| `Shift + D` | Toggle theme |
+| `Shift + C` | Compact (denser) mode |
+| `←` `→` | Previous / next page |
+
+---
+
+## 📄 Page size & pagination
+
+Use the **10 / 25 / 50** rows selector, plus the pagination bar with a "jump to page" field. Each page is assembled from the live API and always fills to the chosen size when enough entries exist (the last page shows however many actually remain).
 
 ---
 
 ## 🔗 Deep linking
 
-Stan strony zapisywany w URL hash (`#s=PL1&e=honorPoints&p=3`). Możesz:
-- Skopiować link do konkretnego rankingu i wysłać znajomemu
-- Dodać zakładkę do ulubionego rankingu
-- Wrócić do tego samego widoku po odświeżeniu
+The page state is stored in the URL hash (`#s=PL1&e=honorPoints&p=3`). You can:
+- Copy a link to a specific ranking and send it to a friend
+- Bookmark a favorite ranking
+- Return to the same view after a refresh
 
 ---
 
-## ↺ Odświeżanie danych
+## ↺ Data refresh
 
-Dane są pobierane na żywo z API. Status połączenia widoczny w pasku:
+Data is fetched live from the API. Connection status is shown in the status bar:
 
-- 🟢 **Dane LIVE** — załadowano poprawnie (z timem)
-- 🟡 **Pobieranie...** — trwa ładowanie
-- 🔴 **Błąd API** — problem z połączeniem
+- 🟢 **LIVE data** — loaded successfully (with a timestamp)
+- 🟡 **Loading...** — fetch in progress
+- 🔴 **API error** — connection problem
 
-Przy błędzie następuje automatyczny retry z exponential backoff (do 2 prób).
-
----
-
-## 📱 Urządzenia mobilne i instalacja (PWA)
-
-Strona działa na telefonach i tabletach. Toolbar i tabela przewijalne poziomo. ARIA labels dla czytników ekranu.
-
-Możesz ją **zainstalować jako aplikację**: w przeglądarce wybierz „Dodaj do ekranu głównego" / „Zainstaluj". Po instalacji działa w trybie pełnoekranowym, statyczne pliki są cache'owane (szybszy start, podstawowy tryb offline).
+On error, an automatic retry with exponential backoff kicks in (up to 2 attempts).
 
 ---
 
-## 💾 Co jest zapisane lokalnie
+## 📱 Mobile & installation (PWA)
 
-W `localStorage`:
-- Ostatnio wybrany serwer
-- Lista obserwowanych graczy i sojuszów (wraz z notatkami)
-- Historia pozycji (do 14 dni, ~12 snapshotów na ranking)
-- Preferencje: motyw, język, auto-odświeżanie, rozmiar strony, tryb kompaktowy, powiadomienia
+The site works on phones and tablets — the toolbar and table scroll horizontally, and ARIA labels are provided for screen readers.
+
+You can **install it as an app**: in your browser choose "Add to Home Screen" / "Install". Once installed it runs full-screen, and static files are cached for a faster start and basic offline support.
+
+---
+
+## 💾 What's stored locally
+
+In `localStorage`:
+- The last selected server
+- Your watchlist of players and alliances (including notes)
+- Position history (up to 14 days, ~12 snapshots per ranking)
+- Preferences: theme, language, auto-refresh, page size, compact mode, notifications
