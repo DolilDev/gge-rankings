@@ -301,6 +301,14 @@ function wireGgtMembers(rank,allianceName){
 // Protection (peace mode): gge-tracker's peace_disabled_at is null when unprotected, or a future
 // timestamp marking when the active protection expires. Returns that epoch (ms) while active, else 0.
 function ggtProtectedUntil(p){const t=p.peace_disabled_at?Date.parse(p.peace_disabled_at):0;return t>Date.now()?t:0}
+// Compact remaining-time label, e.g. 51d / 5h / 30m (how much protection is left).
+function fmtDur(ms){
+  if(ms<=0)return'';
+  const m=Math.round(ms/60000),h=Math.floor(m/60),d=Math.floor(h/24);
+  if(d>=1)return d+L('d');
+  if(h>=1)return h+L('h');
+  return Math.max(1,m)+L('min');
+}
 // Sortable columns for the member-stats list — rendered as clickable headers.
 // `rank` sorts by in-alliance role (leader = 0 first); negate so the default DESC click lifts the leader to the top.
 const GGT_SORTS=[
@@ -336,7 +344,8 @@ function paintGgtMembers(box){
       ?`<span class="gtm-role gtm-leader" title="${L('Lider sojuszu')}">👑 ${L('Lider')}</span>`
       :(p.alliance_rank!=null?`<span class="gtm-role" title="${L('Ranga w sojuszu')}: ${p.alliance_rank}">🎖 ${p.alliance_rank}</span>`:'');
     const protUntil=ggtProtectedUntil(p);
-    const protBadge=protUntil?`<span class="gtm-prot" title="${L('Ochrona do {d}',{d:new Date(protUntil).toLocaleDateString(curLocale())})}">🛡</span>`:'';
+    const protLeft=protUntil?fmtDur(protUntil-Date.now()):'';
+    const protBadge=protUntil?`<span class="gtm-prot" title="${L('Ochrona jeszcze {n} (do {d})',{n:protLeft,d:new Date(protUntil).toLocaleString(curLocale())})}">🛡 ${protLeft}</span>`:'';
     // All-time / peak values (record might, loot, glory, honor) on a dimmer second line.
     const at=[];
     if(p.might_all_time)at.push(`<span>💪 <b>${fmtN(p.might_all_time)}</b></span>`);

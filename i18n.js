@@ -173,7 +173,8 @@ const EN={
   'Lider sojuszu':'Alliance leader',
   'Ranga w sojuszu':'Alliance rank',
   'Ochrona':'Protection',
-  'Ochrona do {d}':'Protected until {d}',
+  'Ochrona jeszcze {n} (do {d})':'Protection: {n} left (until {d})',
+  'd':'d','h':'h','min':'min',
   'Rekord':'All-time',
   'Wartości all-time (rekordowe)':'All-time (peak) values',
   // Favorites cards
