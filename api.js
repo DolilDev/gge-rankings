@@ -171,25 +171,27 @@ async function fetchRankingPage(sv){
   if(isName){const d=await fetchRanking(sv);return d?parseRows(d):null}
   const start=Math.max(1,+sv||1);
   const map=new Map();let total=0;
+  // Returns how many *new* ranks were added (so the fill loop can detect "no progress").
   const fetchInto=async(starts,skipCache)=>{
     const results=await Promise.all(starts.map(s=>fetchRanking(String(s),skipCache)));
-    results.forEach(d=>{if(!d)return;const pr=parseRows(d);if(pr.total>total)total=pr.total;pr.rows.forEach(r=>{if(r&&r.rank!=null)map.set(r.rank,r)})});
+    let added=0;
+    results.forEach(d=>{if(!d)return;const pr=parseRows(d);if(pr.total>total)total=pr.total;pr.rows.forEach(r=>{if(r&&r.rank!=null&&!map.has(r.rank)){map.set(r.rank,r);added++;}})});
+    return added;
   };
   const chunks=Math.max(1,Math.ceil(S.pageSize/API_PAGE));
-  const allStarts=[];for(let i=0;i<chunks;i++)allStarts.push(start+i*API_PAGE);
-  await fetchInto(allStarts,false);
-  // A flaky/timed-out/partial chunk request would otherwise shrink the page below the
-  // chosen size (e.g. 46 of 50). Re-fetch — cache-bypassed, so a cached partial response
-  // doesn't stick — the chunks covering any rank still missing in the requested window,
-  // a couple of times, before giving up. (`end` is capped by the real total so the last
-  // page doesn't retry for ranks that don't exist.)
-  for(let attempt=0;attempt<2;attempt++){
+  const firstStarts=[];for(let i=0;i<chunks;i++)firstStarts.push(start+i*API_PAGE);
+  await fetchInto(firstStarts,false);
+  // Some leaderboards (e.g. achievement points) return a window offset a few ranks *before*
+  // the requested SV — so SV=11 yields ranks 7‑16, and the fixed chunks above leave a gap at
+  // the tail of the page (showing e.g. 46 of 50). Fill any rank still missing in [start, end]
+  // by requesting that rank directly, bounded by the real total and a guard against looping.
+  for(let guard=0;guard<8;guard++){
     const end=total>0?Math.min(start+S.pageSize-1,total):start+S.pageSize-1;
-    const need=new Set();
-    for(let rank=start;rank<=end;rank++)if(!map.has(rank))need.add(start+Math.floor((rank-start)/API_PAGE)*API_PAGE);
-    if(!need.size)break;
-    await delay(300);
-    await fetchInto([...need],true);
+    let missing=-1;
+    for(let rank=start;rank<=end;rank++){if(!map.has(rank)){missing=rank;break;}}
+    if(missing<0)break;
+    await delay(200);
+    if(!await fetchInto([String(missing)],true))break; // no new rows → genuine end / API cap
   }
   if(!map.size)return null;
   const rows=[...map.values()].filter(r=>r.rank>=start).sort((a,b)=>a.rank-b.rank).slice(0,S.pageSize);
