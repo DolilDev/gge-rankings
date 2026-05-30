@@ -140,8 +140,6 @@ const EN={
   'Punkty ataku':'Attack points',
   'Punkty obrony':'Defense points',
   'Punkty rabunku':'Loot points',
-  'Tryb ochrony':'Protection',
-  'Zbanowany':'Banned',
   'Ranga':'Rank',
   'Tytuł (prefix)':'Title (prefix)',
   'Tytuł (suffix)':'Title (suffix)',
@@ -174,6 +172,8 @@ const EN={
   'Lider':'Leader',
   'Lider sojuszu':'Alliance leader',
   'Ranga w sojuszu':'Alliance rank',
+  'Ochrona':'Protection',
+  'Ochrona do {d}':'Protected until {d}',
   'Rekord':'All-time',
   'Wartości all-time (rekordowe)':'All-time (peak) values',
   // Favorites cards

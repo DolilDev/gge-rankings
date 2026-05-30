@@ -126,10 +126,10 @@ function parseRows(data){
       avp=obj.AVP??null;hf=obj.HF??null;rpt=obj.RPT??null;
       rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
       ap=obj.AP??null;vp=obj.VP??null;
-      // Protection: PF = peace mode, VF = vacation mode (both make the player unattackable).
-      // Ban: DUM marks a dummy/banned account (in practice GGE drops banned players from the
-      // highscore, so this is rarely — if ever — seen here).
-      prot=!!(obj.PF||obj.VF);banned=!!obj.DUM;
+      // The highscore payload carries no reliable ban/protection flag (PF/VF/DUM don't track it —
+      // even level-3 beginners under protection show nothing). Protection comes from gge-tracker
+      // instead (peace_disabled_at), shown in the alliance member-stats list.
+      banned=false;prot=false;
     }
     return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
   }).filter(Boolean);

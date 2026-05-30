@@ -135,8 +135,6 @@ function renderTable(){
     const fvb=fv?'<span class="badge b-fav">★</span>':'';
     const favNote=fv?(S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server)||{}).note:'';
     const noteBadge=favNote?`<span class="badge b-note" title="${esc(favNote)}">📝</span>`:'';
-    const protMark=r.prot?`<span class="badge b-prot" title="${L('Tryb ochrony')}">🛡</span>`:'';
-    const banMark=r.banned?`<span class="badge b-ban" title="${L('Zbanowany')}">🚫</span>`:'';
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
     const inCmp=S.compare.some(c=>c.name===r.name&&c.server===S.server);
     const chg=chgIndicator(r.name,r.rank);
@@ -148,7 +146,7 @@ function renderTable(){
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
-      <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${banMark}${protMark}${fvb}${noteBadge}</td>
+      <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       </tr>
@@ -300,7 +298,10 @@ function wireGgtMembers(rank,allianceName){
     renderGgtMembers(box,res);
   });
 }
-// Sortable columns for the gge-tracker member list — rendered as clickable headers.
+// Protection (peace mode): gge-tracker's peace_disabled_at is null when unprotected, or a future
+// timestamp marking when the active protection expires. Returns that epoch (ms) while active, else 0.
+function ggtProtectedUntil(p){const t=p.peace_disabled_at?Date.parse(p.peace_disabled_at):0;return t>Date.now()?t:0}
+// Sortable columns for the member-stats list — rendered as clickable headers.
 // `rank` sorts by in-alliance role (leader = 0 first); negate so the default DESC click lifts the leader to the top.
 const GGT_SORTS=[
   {k:'might',l:'Moc',ic:'💪',get:p=>p.might_current??0},
@@ -309,6 +310,7 @@ const GGT_SORTS=[
   {k:'honor',l:'Honor',ic:'❤',get:p=>p.honor??0},
   {k:'level',l:'Poziom',ic:'',get:p=>(p.legendary_level>0?1e6+p.legendary_level:(p.level??0))},
   {k:'rank',l:'Ranga',ic:'🎖',get:p=>-(p.alliance_rank??999)},
+  {k:'prot',l:'Ochrona',ic:'🛡',get:p=>ggtProtectedUntil(p)},
 ];
 function renderGgtMembers(box,res){
   const msg=t=>`<div style="color:var(--c-muted);font-size:12px;padding:8px 0">${esc(t)}</div>`;
@@ -333,6 +335,8 @@ function paintGgtMembers(box){
     const roleBadge=isLeader
       ?`<span class="gtm-role gtm-leader" title="${L('Lider sojuszu')}">👑 ${L('Lider')}</span>`
       :(p.alliance_rank!=null?`<span class="gtm-role" title="${L('Ranga w sojuszu')}: ${p.alliance_rank}">🎖 ${p.alliance_rank}</span>`:'');
+    const protUntil=ggtProtectedUntil(p);
+    const protBadge=protUntil?`<span class="gtm-prot" title="${L('Ochrona do {d}',{d:new Date(protUntil).toLocaleDateString(curLocale())})}">🛡</span>`:'';
     // All-time / peak values (record might, loot, glory, honor) on a dimmer second line.
     const at=[];
     if(p.might_all_time)at.push(`<span>💪 <b>${fmtN(p.might_all_time)}</b></span>`);
@@ -342,7 +346,7 @@ function paintGgtMembers(box){
     const atRow=at.length?`<div class="gtm-sub gtm-at"><span class="gtm-at-tag" title="${L('Wartości all-time (rekordowe)')}">${L('Rekord')}</span>${at.join('')}</div>`:'';
     return`<div class="gtm-row${isLeader?' gtm-leader-row':''}" data-search-player="${esc(p.player_name||'')}">
       <div class="gtm-rk${rkCls}">${i+1}</div>
-      <div class="gtm-nm">${esc(p.player_name||'—')}${roleBadge}<span class="gtm-lv">Lv ${ll}</span></div>
+      <div class="gtm-nm">${esc(p.player_name||'—')}${protBadge}${roleBadge}<span class="gtm-lv">Lv ${ll}</span></div>
       <div class="gtm-sub"><span>💪 <b>${fmtN(p.might_current)}</b></span><span>💰 <b>${fmtN(p.loot_current)}</b></span><span>🏆 <b>${fmtN(p.current_fame)}</b></span><span>❤ <b>${fmtN(p.honor)}</b></span></div>
       ${atRow}
     </div>`;
@@ -515,8 +519,6 @@ function renderDetailContent(rank){
   if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)'});
   if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)'});
   if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu'});
-  if(r.prot)stats.push({v:'🛡 '+L('Tak'),l:'Tryb ochrony'});
-  if(r.banned)stats.push({v:'🚫 '+L('Tak'),l:'Zbanowany'});
   if(r.al)stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie'});
   const statHtml=stats.map(st=>{

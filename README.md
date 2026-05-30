@@ -78,8 +78,6 @@ Expanding a player row shows:
 - 📝 Your note about the player (if watched and a note exists)
 
 Icons next to a player's name:
-- 🚫 **Ban** — banned player
-- 🛡 **Protection** — player under protection
 - ★ **Favorite** — player is on your watchlist
 
 ### Alliance details
@@ -88,7 +86,7 @@ Expanding an alliance row shows:
 - Aggregate stats: might, glory points, whether the alliance is open, member count, average might, and total attack / defense / loot points
 - The alliance **description** (when set), in its own full-width block
 - A member list (name · level · might) — click a member to look them up
-- A **👥 Show members** button that loads the full member list with stats (where the server is supported). Each member shows current **💪 Might**, **💰 Loot**, **🏆 Glory** and **❤ Honor**, plus a dimmer **All-time** line with their peak (record) values for the same stats. The **alliance leader** is highlighted (👑 gold accent) and every member carries their **in-alliance rank** badge. The list has **clickable sortable headers** — sort by **💪 Might**, **💰 Loot**, **🏆 Glory**, **❤ Honor**, **Level** or **🎖 Rank** (click a header again to flip the direction). Click a member to search for them.
+- A **👥 Show members** button that loads the full member list with stats (where the server is supported). Each member shows current **💪 Might**, **💰 Loot**, **🏆 Glory** and **❤ Honor**, plus a dimmer **All-time** line with their peak (record) values for the same stats. The **alliance leader** is highlighted (👑 gold accent), members under **protection** (peace mode) show a 🛡 badge with the expiry date, and every member carries their **in-alliance rank** badge. The list has **clickable sortable headers** — sort by **💪 Might**, **💰 Loot**, **🏆 Glory**, **❤ Honor**, **Level**, **🎖 Rank** or **🛡 Protection** (click a header again to flip the direction). Click a member to search for them.
 
 You can also **watch an alliance** straight from its detail panel (☆ Watch / ⭐ Watching).
 
