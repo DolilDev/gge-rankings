@@ -288,11 +288,14 @@ function wireGgtMembers(rank,allianceName){
   });
 }
 // Sortable columns for the gge-tracker member list — rendered as clickable headers.
+// `rank` sorts by in-alliance role (leader = 0 first); negate so the default DESC click lifts the leader to the top.
 const GGT_SORTS=[
   {k:'might',l:'Moc',ic:'💪',get:p=>p.might_current??0},
+  {k:'loot',l:'Rabunek',ic:'💰',get:p=>p.loot_current??0},
   {k:'glory',l:'Chwała',ic:'🏆',get:p=>p.current_fame??0},
   {k:'honor',l:'Honor',ic:'❤',get:p=>p.honor??0},
   {k:'level',l:'Poziom',ic:'',get:p=>(p.legendary_level>0?1e6+p.legendary_level:(p.level??0))},
+  {k:'rank',l:'Ranga',ic:'🎖',get:p=>-(p.alliance_rank??999)},
 ];
 function renderGgtMembers(box,res){
   const msg=t=>`<div style="color:var(--c-muted);font-size:12px;padding:8px 0">${esc(t)}</div>`;
@@ -313,10 +316,22 @@ function paintGgtMembers(box){
   const rows=sorted.map((p,i)=>{
     const ll=p.legendary_level>0?`✦${p.legendary_level}`:(p.level>=70?`✦${p.level}`:`${p.level||'?'}`);
     const rkCls=i<3?` rk${i+1}`:'';
-    return`<div class="gtm-row" data-search-player="${esc(p.player_name||'')}">
+    const isLeader=p.alliance_rank===0;
+    const roleBadge=isLeader
+      ?`<span class="gtm-role gtm-leader" title="${L('Lider sojuszu')}">👑 ${L('Lider')}</span>`
+      :(p.alliance_rank!=null?`<span class="gtm-role" title="${L('Ranga w sojuszu')}: ${p.alliance_rank}">🎖 ${p.alliance_rank}</span>`:'');
+    // All-time / peak values (record might, loot, glory, honor) on a dimmer second line.
+    const at=[];
+    if(p.might_all_time)at.push(`<span>💪 <b>${fmtN(p.might_all_time)}</b></span>`);
+    if(p.loot_all_time)at.push(`<span>💰 <b>${fmtN(p.loot_all_time)}</b></span>`);
+    if(p.highest_fame)at.push(`<span>🏆 <b>${fmtN(p.highest_fame)}</b></span>`);
+    if(p.max_honor)at.push(`<span>❤ <b>${fmtN(p.max_honor)}</b></span>`);
+    const atRow=at.length?`<div class="gtm-sub gtm-at"><span class="gtm-at-tag" title="${L('Wartości all-time (rekordowe)')}">${L('Rekord')}</span>${at.join('')}</div>`:'';
+    return`<div class="gtm-row${isLeader?' gtm-leader-row':''}" data-search-player="${esc(p.player_name||'')}">
       <div class="gtm-rk${rkCls}">${i+1}</div>
-      <div class="gtm-nm">${esc(p.player_name||'—')}<span class="gtm-lv">Lv ${ll}</span></div>
-      <div class="gtm-sub"><span>💪 <b>${fmtN(p.might_current)}</b></span><span>🏆 <b>${fmtN(p.current_fame)}</b></span><span>❤ <b>${fmtN(p.honor)}</b></span></div>
+      <div class="gtm-nm">${esc(p.player_name||'—')}${roleBadge}<span class="gtm-lv">Lv ${ll}</span></div>
+      <div class="gtm-sub"><span>💪 <b>${fmtN(p.might_current)}</b></span><span>💰 <b>${fmtN(p.loot_current)}</b></span><span>🏆 <b>${fmtN(p.current_fame)}</b></span><span>❤ <b>${fmtN(p.honor)}</b></span></div>
+      ${atRow}
     </div>`;
   }).join('');
   const headHtml=GGT_SORTS.map(s=>{

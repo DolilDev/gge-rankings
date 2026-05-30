@@ -166,6 +166,11 @@ const EN={
   'Nie znaleziono sojuszu w gge-tracker':'Alliance not found in gge-tracker',
   'Członkowie wg gge-tracker ({n})':'Members per gge-tracker ({n})',
   'Zaktualizowano {t}':'Updated {t}',
+  'Lider':'Leader',
+  'Lider sojuszu':'Alliance leader',
+  'Ranga w sojuszu':'Alliance rank',
+  'Rekord':'All-time',
+  'Wartości all-time (rekordowe)':'All-time (peak) values',
   // Favorites cards
   'Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.':'No watched players or alliances.<br>Click ☆ on any player or alliance.',
   '⏳ Pobieranie...':'⏳ Fetching...',
