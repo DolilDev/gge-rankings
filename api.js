@@ -97,7 +97,13 @@ function parseRows(data){
   const c=data.content||{};const L=c.L||[];const total=c.LR||c.T||L.length;
   const rows=L.map(entry=>{
     if(!Array.isArray(entry))return null;
-    const rank=entry[0],score=entry[1],obj=entry[2]||{};
+    // Most leaderboards: [rank, score, payload]. Some event boards (e.g. cargo/Karawan)
+    // prepend a flag: [flag, rank, score, payload]. Locate the payload (the first array or
+    // object) and read the two numbers right before it as rank and score, so the shifted
+    // layout doesn't leave every row but #1 with rank 0 (which the page assembler drops).
+    let pIdx=entry.findIndex(x=>Array.isArray(x)||(x&&typeof x==='object'));
+    if(pIdx<2)pIdx=2;
+    const rank=entry[pIdx-2],score=entry[pIdx-1],obj=entry[pIdx]||{};
     const isArr=Array.isArray(obj);
     let name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot;
     let allianceId=null;
