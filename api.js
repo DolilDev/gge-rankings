@@ -110,7 +110,7 @@ function parseRows(data){
     if(pIdx<2)pIdx=2;
     const rank=entry[pIdx-2],score=entry[pIdx-1],obj=entry[pIdx]||{};
     const isArr=Array.isArray(obj);
-    let name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot;
+    let name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot,emblem;
     let allianceId=null;
     if(isArr){
       const strs=obj.filter(x=>typeof x==='string'&&x.length>0);
@@ -126,12 +126,14 @@ function parseRows(data){
       avp=obj.AVP??null;hf=obj.HF??null;rpt=obj.RPT??null;
       rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
       ap=obj.AP??null;vp=obj.VP??null;
+      // Coat of arms (rendered client-side from the baked pack via Crest). See crest.js.
+      emblem=(obj.E&&typeof obj.E==='object')?obj.E:null;
       // The highscore payload carries no reliable ban/protection flag (PF/VF/DUM don't track it —
       // even level-3 beginners under protection show nothing). Protection comes from gge-tracker
       // instead (peace_disabled_at), shown in the alliance member-stats list.
       banned=false;prot=false;
     }
-    return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot};
+    return{rank,score,name,al,alTag,allianceId,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot,emblem:emblem||null};
   }).filter(Boolean);
   return{rows,total};
 }

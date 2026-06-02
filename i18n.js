@@ -177,6 +177,7 @@ const EN={
   'd':'d','h':'h','min':'min',
   'Rekord':'All-time',
   'Wartości all-time (rekordowe)':'All-time (peak) values',
+  'Herb':'Coat of arms',
   // Favorites cards
   'Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.':'No watched players or alliances.<br>Click ☆ on any player or alliance.',
   '⏳ Pobieranie...':'⏳ Fetching...',

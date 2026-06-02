@@ -2,7 +2,7 @@
 //  GGE Rankings — service worker (offline app shell + fast loads)
 //  Bump VERSION on every asset change (keep in sync with ?v= in index.html).
 // ══════════════════════════════════════════════════════════════
-const VERSION = '20260530-14';
+const VERSION = '20260602-1';
 const CACHE = 'gge-' + VERSION;
 
 // App shell — relative URLs so it works under the /gge-rankings/ GitHub Pages path.
@@ -13,6 +13,7 @@ const PRECACHE = [
   './i18n.js?v=' + VERSION,
   './state.js?v=' + VERSION,
   './api.js?v=' + VERSION,
+  './crest.js?v=' + VERSION,
   './render.js?v=' + VERSION,
   './features.js?v=' + VERSION,
   './main.js?v=' + VERSION,

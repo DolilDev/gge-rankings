@@ -80,6 +80,14 @@ function scoreChgIndicator(name,curScore){
   return`<span class="chg sd ${up?'up':'dn'}" title="Δ ${up?'+':'−'}${fmtN(Math.abs(d))}">Δ${up?'+':'−'}${fmtAbbr(d)}</span>`;
 }
 
+// Coat of arms (player emblem). Returns an <img> with a same-origin data URL, or '' when the
+// pack isn't loaded yet / the row has no emblem. crest.js re-renders the table once the pack loads.
+function crestImg(emblem,size,cls){
+  if(!emblem||!window.Crest||!Crest.ready)return'';
+  const u=Crest.url(emblem,size);
+  return u?`<img class="${cls||'pcrest'}" src="${u}" width="${size}" height="${size}" alt="" title="${L('Herb')}">`:'';
+}
+
 function buildSynthRows(pool){
   const f=synthField();
   const valid=(pool||[]).filter(r=>r[f]!=null);
@@ -146,7 +154,7 @@ function renderTable(){
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
-      <td class="c-name"><span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
+      <td class="c-name">${isAl?'':crestImg(r.emblem,20,'pcrest')}<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
       </tr>
@@ -543,7 +551,9 @@ function renderDetailContent(rank){
     </div>`:'';
   const favObj=S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server);
   const noteHtml=favObj&&favObj.note?`<div class="dnote">📝 ${esc(favObj.note)}</div>`:'';
+  const dc=crestImg(r.emblem,88,'dcrest');
   panel.innerHTML=`
+    ${dc?`<div class="dcrest-box">${dc}</div>`:''}
     <div class="ds">${statHtml||`<span style="color:var(--c-muted);font-size:12px">${L('Brak szczegółowych danych')}</span>`}</div>
     <div class="da">
       <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
