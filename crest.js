@@ -5,6 +5,9 @@
 (function(global){
   const BASE='crest';
   const BGT_MAP=[[0,0,0,0],[0,1,0,1],[0,0,1,1],[0,1,1,0]]; // plain / horizontal / vertical / four-X
+  // The source geometry fills each symbol slot edge-to-edge, which makes neighboring
+  // emblems overlap visually. Keep some breathing room inside every slot.
+  const SYMBOL_SCALE=0.72;
   function hex(c){return '#'+('000000'+((c>>>0)&0xffffff).toString(16)).slice(-6)}
 
   const Crest={
@@ -51,7 +54,7 @@
       if(g)g.slots.forEach(slot=>{
         const id=slot.c===1?E.S1:E.S2, col=slot.c===1?E.SC1:E.SC2, fr=m.atlas.frames[id];
         if(!fr)return;
-        const s=Math.min(g.box[0]/fr.bw,g.box[1]/fr.bh);
+        const s=Math.min(g.box[0]/fr.bw,g.box[1]/fr.bh)*SYMBOL_SCALE;
         const ccx=slot.cx+fr.ox*s, ccy=slot.cy+fr.oy*s, dw=(fr.w/SS)*s*k, dh=(fr.h/SS)*s*k;
         ctx.drawImage(this._tintRect(im.symbols,fr,col),ccx*k-dw/2,ccy*k-dh/2,dw,dh);
       });
