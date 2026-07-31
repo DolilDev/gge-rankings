@@ -1,31 +1,64 @@
 // gge-rankings — state.js (split from app.js; classic script, shared global scope).
 // Load order: config → i18n → state → api → render → features → main. All wiring + init() live in main.js (loaded last).
 
+// ── Persisted state ──
+function readStoredArray(key){
+  try{
+    const value=JSON.parse(localStorage.getItem(key)||'[]');
+    return Array.isArray(value)?value:[];
+  }catch{return[]}
+}
+function storedChoice(key,allowed,fallback){
+  const value=localStorage.getItem(key);
+  return allowed.includes(value)?value:fallback;
+}
+function normalizeFavs(items){
+  return items.filter(f=>f&&typeof f==='object'&&typeof f.name==='string'&&srvInfo(f.server))
+    .map(f=>({
+      name:f.name.slice(0,100),
+      game:srvGame(f.server),
+      server:f.server,
+      ...(typeof f.note==='string'&&f.note?{note:f.note.slice(0,500)}:{})
+    }));
+}
+function normalizeFavAls(items){
+  return items.filter(f=>f&&typeof f==='object'&&typeof f.name==='string'&&srvInfo(f.server))
+    .map(f=>({
+      name:f.name.slice(0,100),
+      server:f.server,
+      allianceId:f.allianceId!==null&&f.allianceId!==''&&Number.isFinite(+f.allianceId)?+f.allianceId:null,
+      game:srvGame(f.server)
+    }));
+}
+
 // ── State ──
+const storedServer=localStorage.getItem('server');
+const storedPageSize=+localStorage.getItem('gge_pagesize');
+const storedAutoRef=+localStorage.getItem('gge_autoref');
 const S = {
   page:'ranking',
-  server: localStorage.getItem('server') || 'EmpireEx_5',
+  server: srvInfo(storedServer)?storedServer:'EmpireEx_5',
   eventKey:'', catIdx:0, allianceMode:false,
   curPage:1, totalRows:0,
   rows:[], expandedRank:null, expandedName:null, loading:false, reqId:0, lastSearch:'',
   pool:null, poolCtx:null, filtered:null, _poolPromise:null, synthRows:null,
   events:{}, texts:{},
-  favs: JSON.parse(localStorage.getItem('gge_favs_v7')||'[]'),
-  favAls: JSON.parse(localStorage.getItem('gge_favAls_v1')||'[]'),
+  favs: normalizeFavs(readStoredArray('gge_favs_v7')),
+  favAls: normalizeFavAls(readStoredArray('gge_favAls_v1')),
   sort: null,
   filter: {alliance:'all', alName:'', minScore:0},
   compare: [],
-  autoRef: +localStorage.getItem('gge_autoref')||0,
-  theme: localStorage.getItem('gge_theme')||'dark',
-  lang: localStorage.getItem('gge_lang')||'pl',
-  pageSize: +localStorage.getItem('gge_pagesize')||10,
+  autoRef: [0,30,60,300,600].includes(storedAutoRef)?storedAutoRef:0,
+  theme: storedChoice('gge_theme',['dark','light'],'dark'),
+  lang: storedChoice('gge_lang',['pl','en'],'pl'),
+  pageSize: [10,25,50].includes(storedPageSize)?storedPageSize:10,
   compact: localStorage.getItem('gge_compact')==='1',
   notify: localStorage.getItem('gge_notify')==='1',
 };
 
 // ── Helpers ──
 const $ = id => document.getElementById(id);
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(x)?String(n):x.toLocaleString(curLocale())}
 function isFav(n,g,s){return S.favs.some(f=>f.name===n&&f.game===g&&f.server===s)}
 function saveFavs(){localStorage.setItem('gge_favs_v7',JSON.stringify(S.favs))}
@@ -52,7 +85,13 @@ function toggleTheme(){applyTheme(S.theme==='light'?'dark':'light')}
 function readHash(){
   const h=location.hash.slice(1);if(!h)return{};
   const p=new URLSearchParams(h);
-  return{server:p.get('s'),event:p.get('e'),cat:p.get('c'),type:p.get('t'),page:+p.get('p')||0,q:p.get('q')||''};
+  const cat=Number.parseInt(p.get('c'),10),page=Number.parseInt(p.get('p'),10);
+  return{
+    server:p.get('s'),event:p.get('e'),
+    cat:Number.isInteger(cat)&&cat>=0?cat:null,
+    type:p.get('t'),page:Number.isInteger(page)&&page>=1?page:0,
+    q:(p.get('q')||'').slice(0,100)
+  };
 }
 let _writeHashTimer;
 function writeHash(){

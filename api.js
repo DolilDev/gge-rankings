@@ -106,9 +106,14 @@ function parseRows(data){
     // prepend a flag: [flag, rank, score, payload]. Locate the payload (the first array or
     // object) and read the two numbers right before it as rank and score, so the shifted
     // layout doesn't leave every row but #1 with rank 0 (which the page assembler drops).
+    const num=value=>{
+      if(value===null||value===undefined||value==='')return null;
+      const parsed=Number(value);return Number.isFinite(parsed)?parsed:null;
+    };
     let pIdx=entry.findIndex(x=>Array.isArray(x)||(x&&typeof x==='object'));
     if(pIdx<2)pIdx=2;
-    const rank=entry[pIdx-2],score=entry[pIdx-1],obj=entry[pIdx]||{};
+    const rank=num(entry[pIdx-2]),score=num(entry[pIdx-1]),obj=entry[pIdx]||{};
+    if(rank==null)return null;
     const isArr=Array.isArray(obj);
     let name,al,alTag,members,honor,might,glory,level,legendLevel,avp,hf,rpt,rank2,pre,suf,ap,vp,banned,prot,emblem;
     let allianceId=null;
@@ -116,16 +121,18 @@ function parseRows(data){
       const strs=obj.filter(x=>typeof x==='string'&&x.length>0);
       name=strs[0]||'—';
       if(S.allianceMode){
-        allianceId=typeof obj[0]==='number'?obj[0]:null;
-        members=typeof obj[2]==='number'?obj[2]:null;
+        allianceId=num(obj[0]);
+        members=num(obj[2]);
       }
     }else{
-      name=obj.N||'—';al=obj.AN||null;alTag=obj.AT||null;
-      members=obj.MC??obj.NM??obj.MCount??obj.memberCount??obj.members??obj.M??null;honor=obj.H??null;might=obj.MP??null;
-      glory=obj.CF??null;level=obj.L??null;legendLevel=obj.LL??null;
-      avp=obj.AVP??null;hf=obj.HF??null;rpt=obj.RPT??null;
-      rank2=obj.R??null;pre=obj.PRE||null;suf=obj.SUF||null;
-      ap=obj.AP??null;vp=obj.VP??null;
+      name=typeof obj.N==='string'&&obj.N?obj.N:'—';
+      al=typeof obj.AN==='string'&&obj.AN?obj.AN:null;
+      alTag=typeof obj.AT==='string'&&obj.AT?obj.AT:null;
+      members=num(obj.MC??obj.NM??obj.MCount??obj.memberCount??obj.members??obj.M);honor=num(obj.H);might=num(obj.MP);
+      glory=num(obj.CF);level=num(obj.L);legendLevel=num(obj.LL);
+      avp=num(obj.AVP);hf=num(obj.HF);rpt=num(obj.RPT);
+      rank2=num(obj.R);pre=num(obj.PRE);suf=num(obj.SUF);
+      ap=num(obj.AP);vp=num(obj.VP);
       // Coat of arms (rendered client-side from the baked pack via Crest). See crest.js.
       emblem=(obj.E&&typeof obj.E==='object')?obj.E:null;
       // The highscore payload carries no reliable ban/protection flag (PF/VF/DUM don't track it —
@@ -171,7 +178,12 @@ function injectSyntheticEvents(){
   if(!rebuilt.playerGlory)rebuilt.playerGlory=glory; // no Might key → just append
   S.events.player=rebuilt;
 }
-function validateEv(){const l=evList();if(!(S.eventKey in l))S.eventKey=Object.keys(l)[0]||''}
+function validateEv(){
+  const l=evList();
+  if(!(S.eventKey in l))S.eventKey=Object.keys(l)[0]||'';
+  const count=l[S.eventKey]?.categories?.length||1;
+  S.catIdx=Math.max(0,Math.min(Number.isInteger(S.catIdx)?S.catIdx:0,count-1));
+}
 function normalizeCats(){
   ['player','alliance'].forEach(mode=>{
     const evs=S.events[mode]||{};

@@ -345,26 +345,29 @@ function paintGgtMembers(box){
     return d?d*dir:(a.player_name||'').localeCompare(b.player_name||'');
   });
   const rows=sorted.map((p,i)=>{
-    const ll=p.legendary_level>0?`✦${p.legendary_level}`:(p.level>=70?`✦${p.level}`:`${p.level||'?'}`);
+    const legendaryLevel=Number.isFinite(+p.legendary_level)?+p.legendary_level:0;
+    const level=Number.isFinite(+p.level)?+p.level:0;
+    const ll=legendaryLevel>0?`✦${legendaryLevel}`:(level>=70?`✦${level}`:`${level||'?'}`);
     const rkCls=i<3?` rk${i+1}`:'';
-    const isLeader=p.alliance_rank===0;
+    const allianceRank=p.alliance_rank!==null&&p.alliance_rank!==''&&Number.isFinite(+p.alliance_rank)?+p.alliance_rank:null;
+    const isLeader=allianceRank===0;
     const roleBadge=isLeader
       ?`<span class="gtm-role gtm-leader" title="${L('Lider sojuszu')}">👑 ${L('Lider')}</span>`
-      :(p.alliance_rank!=null?`<span class="gtm-role" title="${L('Ranga w sojuszu')}: ${p.alliance_rank}">🎖 ${p.alliance_rank}</span>`:'');
+      :(allianceRank!=null?`<span class="gtm-role" title="${L('Ranga w sojuszu')}: ${allianceRank}">🎖 ${allianceRank}</span>`:'');
     const protUntil=ggtProtectedUntil(p);
     const protLeft=protUntil?fmtDur(protUntil-Date.now()):'';
     const protBadge=protUntil?`<span class="gtm-prot" title="${L('Ochrona jeszcze {n} (do {d})',{n:protLeft,d:new Date(protUntil).toLocaleString(curLocale())})}">🛡 ${protLeft}</span>`:'';
     // All-time / peak values (record might, loot, glory, honor) on a dimmer second line.
     const at=[];
-    if(p.might_all_time)at.push(`<span>💪 <b>${fmtN(p.might_all_time)}</b></span>`);
-    if(p.loot_all_time)at.push(`<span>💰 <b>${fmtN(p.loot_all_time)}</b></span>`);
-    if(p.highest_fame)at.push(`<span>🏆 <b>${fmtN(p.highest_fame)}</b></span>`);
-    if(p.max_honor)at.push(`<span>❤ <b>${fmtN(p.max_honor)}</b></span>`);
+    if(p.might_all_time)at.push(`<span>💪 <b>${esc(fmtN(p.might_all_time))}</b></span>`);
+    if(p.loot_all_time)at.push(`<span>💰 <b>${esc(fmtN(p.loot_all_time))}</b></span>`);
+    if(p.highest_fame)at.push(`<span>🏆 <b>${esc(fmtN(p.highest_fame))}</b></span>`);
+    if(p.max_honor)at.push(`<span>❤ <b>${esc(fmtN(p.max_honor))}</b></span>`);
     const atRow=at.length?`<div class="gtm-sub gtm-at"><span class="gtm-at-tag" title="${L('Wartości all-time (rekordowe)')}">${L('Rekord')}</span>${at.join('')}</div>`:'';
     return`<div class="gtm-row${isLeader?' gtm-leader-row':''}" data-search-player="${esc(p.player_name||'')}">
       <div class="gtm-rk${rkCls}">${i+1}</div>
       <div class="gtm-nm">${esc(p.player_name||'—')}${protBadge}${roleBadge}<span class="gtm-lv">Lv ${ll}</span></div>
-      <div class="gtm-sub"><span>💪 <b>${fmtN(p.might_current)}</b></span><span>💰 <b>${fmtN(p.loot_current)}</b></span><span>🏆 <b>${fmtN(p.current_fame)}</b></span><span>❤ <b>${fmtN(p.honor)}</b></span></div>
+      <div class="gtm-sub"><span>💪 <b>${esc(fmtN(p.might_current))}</b></span><span>💰 <b>${esc(fmtN(p.loot_current))}</b></span><span>🏆 <b>${esc(fmtN(p.current_fame))}</b></span><span>❤ <b>${esc(fmtN(p.honor))}</b></span></div>
       ${atRow}
     </div>`;
   }).join('');
@@ -539,8 +542,11 @@ function renderDetailContent(rank){
   if(r.al)stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
   if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie'});
   const statHtml=stats.map(st=>{
-    if(st.link)return`<div class="db" title="${L('Otwórz ranking: {x}',{x:evname(st.link)})}" data-link="${st.link}" data-mode="${st.mode||'player'}" data-search="${esc(st.search||'')}"><div class="db-v">${st.v}</div><div class="db-l">${L(st.l)}</div><div class="db-hint">→ ${evname(st.link)}</div></div>`;
-    return`<div class="db db-plain"><div class="db-v">${st.v}</div><div class="db-l">${L(st.l)}</div></div>`;
+    if(st.link){
+      const eventName=evname(st.link);
+      return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"><div class="db-v">${esc(st.v)}</div><div class="db-l">${esc(L(st.l))}</div><div class="db-hint">→ ${esc(eventName)}</div></div>`;
+    }
+    return`<div class="db db-plain"><div class="db-v">${esc(st.v)}</div><div class="db-l">${esc(L(st.l))}</div></div>`;
   }).join('');
   // Mini-sparkline of historical rank (current ranking only)
   const series=getRankSeriesForKey(r.name,histKey(),12);
@@ -630,7 +636,7 @@ function renderPg(){
 function buildEventSel(){
   const sel=$('eventSelect');const list=evList();const keys=Object.keys(list);
   if(!keys.length){sel.innerHTML=`<option>${L('Brak')}</option>`;return}
-  sel.innerHTML=keys.map(k=>`<option value="${k}">${evname(k)}</option>`).join('');
+  sel.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(evname(k))}</option>`).join('');
   if(!(S.eventKey in list))S.eventKey=keys[0];
   sel.value=S.eventKey;buildCats();
 }
@@ -638,7 +644,7 @@ function buildCats(){
   const cb=$('catBar');const cats=curEv().categories;
   if(!cats?.length||cats.length<=1){cb.style.display='none';return}
   cb.style.display='flex';
-  cb.innerHTML=cats.map((c,i)=>{const n=catname(c);return n?`<button class="cat${i===S.catIdx?' on':''}" data-i="${i}">${n}</button>`:''}).join('');
+  cb.innerHTML=cats.map((c,i)=>{const n=catname(c);return n?`<button class="cat${i===S.catIdx?' on':''}" data-i="${i}">${esc(n)}</button>`:''}).join('');
   cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;clearExpanded();buildCats();await reloadCtx()}));
 }
 function updateTypeSeg(){

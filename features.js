@@ -149,7 +149,7 @@ function toggleFav(name,game,server,tr){
   if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast(L('Usunięto z obserwowanych'))}
   else{S.favs.push({name,game,server});toast(L('Obserwujesz {n} ⭐',{n:name}),'success')}
   saveFavs();updFavCnt();
-  document.querySelectorAll(`.sb[data-n="${esc(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.textContent=isFav(name,game,server)?'⭐':'☆'});
+  document.querySelectorAll(`.sb[data-n="${CSS.escape(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.textContent=isFav(name,game,server)?'⭐':'☆'});
   if(tr)tr.classList.toggle('fav',isFav(name,game,server));
 }
 
@@ -165,7 +165,7 @@ function renderFavPage(){
     const spkId='spk_'+fav.name.replace(/\W/g,'_')+'_'+fav.server;
     card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="${L('Usuń')}">×</button></div>
       <div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('⏳ Pobieranie...')}</span></div></div>
-      <input type="text" class="fnote" placeholder="${L('Notatka (np. wróg / sojusznik / cel)')}" value="${esc(fav.note||'')}" aria-label="${L('Notatka (np. wróg / sojusznik / cel)')}">
+      <input type="text" class="fnote" maxlength="500" placeholder="${L('Notatka (np. wróg / sojusznik / cel)')}" value="${esc(fav.note||'')}" aria-label="${L('Notatka (np. wróg / sojusznik / cel)')}">
       <div id="${spkId}"></div>`;
     card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast(L('Usunięto'))});
     const noteEl=card.querySelector('.fnote');
@@ -198,7 +198,7 @@ async function loadFavAlStats(fav,card,cid){
     if(al.MP!=null)rows.push({l:'Moc',v:fmtN(al.MP)});
     if(al.CF!=null)rows.push({l:'Punkty chwały',v:fmtN(al.CF)});
     rows.push({l:'Członkowie',v:fmtN(members.length)});
-    el.innerHTML=rows.map(r=>`<div class="fr"><span class="fl">${L(r.l)}</span><span class="fp2">${r.v}</span></div>`).join('');
+    el.innerHTML=rows.map(r=>`<div class="fr"><span class="fl">${esc(L(r.l))}</span><span class="fp2">${esc(r.v)}</span></div>`).join('');
   }catch{
     if(el.isConnected)el.innerHTML=`<div class="fr"><span class="fl" style="color:var(--c-muted)">${L('Błąd')}</span></div>`;
   }
@@ -255,7 +255,9 @@ function exportData(fmt){
     const csv=[headers.join(',')];
     rows.forEach(r=>{
       const cells=headers.map(h=>{
-        const v=r[h]??'';const s=String(v);
+        const v=r[h]??'';let s=String(v);
+        // Prevent spreadsheet applications from evaluating player-controlled values.
+        if(/^[\t\r ]*[=+\-@]/.test(s))s="'"+s;
         return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;
       });
       csv.push(cells.join(','));
