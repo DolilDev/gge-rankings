@@ -67,6 +67,11 @@ function toast(m,kind=''){const t=$('toast');t.textContent=m;t.className='toast 
 function setSt(cls,msg){const b=$('sBar');b.className='sbar '+cls;$('sMsg').textContent=msg}
 function timeout(p,ms){return Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),ms))])}
 function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+function pageForRank(rank,pageSize=S.pageSize){
+  const safeRank=Math.max(1,Math.floor(+rank)||1);
+  const safeSize=Math.max(1,Math.floor(+pageSize)||10);
+  return Math.ceil(safeRank/safeSize);
+}
 function srvInfo(h){return ALL_SERVERS.find(s=>s.h===h)||null}
 function srvGame(h){return srvInfo(h)?.game||'gge'}
 function sname(h){const s=srvInfo(h);return s?`${s.flag} ${s.name}`:`Serwer ${h}`}

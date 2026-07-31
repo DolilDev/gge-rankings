@@ -458,7 +458,7 @@ async function renderAllianceDetail(r,panel){
           const lvl=m.LL>0?`✦${m.LL}`:(m.L>=70?`✦${m.L}`:(m.L>0?`${m.L}`:'?'));
           return`<div class="db db-plain" style="min-width:0;padding:5px 8px;cursor:pointer" data-search-player="${esc(m.N||'')}">
             <div class="db-v" style="font-size:12px">${esc(m.N||'—')}</div>
-            <div class="db-l">Lv ${lvl} · ${fmtN(m.MP??0)}</div>
+            <div class="db-l">Lv ${lvl} · ${esc(fmtN(m.MP??0))}</div>
           </div>`;
         }).join('')}
         </div></div>`;

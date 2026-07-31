@@ -95,7 +95,7 @@ const doSearch=async()=>{
   const numeric=!isNaN(+v);
   if(numeric){
     const rank=Math.max(1,Math.floor(+v));
-    S.curPage=Math.ceil(rank/S.pageSize);
+    S.curPage=pageForRank(rank);
     clearExpanded();
     await loadRanking(String((S.curPage-1)*S.pageSize+1));
   }else{

@@ -218,12 +218,13 @@ async function loadFavRanks(fav,card,spkId){
       const d=await ggeGet(url);
       if(d?.return_code==0&&d.content?.L?.length){
         const f=d.content.L.find(p=>Array.isArray(p)&&(p[2]?.N||'').toLowerCase()===fav.name.toLowerCase());
-        if(f)res.push({key,rank:f[0],score:f[1]});
+        const rank=f?Number(f[0]):NaN,score=f?Number(f[1]):NaN;
+        if(f&&Number.isFinite(rank))res.push({key,rank,score:Number.isFinite(score)?score:null});
       }
     }catch{}
   }
   if(!el.isConnected)return;
-  el.innerHTML=res.length?res.map(r=>`<div class="fr"><span class="fl">${esc(evname(r.key))}</span><span class="fp2${r.rank<=3?' g':''}">#${r.rank}</span><span class="fs">${fmtN(r.score)}</span></div>`).join('')
+  el.innerHTML=res.length?res.map(r=>`<div class="fr"><span class="fl">${esc(evname(r.key))}</span><span class="fp2${r.rank<=3?' g':''}">#${r.rank}</span><span class="fs">${esc(fmtN(r.score))}</span></div>`).join('')
     :`<div class="fr"><span class="fl" style="color:var(--c-muted)">${L('Nie znaleziono')}</span></div>`;
   // Sparkline (best key for this player)
   const spkEl=card.querySelector('#'+CSS.escape(spkId));
@@ -246,6 +247,12 @@ function downloadFile(name,content,type){
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},100);
   toast(L('📥 Pobrano {name}',{name}),'success');
 }
+function csvCell(value){
+  let cell=String(value??'');
+  // Prevent spreadsheet applications from evaluating player-controlled values.
+  if(/^[\t\r ]*[=+\-@]/.test(cell))cell="'"+cell;
+  return /[",\n]/.test(cell)?`"${cell.replace(/"/g,'""')}"`:cell;
+}
 function exportData(fmt){
   const rows=visibleRows();
   if(!rows.length){toast(L('Brak danych do eksportu'),'error');return}
@@ -258,12 +265,7 @@ function exportData(fmt){
       :['rank','name','al','alTag','members','score','honor','might','glory','level','legendLevel','avp','hf','rpt'];
     const csv=[headers.join(',')];
     rows.forEach(r=>{
-      const cells=headers.map(h=>{
-        const v=r[h]??'';let s=String(v);
-        // Prevent spreadsheet applications from evaluating player-controlled values.
-        if(/^[\t\r ]*[=+\-@]/.test(s))s="'"+s;
-        return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;
-      });
+      const cells=headers.map(h=>csvCell(r[h]));
       csv.push(cells.join(','));
     });
     downloadFile(`${baseName}.csv`,csv.join('\n'),'text/csv;charset=utf-8');

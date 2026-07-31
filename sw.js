@@ -2,8 +2,9 @@
 //  GGE Rankings — service worker (offline app shell + fast loads)
 //  Bump VERSION on every asset change (keep in sync with ?v= in index.html).
 // ══════════════════════════════════════════════════════════════
-const VERSION = '20260602-1';
-const CACHE = 'gge-' + VERSION;
+const VERSION = '20260731-1';
+const CACHE_PREFIX = 'gge-';
+const CACHE = CACHE_PREFIX + VERSION;
 
 // App shell — relative URLs so it works under the /gge-rankings/ GitHub Pages path.
 const PRECACHE = [
@@ -35,7 +36,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    await Promise.all(keys.filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });

@@ -1,0 +1,8 @@
+{
+  "name": "gge-rankings",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check config.js && node --check i18n.js && node --check state.js && node --check api.js && node --check crest.js && node --check render.js && node --check features.js && node --check main.js && node --check sw.js && node --test"
+  }
+}
