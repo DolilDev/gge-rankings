@@ -8,6 +8,7 @@
   // The source geometry fills each symbol slot edge-to-edge, which makes neighboring
   // emblems overlap visually. Keep some breathing room inside every slot.
   const SYMBOL_SCALE=0.72;
+  const HORIZONTAL_PAIR_SCALE=0.55;
   function hex(c){return '#'+('000000'+((c>>>0)&0xffffff).toString(16)).slice(-6)}
 
   const Crest={
@@ -51,10 +52,11 @@
       const map=BGT_MAP[E.BGT]||BGT_MAP[0],cols=[E.BGC1,E.BGC2];
       for(let r=0;r<4;r++)if(L.regions[r].w)blit(this._tintImg(im.regions[r],cols[map[r]]),L.regions[r]);
       const g=m.geo[E.SPT]||m.geo[1];
+      const symbolScale=Number(E.SPT)===1?HORIZONTAL_PAIR_SCALE:SYMBOL_SCALE;
       if(g)g.slots.forEach(slot=>{
         const id=slot.c===1?E.S1:E.S2, col=slot.c===1?E.SC1:E.SC2, fr=m.atlas.frames[id];
         if(!fr)return;
-        const s=Math.min(g.box[0]/fr.bw,g.box[1]/fr.bh)*SYMBOL_SCALE;
+        const s=Math.min(g.box[0]/fr.bw,g.box[1]/fr.bh)*symbolScale;
         const ccx=slot.cx+fr.ox*s, ccy=slot.cy+fr.oy*s, dw=(fr.w/SS)*s*k, dh=(fr.h/SS)*s*k;
         ctx.drawImage(this._tintRect(im.symbols,fr,col),ccx*k-dw/2,ccy*k-dh/2,dw,dh);
       });
