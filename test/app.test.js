@@ -103,10 +103,11 @@ test('CSV cells neutralize formulas and quote delimiters',()=>{
 
 test('service worker only deletes caches owned by this app',async()=>{
   const handlers={};const deleted=[];
+  const version=source('sw.js').match(/const VERSION = '([^']+)'/)[1];
   const context={
     URL,Response,
     self:{location:{origin:'https://example.test'},addEventListener:(name,handler)=>{handlers[name]=handler},skipWaiting(){},clients:{claim(){}}},
-    caches:{keys:async()=>['gge-old','other-app','gge-20260731-1'],delete:async key=>{deleted.push(key)}},
+    caches:{keys:async()=>['gge-old','other-app',`gge-${version}`],delete:async key=>{deleted.push(key)}},
     fetch:async()=>{throw new Error('unused')}
   };
   vm.createContext(context);vm.runInContext(source('sw.js'),context);

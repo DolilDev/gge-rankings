@@ -2,7 +2,7 @@
 //  GGE Rankings — service worker (offline app shell + fast loads)
 //  Bump VERSION on every asset change (keep in sync with ?v= in index.html).
 // ══════════════════════════════════════════════════════════════
-const VERSION = '20260731-1';
+const VERSION = '20260731-2';
 const CACHE_PREFIX = 'gge-';
 const CACHE = CACHE_PREFIX + VERSION;
 

@@ -147,16 +147,19 @@ function renderTable(){
     const inCmp=S.compare.some(c=>c.name===r.name&&c.server===S.server);
     const chg=chgIndicator(r.name,r.rank);
     const scd=scoreChgIndicator(r.name,r.score);
+    const nameContent=isAl
+      ?`<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}`
+      :`<span class="player-name-line">${crestImg(r.emblem,20,'pcrest')}<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</span>`;
     const alCell=isAl
       ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
       :`<td style="font-size:11px;color:var(--c-muted)">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.al)}</button>`:'—'}</td>`;
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
-      <td class="rk ${rkCls}">${badge}${chg}${scd}</td>
+      <td class="rk ${rkCls}"><div class="rk-stack"><span class="rk-value">${badge}</span>${chg}</div></td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
-      <td class="c-name">${isAl?'':crestImg(r.emblem,20,'pcrest')}<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</td>
+      <td class="c-name">${nameContent}</td>
       ${alCell}
-      <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><span class="sv">${fmtN(r.score)}</span></div></td>
+      <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><div class="score-values"><span class="sv">${fmtN(r.score)}</span>${scd}</div></div></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
       <td colspan="${ncols}"><div class="dp" id="dp_${r.rank}"></div></td>

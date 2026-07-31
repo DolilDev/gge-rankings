@@ -112,6 +112,9 @@ tr.xr{border-bottom:1px solid var(--c-border);background:var(--c-surface)}tr.xr 
 td{padding:8px 12px;font-size:13px;vertical-align:middle}
 
 .rk{width:40px;text-align:center;font-size:12px;font-weight:600;color:var(--c-muted);white-space:nowrap}
+.rk-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1;min-height:28px}
+.rk-value{display:block}
+.rk-stack .chg{margin-left:0;padding:0 3px;font-size:8px;line-height:11px}
 
 .rk1{color:#f0c030;font-size:15px}.rk2{color:#b0b8c8;font-size:14px}.rk3{color:#c07828;font-size:13px}
 
@@ -120,6 +123,9 @@ td{padding:8px 12px;font-size:13px;vertical-align:middle}
 .ck{width:14px;height:14px;cursor:pointer;accent-color:var(--c-blue);margin:0}
 
 .pn{font-weight:500;color:var(--c-bright)}
+.player-name-line{display:flex;align-items:center;min-width:0;max-width:100%;overflow:hidden}
+.player-name-line .pn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player-name-line .badge{flex:0 0 auto}
 /* Coat of arms (crest.js). Small badge before the player name; larger one on the detail card. */
 .pcrest{display:inline-block;width:20px;height:20px;vertical-align:middle;margin-right:6px;flex:0 0 auto}
 body.compact .pcrest{width:17px;height:17px;margin-right:5px}
@@ -139,10 +145,13 @@ body.compact .pcrest{width:17px;height:17px;margin-right:5px}
 .chg.up{color:var(--c-green);background:rgba(63,185,80,.12)}
 .chg.dn{color:var(--c-red);background:rgba(248,81,73,.12)}
 .chg.new{color:var(--c-yellow);background:rgba(210,153,34,.12)}
-/* Δ score-delta chip sits next to the rank-change arrow */
+/* Score delta belongs to the score column, below the current value. */
 .chg.sd{font-size:9px;padding:1px 4px;margin-left:4px}
 
 .sc{display:flex;align-items:center;gap:7px;justify-content:flex-end}
+.score-values{display:flex;flex:0 0 auto;min-width:62px;flex-direction:column;align-items:flex-end;gap:2px}
+.score-values .sv{min-width:0}
+.score-values .chg.sd{margin-left:0;line-height:12px}
 
 /* In a fixed-width score column the bar yields space so the full number stays visible. */
 .sbar2{width:56px;height:4px;background:var(--c-border);border-radius:2px;flex-shrink:1;min-width:0}
@@ -227,6 +236,9 @@ body.compact td{padding:3px 10px;font-size:12px}
 body.compact thead th{padding:5px 10px}
 body.compact .dp{padding:10px 12px}
 body.compact .sc{gap:5px}
+body.compact .rk-stack{min-height:22px;gap:0}
+body.compact .rk-stack .chg,body.compact .score-values .chg.sd{line-height:9px}
+body.compact .score-values{gap:0}
 
 /* States */
 .st{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 20px;gap:12px}
