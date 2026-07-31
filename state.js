@@ -148,7 +148,7 @@ function captureSnapshot(rows){
   const k=histKey();
   HIST[k]=HIST[k]||{};
   const now=Date.now();
-  rows.slice(0,100).forEach(r=>{
+  rows.forEach(r=>{
     const arr=HIST[k][r.name]=HIST[k][r.name]||[];
     const last=arr[arr.length-1];
     if(last&&(now-last[0])<HIST_DEDUPE_MS){

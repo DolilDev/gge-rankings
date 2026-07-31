@@ -3,6 +3,7 @@
 
 // ── API with retry ──
 const CACHE=new Map();
+const EVENT_CATALOGS=new Map();
 function cGet(k){const e=CACHE.get(k);return(e&&Date.now()<e.x)?e.v:null}
 function cSet(k,v,ttl){CACHE.set(k,{v,x:Date.now()+ttl})}
 async function fetchRetry(url,retries=2){
@@ -18,8 +19,8 @@ async function fetchRetry(url,retries=2){
     }
   }
 }
-async function ggeGet(url,skipCache=false){
-  if(!skipCache){const hit=cGet(url);if(hit)return hit;}
+async function ggeGet(url,fresh=false){
+  const hit=fresh?null:cGet(url);if(hit)return hit;
   try{
     const r=await fetchRetry(url);if(!r||!r.ok)return null;
     const d=await r.json();cSet(url,d,60000);return d;
@@ -149,9 +150,25 @@ function parseRows(data){
 async function loadTexts(){
   try{const r=await timeout(fetch(TEXTS_URL(S.lang)),4000);if(r.ok){const d=await r.json();if(d)S.texts=d;}}catch{}
 }
+async function getEventCatalog(game){
+  if(EVENT_CATALOGS.has(game))return EVENT_CATALOGS.get(game);
+  const pending=(async()=>{
+    try{
+      const r=await timeout(fetch(EVENTS_URL(game)),6000);
+      if(!r.ok)return null;
+      const data=await r.json();
+      return data&&typeof data==='object'&&data.player&&typeof data.player==='object'?data:null;
+    }catch{return null}
+  })();
+  EVENT_CATALOGS.set(game,pending);
+  const catalog=await pending;
+  if(!catalog)EVENT_CATALOGS.delete(game);
+  return catalog;
+}
 async function loadEvents(){
   const game=srvGame(S.server);
-  try{const r=await timeout(fetch(EVENTS_URL(game)),6000);if(r.ok){const d=await r.json();if(d)S.events=d;}}catch{}
+  const catalog=await getEventCatalog(game);
+  if(catalog)S.events=JSON.parse(JSON.stringify(catalog));
   if(!S.events.player){
     S.events={
       player:{
@@ -195,22 +212,22 @@ function normalizeCats(){
   });
 }
 
-async function fetchRanking(sv,skipCache=false){
+async function fetchRanking(sv,fresh=false){
   const isNameSearch=sv&&isNaN(+sv);
   const lt=isNameSearch?(curEv().id??curLT()):curLT();
   if(!lt||!S.server)return null;
   const lid=isNameSearch?'':curCat().id||'';
   try{
     const url=isGlobal()?ggeGlobalUrl(S.server,lt,sv,lid):ggeUrl(S.server,lt,sv,lid);
-    return await timeout(ggeGet(url,skipCache),10000);
+    return await timeout(ggeGet(url,fresh),10000);
   }catch(e){console.warn('fetchRanking:',e.message);return null}
 }
 
 // Fetch one UI page (up to S.pageSize rows). Name search → single request;
 // numeric start rank → ceil(pageSize/API_PAGE) chunks fetched in parallel and merged.
-async function fetchRankingPage(sv){
+async function fetchRankingPage(sv,fresh=false){
   const isName=sv&&isNaN(+sv);
-  if(isName){const d=await fetchRanking(sv);return d?parseRows(d):null}
+  if(isName){const d=await fetchRanking(sv,fresh);return d?parseRows(d):null}
   const start=Math.max(1,+sv||1);
   const map=new Map();let total=0;
   // Returns how many *new* ranks were added (so the fill loop can detect "no progress").
@@ -222,7 +239,7 @@ async function fetchRankingPage(sv){
   };
   const chunks=Math.max(1,Math.ceil(S.pageSize/API_PAGE));
   const firstStarts=[];for(let i=0;i<chunks;i++)firstStarts.push(start+i*API_PAGE);
-  await fetchInto(firstStarts,false);
+  await fetchInto(firstStarts,fresh);
   // Some leaderboards (e.g. achievement points) return a window offset a few ranks *before*
   // the requested SV — so SV=11 yields ranks 7‑16, and the fixed chunks above leave a gap at
   // the tail of the page (showing e.g. 46 of 50). Fill any rank still missing in [start, end]
@@ -240,18 +257,18 @@ async function fetchRankingPage(sv){
   return{rows,total:total||rows.length};
 }
 
-async function loadRanking(sv='1'){
+async function loadRanking(sv='1',fresh=false){
   // Don't drop the open detail panel here — renderTable() re-attaches it by player
   // name, so it survives refreshes. Context navigations clear it explicitly.
   S.lastSearch=(sv&&isNaN(+sv))?sv.toLowerCase():'';
-  if(synthActive())return loadSynth();
+  if(synthActive())return loadSynth(fresh);
   const rid=++S.reqId;S.loading=true;
   // Keep the current table on screen (dimmed) while refreshing, so there is no blank gap.
   const keep=S.rows.length>0;
   setSt('spin',L(keep?'Odświeżanie...':'Pobieranie...'));
   if(keep)$('mainView').classList.add('stale');else showSpin();
   if(!S.server||!curLT()){S.loading=false;setSt('err',L('Wybierz serwer lub ranking'));showSt('⚙️',L('Wybierz serwer z listy'),'');return}
-  const res=await fetchRankingPage(sv);
+  const res=await fetchRankingPage(sv,fresh);
   if(rid!==S.reqId)return;
   S.loading=false;
   if(!res){
@@ -262,9 +279,6 @@ async function loadRanking(sv='1'){
   }
   const{rows,total}=res;
 
-  // Detect fav movements before capturing new snapshot
-  if(!S.allianceMode) detectFavMovements(rows);
-
   S.rows=rows;S.totalRows=total;
   if(!rows.length){setSt('live',L('Brak danych'));showSt('📭',L('Brak danych dla tego rankingu'),L('Ten event może nie być aktywny na wybranym serwerze.'));return}
   const totalPgs=Math.max(1,Math.ceil(total/S.pageSize));
@@ -273,19 +287,40 @@ async function loadRanking(sv='1'){
   if(S.server)localStorage.setItem('server',S.server);
 
   renderTable();renderPg();
-  // Capture snapshot AFTER render so prev ranks were available for indicators
-  captureSnapshot(rows);
   writeHash();
+
+  // Favorites are queried separately when they are outside the visible page. Do this
+  // after rendering so a slow lookup never delays the visible ranking.
+  const snapshotRows=S.allianceMode?rows:await rowsWithTrackedFavorites(rows,fresh);
+  if(rid!==S.reqId)return;
+  if(!S.allianceMode)detectFavMovements(snapshotRows);
+  // Capture snapshot AFTER render so prev ranks were available for indicators
+  captureSnapshot(snapshotRows);
+}
+
+async function rowsWithTrackedFavorites(rows,fresh=false){
+  const game=srvGame(S.server);
+  const favorites=S.favs.filter(f=>f.game===game&&f.server===S.server);
+  if(!favorites.length)return rows;
+  const byName=new Map(rows.map(r=>[r.name.toLowerCase(),r]));
+  const missing=favorites.filter(f=>!byName.has(f.name.toLowerCase()));
+  const found=await Promise.all(missing.map(async fav=>{
+    const data=await fetchRanking(fav.name,fresh);
+    const matches=data?parseRows(data).rows:[];
+    return matches.find(r=>r.name.toLowerCase()===fav.name.toLowerCase())||null;
+  }));
+  found.filter(Boolean).forEach(r=>byName.set(r.name.toLowerCase(),r));
+  return[...byName.values()];
 }
 
 // Build & render the synthetic glory ranking: pull the base-board pool, sort by the chosen field,
 // re-rank 1..N and paginate locally (the table/pager treat it like the filter path).
-async function loadSynth(){
+async function loadSynth(fresh=false){
   const rid=++S.reqId;
   const ctx=poolCtx();
   const cached=S.pool&&S.poolCtx===ctx;
   if(!cached){S.loading=true;setSt('spin',L('Pobieranie graczy…'));if(S.rows.length||S.synthRows)$('mainView').classList.add('stale');else showSpin()}
-  const pool=await ensurePool();
+  const pool=await ensurePool(fresh);
   if(rid!==S.reqId||poolCtx()!==ctx)return;
   S.loading=false;
   let full=buildSynthRows(pool);
@@ -301,7 +336,11 @@ async function loadSynth(){
   S.rows=pageRows;
   renderSynthStatus();
   renderTable();renderPg();
-  captureSnapshot(pageRows);
+  const game=srvGame(S.server);
+  const tracked=full.filter(row=>S.favs.some(f=>f.game===game&&f.server===S.server&&f.name.toLowerCase()===row.name.toLowerCase()));
+  const snapshotRows=[...new Map([...pageRows,...tracked].map(row=>[row.name.toLowerCase(),row])).values()];
+  detectFavMovements(snapshotRows);
+  captureSnapshot(snapshotRows);
   writeHash();
 }
 
@@ -309,9 +348,9 @@ function detectFavMovements(rows){
   const game=srvGame(S.server);
   S.favs.forEach(fav=>{
     if(fav.game!==game||fav.server!==S.server)return;
-    const cur=rows.find(r=>r.name===fav.name);
+    const cur=rows.find(r=>r.name.toLowerCase()===fav.name.toLowerCase());
     if(!cur)return;
-    const prev=getPrevRank(fav.name);
+    const prev=getPrevRank(cur.name);
     if(prev==null)return;
     let msg=null,kind='';
     if(prev>10&&cur.rank<=10){msg=L('🚀 {n} wszedł do TOP 10 (#{r})',{n:fav.name,r:cur.rank});kind='success'}
@@ -322,6 +361,7 @@ function detectFavMovements(rows){
 }
 
 async function goPage(page){
+  page=Math.max(1,Math.floor(+page)||1);
   // Locally-paginated views (synthetic glory ranking, active filter) just re-slice in place.
   if(synthActive()&&S.synthRows){
     const totalPgs=Math.max(1,Math.ceil(S.synthRows.length/S.pageSize));

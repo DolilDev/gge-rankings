@@ -89,10 +89,22 @@ $('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.addEventListener('click',as
   updateTypeSeg();buildEventSel();await reloadCtx();
 }));
 
-const doSearch=async()=>{const v=$('searchInput').value.trim();if(!v)return;if(filterActive())resetFilterUI();S.curPage=1;clearExpanded();await loadRanking(v)};
+const doSearch=async()=>{
+  const v=$('searchInput').value.trim();if(!v)return;
+  if(filterActive())resetFilterUI();
+  const numeric=!isNaN(+v);
+  if(numeric){
+    const rank=Math.max(1,Math.floor(+v));
+    S.curPage=Math.ceil(rank/S.pageSize);
+    clearExpanded();
+    await loadRanking(String((S.curPage-1)*S.pageSize+1));
+  }else{
+    S.curPage=1;clearExpanded();await loadRanking(v);
+  }
+};
 $('goSearch').addEventListener('click',doSearch);
 $('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
-$('refreshBtn').addEventListener('click',()=>{S.curPage=1;reloadCtx()});
+$('refreshBtn').addEventListener('click',()=>{S.curPage=1;reloadCtx(true)});
 
 $('addBtn').addEventListener('click',()=>{
   $('mName').value='';$('mErr').style.display='none';

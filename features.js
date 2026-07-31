@@ -56,7 +56,7 @@ function activeRows(){
   return (filterActive()&&S.filtered)?S.filtered:S.rows;
 }
 function findRow(rank){return activeRows().find(x=>x.rank===rank)}
-async function ensurePool(){
+async function ensurePool(fresh=false){
   const ctx=poolCtx();
   if(S.pool&&S.poolCtx===ctx)return S.pool;
   if(S._poolPromise)return S._poolPromise;
@@ -65,7 +65,7 @@ async function ensurePool(){
     for(let sv=1;sv<=FILTER_POOL_MAX;){
       const batch=[];
       for(let j=0;j<FILTER_FETCH_CONC&&sv<=FILTER_POOL_MAX;j++,sv+=API_PAGE)batch.push(sv);
-      const res=await Promise.all(batch.map(s=>fetchRanking(String(s)).then(d=>d?parseRows(d).rows:[]).catch(()=>[])));
+      const res=await Promise.all(batch.map(s=>fetchRanking(String(s),fresh).then(d=>d?parseRows(d).rows:[]).catch(()=>[])));
       let got=0;res.forEach(rows=>{got+=rows.length;all.push(...rows)});
       if(poolCtx()!==ctx){S._poolPromise=null;return S.pool||[]}
       setSt('spin',L('Pobieranie graczy… {n}',{n:all.length}));
@@ -93,14 +93,16 @@ function renderFilteredStatus(){
   $('sPage').textContent=`${Math.min(S.curPage,totalPgs)} / ${totalPgs}`;
   setSt('live',L('Filtr: {n} z {pool} pobranych',{n:fmtN(n),pool:fmtN(poolN)}));
 }
-async function runFilter(){
-  if(!filterActive()){S.filtered=null;await loadRanking('1');return}
+async function runFilter(fresh=false){
+  if(!filterActive()){S.filtered=null;await loadRanking('1',fresh);return}
+  const rid=++S.reqId;
   const ctx=poolCtx();
   if(!(S.pool&&S.poolCtx===ctx)){S.loading=true;setSt('spin',L('Pobieranie graczy do filtrów…'));if(S.rows.length)$('mainView').classList.add('stale');else showSpin()}
-  const pool=await ensurePool();
+  const pool=await ensurePool(fresh);
+  if(rid!==S.reqId)return;
   S.loading=false;
   if(poolCtx()!==ctx)return;
-  if(!filterActive()){S.filtered=null;await loadRanking('1');return}
+  if(!filterActive()){S.filtered=null;await loadRanking('1',fresh);return}
   S.pool=pool;
   applyFiltered();
   const totalPgs=Math.max(1,Math.ceil(S.filtered.length/S.pageSize));
@@ -116,7 +118,7 @@ function resetFilterUI(){
   if($('fMinScore'))$('fMinScore').value='';
   S.filtered=null;
 }
-async function reloadCtx(){invalidatePool();if(filterActive()&&!synthActive())await runFilter();else await loadRanking()}
+async function reloadCtx(fresh=false){invalidatePool();if(filterActive()&&!synthActive())await runFilter(fresh);else await loadRanking('1',fresh)}
 
 // Click an alliance tag → list that alliance's players in the current ranking (via the name filter).
 function filterByAlliance(name){
@@ -206,7 +208,9 @@ async function loadFavAlStats(fav,card,cid){
 
 async function loadFavRanks(fav,card,spkId){
   const cid='fr_'+fav.name.replace(/\W/g,'_');const el=card.querySelector('#'+CSS.escape(cid));if(!el)return;
-  const evs=S.events?.player||{};const res=[];
+  const catalog=await getEventCatalog(fav.game);
+  if(!el.isConnected)return;
+  const evs=catalog?.player||(fav.game===srvGame(S.server)?S.events?.player:null)||{};const res=[];
   for(const[key,ev]of Object.entries(evs)){
     if(!ev.id)continue;
     try{
@@ -374,7 +378,7 @@ function startAutoRef(){
   _arTimer=setInterval(()=>{
     _arCount--;
     $('sAutoRT').textContent=fmtCountdown(_arCount);
-    if(_arCount<=0){_arCount=S.autoRef;if(filterActive()||synthActive()){reloadCtx()}else{const sv=S.lastSearch||String((S.curPage-1)*S.pageSize+1);loadRanking(sv)}}
+    if(_arCount<=0){_arCount=S.autoRef;if(filterActive()||synthActive()){reloadCtx(true)}else{const sv=S.lastSearch||String((S.curPage-1)*S.pageSize+1);loadRanking(sv,true)}}
   },1000);
 }
 function updateAutoRefUI(){
