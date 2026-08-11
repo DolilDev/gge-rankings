@@ -81,7 +81,7 @@ const EV_LABELS = {
   event_title_80:'Wydarzenie 80', event_title_85:'Wydarzenie 85',
   event_title_89:'Wydarzenie 89', event_title_113:'Wydarzenie 113',
   event_title_127:'Wydarzenie 127', event_title_128:'Wydarzenie 128',
-  event_title_130:'Wydarzenie 130', event_title_131:'Wydarzenie 131',
+  event_title_130:'Wydarzenie 130', event_title_131:'Królewski bankiet',
   event_title_134:'Wydarzenie 134', event_title_601:'Liga',
   event_title_3:'Frakcje', event_title_60:'Wyd. 60 (poziom)',
   event_title_97:'Wydarzenie 97',
@@ -89,4 +89,10 @@ const EV_LABELS = {
   dialog_BeggingKnights_nobilityPoints:'Żebracy',
   dialog_longPointsEvent_seasonalPoints:'Sezonowy',
   eventBuilding_DonationEvent:'Donacje',
+};
+
+// Rankings that should remain available even when the remote event catalogue lags behind the game.
+// LT 85 is the Anniversary Gacha leaderboard ("Królewski bankiet" / "King's Banquet").
+const REQUIRED_GGE_PLAYER_EVENTS = {
+  event_title_131:{id:85,categories:[{id:1,name:'dialog_ci_filter01_all'}]},
 };

@@ -179,8 +179,18 @@ async function loadEvents(){
       player_to_alliance:[['honorPoints','allianceHonor'],['playerMight','allianceMight']]
     };
   }
+  injectRequiredGgeEvents();
   injectSyntheticEvents();
   normalizeCats();validateEv();buildEventSel();
+}
+// The live game can publish a leaderboard before the shared event catalogue is refreshed.
+// Add only missing definitions so newer catalogue metadata always wins.
+function injectRequiredGgeEvents(){
+  const p=S.events.player;
+  if(srvGame(S.server)!=='gge'||!p)return;
+  for(const [key,event] of Object.entries(REQUIRED_GGE_PLAYER_EVENTS)){
+    if(!p[key])p[key]=JSON.parse(JSON.stringify(event));
+  }
 }
 // Add the client-side "Chwała" (glory) player ranking right after Might. It reuses the nobility
 // board (a single, level-agnostic list of every player, each row carrying CF/glory) as its pool

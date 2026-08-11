@@ -79,6 +79,18 @@ test('ranking parser normalizes numeric API fields',()=>{
   assert.equal(result.rows[1].score,180);
 });
 
+test('Anniversary Gacha ranking is available when the remote catalogue lags behind',()=>{
+  const context={
+    console,setTimeout,clearTimeout,window:{},
+    S:{server:'EmpireEx_5',events:{player:{honorPoints:{id:5}}}},
+    srvGame:()=> 'gge'
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source('config.js')}\n${source('api.js')}\ninjectRequiredGgeEvents();`,context);
+  assert.equal(context.S.events.player.event_title_131.id,85);
+  assert.equal(context.S.events.player.event_title_131.categories[0].id,1);
+});
+
 test('tracked players outside the visible page are included in snapshots',async()=>{
   const context={
     console,setTimeout,clearTimeout,window:{},

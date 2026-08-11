@@ -19,6 +19,7 @@ const EN={
   'Szukaj serwera...':'Search server...',
   'Szukaj serwera':'Search server',
   'Wybierz typ rankingu':'Choose ranking type',
+  'Królewski bankiet':"King's Banquet",
   '👤 Gracze':'👤 Players',
   '🛡 Sojusze':'🛡 Alliances',
   'Rank lub nick... (/)':'Rank or name... (/)',
