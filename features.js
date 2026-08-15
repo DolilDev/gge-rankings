@@ -133,7 +133,7 @@ function filterByAlliance(name){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 // ── Favorites ──
-function updFavCnt(){const n=S.favs.length+S.favAls.length;$('favCnt').textContent=n;$('favBtn').classList.toggle('primary',n>0)}
+function updFavCnt(){const n=S.favs.length+S.favAls.length;const el=$('favCnt');el.textContent=n;el.classList.toggle('has',n>0)}
 function isFavAl(name,server){return S.favAls.some(f=>f.name===name&&f.server===server)}
 function saveFavAls(){localStorage.setItem('gge_favAls_v1',JSON.stringify(S.favAls))}
 function toggleFavAl(name,server,allianceId,btn){

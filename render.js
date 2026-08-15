@@ -117,19 +117,18 @@ function renderTable(){
     if(sortCol===col)cls+=' sort-'+sortDir;
     return cls.trim();
   };
-  // Glory lives in its own ranking (the "Chwała" dropdown entry) and in the player detail panel,
-  // so it is no longer shown as a permanent extra column in the table.
-  // Every column but the name carries an explicit width: with table-layout:fixed the name
-  // absorbs the leftover space, so the score stays anchored near the right edge instead of
-  // drifting far from the rank on wide screens.
+  // Glory lives in its own ranking (the "Chwała" entry in the sidebar) and in the player
+  // detail panel, so it is no longer shown as a permanent extra column in the table.
+  // Every column carries a width: with table-layout:fixed the percentages keep the name
+  // and alliance columns in a fixed ratio, so nothing drifts apart on a wide screen.
   const ncols=6;
   let h=`<div class="twrap${isAl?' al-mode':''}"><table><thead><tr>
     <th style="width:38px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:58px;text-align:center">#</th>
     <th style="width:30px"></th>
-    <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
-    <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'130px':'clamp(140px,24%,300px)'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    <th class="${sortable('score','r')}" data-sort="score" style="width:150px">${synth?L('Chwała'):L('Wynik')}</th>
+    <th class="${sortable('name')}" data-sort="name" style="width:${isAl?'52%':'46%'}">${isAl?L('Sojusz'):L('Gracz')}</th>
+    <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'14%':'20%'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
+    <th class="${sortable('score','r')}" data-sort="score" style="width:170px">${synth?L('Chwała'):L('Wynik')}</th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
@@ -637,18 +636,35 @@ function renderPg(){
   if(jump)jump.addEventListener('keydown',ev=>{if(ev.key==='Enter'){const v=Math.min(total,Math.max(1,+jump.value||1));goPage(v)}});
 }
 
-// ── Event select & cats ──
+// ── Ranking list & cats (sidebar) ──
+// The rankings are the app's primary navigation axis, so they render as a scannable
+// list in the sidebar rather than a <select>. Name kept for the existing call sites.
 function buildEventSel(){
-  const sel=$('eventSelect');const list=evList();const keys=Object.keys(list);
-  if(!keys.length){sel.innerHTML=`<option>${L('Brak')}</option>`;return}
-  sel.innerHTML=keys.map(k=>`<option value="${esc(k)}">${esc(evname(k))}</option>`).join('');
+  const box=$('eventList');const list=evList();const keys=Object.keys(list);
+  if(!keys.length){box.innerHTML=`<div class="side-empty">${L('Brak')}</div>`;updateViewTitle();return}
   if(!(S.eventKey in list))S.eventKey=keys[0];
-  sel.value=S.eventKey;buildCats();
+  box.innerHTML=keys.map(k=>{
+    const n=evname(k),on=k===S.eventKey;
+    return`<button class="ev-i${on?' on':''}" data-k="${esc(k)}" role="tab" aria-selected="${on}" title="${esc(n)}">${esc(n)}</button>`;
+  }).join('');
+  box.querySelectorAll('.ev-i').forEach(el=>el.addEventListener('click',()=>selectEvent(el.dataset.k)));
+  updateViewTitle();buildCats();
+}
+// Picking a ranking always lands on the ranking view, so the list doubles as navigation.
+async function selectEvent(k){
+  if(typeof setPage==='function'&&S.page!=='ranking')setPage('ranking');
+  if(!k||k===S.eventKey)return;
+  S.eventKey=k;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();clearExpanded();
+  buildEventSel();await reloadCtx();
+}
+function updateViewTitle(){
+  const el=$('viewTitle');if(!el)return;
+  el.textContent=S.page==='favorites'?L('Obserwowani gracze'):(evname(S.eventKey)||'GGE Rankings');
 }
 function buildCats(){
-  const cb=$('catBar');const cats=curEv().categories;
-  if(!cats?.length||cats.length<=1){cb.style.display='none';return}
-  cb.style.display='flex';
+  const cb=$('catBar'),sec=$('catSec');const cats=curEv().categories;
+  if(!cats?.length||cats.length<=1){if(sec)sec.style.display='none';return}
+  if(sec)sec.style.display='';
   cb.innerHTML=cats.map((c,i)=>{const n=catname(c);return n?`<button class="cat${i===S.catIdx?' on':''}" data-i="${i}">${esc(n)}</button>`:''}).join('');
   cb.querySelectorAll('.cat').forEach(el=>el.addEventListener('click',async()=>{S.catIdx=+el.dataset.i;S.curPage=1;clearExpanded();buildCats();await reloadCtx()}));
 }

@@ -27,25 +27,27 @@ function setupKeyboard(){
 }
 
 // ── Wiring ──
-document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});
-  b.classList.add('on');b.setAttribute('aria-selected','true');
-  S.page=b.dataset.p;
-  // The toolbar/status/filters drive the ranking view only, so they are hidden on the
-  // favourites tab instead of sitting there inert (see body.page-fav in style.css).
-  document.body.classList.toggle('page-fav',S.page==='favorites');
-  $('mainView').style.display=S.page==='ranking'?'block':'none';
-  $('pgBar').style.display=S.page==='ranking'&&S.rows.length?'flex':'none';
-  $('favView').style.display=S.page==='favorites'?'block':'none';
-  if(S.page==='favorites')renderFavPage();
-}));
+// Single entry point for switching views, so the sidebar nav and the ranking list
+// (which also navigates back to the ranking) stay in sync.
+function setPage(p){
+  S.page=p;
+  document.querySelectorAll('.nav-btn').forEach(x=>{
+    const on=x.dataset.p===p;
+    x.classList.toggle('on',on);x.setAttribute('aria-selected',on?'true':'false');
+  });
+  $('mainView').style.display=p==='ranking'?'block':'none';
+  $('pgBar').style.display=p==='ranking'&&S.rows.length?'flex':'none';
+  $('favView').style.display=p==='favorites'?'block':'none';
+  closeSide();
+  updateViewTitle();
+  if(p==='favorites')renderFavPage();
+}
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>setPage(b.dataset.p)));
 
-$('favBtn').addEventListener('click',()=>{
-  document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});
-  const tab=document.querySelector('[data-p="favorites"]');tab.classList.add('on');tab.setAttribute('aria-selected','true');
-  S.page='favorites';document.body.classList.add('page-fav');
-  $('mainView').style.display='none';$('pgBar').style.display='none';$('favView').style.display='block';renderFavPage();
-});
+// ── Sidebar drawer (narrow screens) ──
+function closeSide(){document.body.classList.remove('side-open')}
+$('sideBtn').addEventListener('click',()=>document.body.classList.toggle('side-open'));
+$('scrim').addEventListener('click',closeSide);
 
 $('themeBtn').addEventListener('click',toggleTheme);
 $('langBtn').addEventListener('click',()=>setLang(S.lang==='pl'?'en':'pl'));
@@ -82,8 +84,6 @@ const mainDrop=buildSrvDropdown('srvList','srvBtn','srvSearch',async h=>{
 
 let modalServer=S.server;
 const modalDrop=buildSrvDropdown('mSrvList','mSrvBtn','mSrvSearch',h=>{modalServer=h;modalDrop.setActive(h)},modalServer);
-
-$('eventSelect').addEventListener('change',async e=>{S.eventKey=e.target.value;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();clearExpanded();buildCats();await reloadCtx()});
 
 $('typeSeg').querySelectorAll('.seg-b').forEach(b=>b.addEventListener('click',async()=>{
   if((b.dataset.v==='alliance')===S.allianceMode)return;
