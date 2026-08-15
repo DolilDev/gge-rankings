@@ -142,22 +142,22 @@ function toggleFavAl(name,server,allianceId,btn){
     toast(L('Usunięto sojusz z obserwowanych'));
   }else{
     S.favAls.push({name,server,allianceId,game:srvGame(server)});
-    toast(L('Obserwujesz sojusz {n} ⭐',{n:name}),'success');
+    toast(L('Obserwujesz sojusz {n}',{n:name}),'success');
   }
   saveFavAls();updFavCnt();
-  if(btn){const now=isFavAl(name,server);btn.textContent=now?L('⭐ Obserwowany'):L('☆ Obserwuj');btn.classList.toggle('primary',now)}
+  if(btn){const now=isFavAl(name,server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('primary',now)}
 }
 function toggleFav(name,game,server,tr){
   if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast(L('Usunięto z obserwowanych'))}
-  else{S.favs.push({name,game,server});toast(L('Obserwujesz {n} ⭐',{n:name}),'success')}
+  else{S.favs.push({name,game,server});toast(L('Obserwujesz {n}',{n:name}),'success')}
   saveFavs();updFavCnt();
-  document.querySelectorAll(`.sb[data-n="${CSS.escape(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.textContent=isFav(name,game,server)?'⭐':'☆'});
+  document.querySelectorAll(`.sb[data-n="${CSS.escape(name)}"]`).forEach(b=>{b.classList.toggle('on',isFav(name,game,server));b.innerHTML=ico('star')});
   if(tr)tr.classList.toggle('fav',isFav(name,game,server));
 }
 
 function renderFavPage(){
   const grid=$('favGrid');
-  if(!S.favs.length&&!S.favAls.length){grid.innerHTML=`<div class="fe">${L('Brak obserwowanych graczy i sojuszów.<br>Kliknij ☆ przy dowolnym graczu lub sojuszu.')}</div>`;return}
+  if(!S.favs.length&&!S.favAls.length){grid.innerHTML=`<div class="fe">${L('Brak obserwowanych graczy i sojuszów.<br>Kliknij gwiazdkę przy dowolnym graczu lub sojuszu.')}</div>`;return}
   grid.innerHTML='';
   S.favs.forEach(fav=>{
     const card=document.createElement('div');card.className='fc';
@@ -165,8 +165,8 @@ function renderFavPage(){
     const label=si?`${si.flag} ${si.name}`:fav.server;
     const cid='fr_'+fav.name.replace(/\W/g,'_');
     const spkId='spk_'+fav.name.replace(/\W/g,'_')+'_'+fav.server;
-    card.innerHTML=`<div class="fch"><div><div class="fcn">👤 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="${L('Usuń')}">×</button></div>
-      <div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('⏳ Pobieranie...')}</span></div></div>
+    card.innerHTML=`<div class="fch"><div><div class="fcn">${ico('user')}<span>${esc(fav.name)}</span></div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="${L('Usuń')}">${ico('x')}</button></div>
+      <div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('Pobieranie...')}</span></div></div>
       <input type="text" class="fnote" maxlength="500" placeholder="${L('Notatka (np. wróg / sojusznik / cel)')}" value="${esc(fav.note||'')}" aria-label="${L('Notatka (np. wróg / sojusznik / cel)')}">
       <div id="${spkId}"></div>`;
     card.querySelector('.fcd').addEventListener('click',function(){S.favs=S.favs.filter(f=>!(f.name===this.dataset.n&&f.game===this.dataset.g&&f.server===this.dataset.s));saveFavs();updFavCnt();renderFavPage();toast(L('Usunięto'))});
@@ -180,7 +180,7 @@ function renderFavPage(){
     const si=srvInfo(fav.server);
     const label=si?`${si.flag} ${si.name}`:fav.server;
     const cid='fral_'+fav.name.replace(/\W/g,'_');
-    card.innerHTML=`<div class="fch"><div><div class="fcn">🛡 ${esc(fav.name)}</div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-s="${fav.server}" aria-label="${L('Usuń')}">×</button></div><div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('⏳ Pobieranie...')}</span></div></div>`;
+    card.innerHTML=`<div class="fch"><div><div class="fcn">${ico('shield')}<span>${esc(fav.name)}</span></div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-s="${fav.server}" aria-label="${L('Usuń')}">${ico('x')}</button></div><div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('Pobieranie...')}</span></div></div>`;
     card.querySelector('.fcd').addEventListener('click',function(){S.favAls=S.favAls.filter(f=>!(f.name===this.dataset.n&&f.server===this.dataset.s));saveFavAls();updFavCnt();renderFavPage();toast(L('Usunięto'))});
     grid.appendChild(card);
     loadFavAlStats(fav,card,cid);
@@ -232,7 +232,7 @@ async function loadFavRanks(fav,card,spkId){
     const series=getBestRankSeries(fav.name,fav.server,12);
     if(series.length>=2){
       spkEl.innerHTML=`<div class="spk-wrap">
-        <div class="spk-lbl"><span>📈 Historia (${series.length} pkt)</span><span>#${series[0].rk} → #${series[series.length-1].rk}</span></div>
+        <div class="spk-lbl"><span>${ico('activity')}${L('Historia ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${series[series.length-1].rk}</span></div>
         ${renderSparklineSVG(series,260,32)}
       </div>`;
     }
@@ -245,7 +245,7 @@ function downloadFile(name,content,type){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},100);
-  toast(L('📥 Pobrano {name}',{name}),'success');
+  toast(L('Pobrano {name}',{name}),'success');
 }
 function csvCell(value){
   let cell=String(value??'');
@@ -285,7 +285,7 @@ function exportData(fmt){
     setTimeout(()=>{
       const url=location.href;
       if(navigator.clipboard?.writeText){
-        navigator.clipboard.writeText(url).then(()=>toast(L('🔗 Link skopiowany do schowka'),'success')).catch(()=>toast(L('Skopiuj URL ręcznie'),'error'));
+        navigator.clipboard.writeText(url).then(()=>toast(L('Link skopiowany do schowka'),'success')).catch(()=>toast(L('Skopiuj URL ręcznie'),'error'));
       }else toast(L('Skopiuj URL ręcznie'),'error');
     },200);
   }
@@ -309,25 +309,25 @@ function exportPlayerCard(r){
   const FONT=`-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif`;
   const dark=S.theme!=='light';
   const C=dark
-    ?{bg:'#0e0c0c',surface:'#161313',border:'#2a2424',bright:'#f2eaea',muted:'#a89a9a',blue:'#cf7676'}
-    :{bg:'#ffffff',surface:'#f6f8fa',border:'#d0d7de',bright:'#0d1117',muted:'#656d76',blue:'#0969da'};
+    ?{bg:'#14120f',surface:'#1b1815',border:'#312b25',bright:'#faf6ef',muted:'#9a8e80',acc:'#d8a33c'}
+    :{bg:'#fffdfa',surface:'#f6f4ef',border:'#e2dbd0',bright:'#14110e',muted:'#7a6f62',acc:'#96660f'};
   const W=640,H=360,scale=2;
   const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
   const ctx=cv.getContext('2d');if(!ctx){toast(L('Brak danych do eksportu'),'error');return}
   ctx.scale(scale,scale);ctx.textBaseline='alphabetic';
   ctx.fillStyle=C.bg;ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=C.blue;ctx.fillRect(0,0,W,6);
-  ctx.fillStyle=C.muted;ctx.font=`600 14px ${FONT}`;ctx.textAlign='left';
-  ctx.fillText('🏰 GGE Rankings',24,40);
+  ctx.fillStyle=C.acc;ctx.fillRect(0,0,W,5);
+  ctx.fillStyle=C.muted;ctx.font=`700 13px ${FONT}`;ctx.textAlign='left';ctx.letterSpacing='1px';
+  ctx.fillText('GGE RANKINGS',24,40);ctx.letterSpacing='0px';
   const srv=srvInfo(S.server);
   ctx.textAlign='right';ctx.font=`13px ${FONT}`;
   ctx.fillText(_fit(ctx,srv?`${srv.flag} ${srv.name}`:S.server,260),W-24,40);
   ctx.textAlign='left';ctx.fillStyle=C.bright;ctx.font=`700 30px ${FONT}`;
   ctx.fillText(_fit(ctx,r.name,W-220),24,92);
-  ctx.fillStyle=C.blue;ctx.font=`600 14px ${FONT}`;
+  ctx.fillStyle=C.acc;ctx.font=`600 14px ${FONT}`;
   const catTxt=catname(curCat());
   ctx.fillText(_fit(ctx,evname(S.eventKey)+(catTxt?` · ${catTxt}`:''),W-220),24,118);
-  const medal=r.rank===1?'#f0c030':r.rank===2?'#b0b8c8':r.rank===3?'#c07828':C.bright;
+  const medal=r.rank===1?'#d9a441':r.rank===2?(dark?'#a8afba':'#6f7681'):r.rank===3?(dark?'#b9793f':'#8d5624'):C.bright;
   ctx.textAlign='right';ctx.fillStyle=medal;ctx.font=`800 56px ${FONT}`;
   ctx.fillText('#'+r.rank,W-24,100);ctx.textAlign='left';
   ctx.strokeStyle=C.border;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(24,140);ctx.lineTo(W-24,140);ctx.stroke();
@@ -350,7 +350,7 @@ function exportPlayerCard(r){
   });
   ctx.fillStyle=C.muted;ctx.font=`12px ${FONT}`;ctx.textAlign='right';
   ctx.fillText(new Date().toLocaleString(curLocale()),W-24,H-16);
-  ctx.textAlign='left';ctx.fillStyle=C.blue;ctx.font=`600 12px ${FONT}`;
+  ctx.textAlign='left';ctx.fillStyle=C.acc;ctx.font=`600 12px ${FONT}`;
   ctx.fillText('dolildev.github.io/gge-rankings',24,H-16);
   const safe=r.name.replace(/[^\w-]+/g,'_').slice(0,40)||'player';
   const fname=`gge_${safe}_${new Date().toISOString().slice(0,10)}.png`;
@@ -362,7 +362,7 @@ function exportPlayerCard(r){
   });
   if(navigator.clipboard?.write&&window.ClipboardItem){
     navigator.clipboard.write([new ClipboardItem({'image/png':blobPromise})])
-      .then(()=>toast(L('📋 Karta skopiowana do schowka'),'success'))
+      .then(()=>toast(L('Karta skopiowana do schowka'),'success'))
       .catch(()=>download().then(ok=>{if(ok)toast(L('Schowek niedostępny — karta pobrana'),'error')}));
   }else download();
 }
@@ -385,7 +385,7 @@ function startAutoRef(){
 }
 function updateAutoRefUI(){
   $('autoRefBtn').classList.toggle('on',S.autoRef>0);
-  $('autoRefBtn').textContent=S.autoRef>0?`⏱ ${fmtCountdown(S.autoRef)}`:'⏱ Auto';
+  $('autoRefLbl').textContent=S.autoRef>0?fmtCountdown(S.autoRef):'Auto';
   $('autoRefDrop').querySelectorAll('.mini-opt').forEach(o=>o.classList.toggle('on',+o.dataset.v===S.autoRef));
 }
 

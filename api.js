@@ -82,8 +82,8 @@ function catname(c){
     const t=S.texts[c.name];return t?t.replace(/%s|\{[^}]*\}/gi,v).trim():String(v);
   }
   if(c.name==='dialog_ci_filter01_all')return'Wszyscy';
-  if(c.name?.includes('blueList'))return'🔵 Niebiescy';
-  if(c.name?.includes('redList'))return'🔴 Czerwoni';
+  if(c.name?.includes('blueList'))return'Niebiescy';
+  if(c.name?.includes('redList'))return'Czerwoni';
   return S.texts[c.name]||c.name||'';
 }
 function evList(){return S.events[S.allianceMode?'alliance':'player']||{}}
@@ -277,20 +277,20 @@ async function loadRanking(sv='1',fresh=false){
   const keep=S.rows.length>0;
   setSt('spin',L(keep?'Odświeżanie...':'Pobieranie...'));
   if(keep)$('mainView').classList.add('stale');else showSpin();
-  if(!S.server||!curLT()){S.loading=false;setSt('err',L('Wybierz serwer lub ranking'));showSt('⚙️',L('Wybierz serwer z listy'),'');return}
+  if(!S.server||!curLT()){S.loading=false;setSt('err',L('Wybierz serwer lub ranking'));showSt(ico('server'),L('Wybierz serwer z listy'),'');return}
   const res=await fetchRankingPage(sv,fresh);
   if(rid!==S.reqId)return;
   S.loading=false;
   if(!res){
     setSt('err',L('Błąd API'));
     if(keep)$('mainView').classList.remove('stale'); // keep showing the previous data
-    else showSt('🔌',L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));
+    else showSt(ico('offline'),L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));
     return;
   }
   const{rows,total}=res;
 
   S.rows=rows;S.totalRows=total;
-  if(!rows.length){setSt('live',L('Brak danych'));showSt('📭',L('Brak danych dla tego rankingu'),L('Ten event może nie być aktywny na wybranym serwerze.'));return}
+  if(!rows.length){setSt('live',L('Brak danych'));showSt(ico('inbox'),L('Brak danych dla tego rankingu'),L('Ten event może nie być aktywny na wybranym serwerze.'));return}
   const totalPgs=Math.max(1,Math.ceil(total/S.pageSize));
   $('sTotal').textContent=fmtN(total);$('sPage').textContent=`${S.curPage} / ${totalPgs}`;
   setSt('live',L('Dane LIVE · {t}',{t:new Date().toLocaleTimeString(curLocale())}));
@@ -337,7 +337,7 @@ async function loadSynth(fresh=false){
   if(S.lastSearch){const q=S.lastSearch;full=full.filter(r=>(r.name||'').toLowerCase().includes(q))}
   S.synthRows=full;S.totalRows=full.length;
   if(S.server)localStorage.setItem('server',S.server);
-  if(!full.length){S.synthRows=[];S.rows=[];$('mainView').classList.remove('stale');setSt('live',L('Brak danych'));showSt('📭',L('Brak wyników'),'');renderPg();writeHash();return}
+  if(!full.length){S.synthRows=[];S.rows=[];$('mainView').classList.remove('stale');setSt('live',L('Brak danych'));showSt(ico('inbox'),L('Brak wyników'),'');renderPg();writeHash();return}
   const totalPgs=Math.max(1,Math.ceil(full.length/S.pageSize));
   if(S.curPage>totalPgs)S.curPage=1;
   // Keep S.rows pointing at the visible page so "do we have data" checks (pager, tab switch,
@@ -363,9 +363,9 @@ function detectFavMovements(rows){
     const prev=getPrevRank(cur.name);
     if(prev==null)return;
     let msg=null,kind='';
-    if(prev>10&&cur.rank<=10){msg=L('🚀 {n} wszedł do TOP 10 (#{r})',{n:fav.name,r:cur.rank});kind='success'}
-    else if(prev<=10&&cur.rank>10){msg=L('📉 {n} wypadł z TOP 10 (#{r})',{n:fav.name,r:cur.rank});kind='error'}
-    else if(prev>3&&cur.rank<=3){msg=L('🏅 {n} wszedł do TOP 3 (#{r})',{n:fav.name,r:cur.rank});kind='success'}
+    if(prev>10&&cur.rank<=10){msg=L('{n} wszedł do TOP 10 (#{r})',{n:fav.name,r:cur.rank});kind='success'}
+    else if(prev<=10&&cur.rank>10){msg=L('{n} wypadł z TOP 10 (#{r})',{n:fav.name,r:cur.rank});kind='error'}
+    else if(prev>3&&cur.rank<=3){msg=L('{n} wszedł do TOP 3 (#{r})',{n:fav.name,r:cur.rank});kind='success'}
     if(msg){toast(msg,kind);pushNotify(msg)}
   });
 }

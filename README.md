@@ -23,7 +23,7 @@ From the **Ranking** dropdown, choose the leaderboard you want, e.g.:
 
 ### 3. Switch between players and alliances
 
-Use the **👤 Players / 🛡 Alliances** toggle to switch between individual and alliance leaderboards.
+Use the **Players / Alliances** toggle to switch between individual and alliance leaderboards.
 
 ### 4. Filter by level
 
@@ -49,12 +49,12 @@ Click any row to expand its details. Each row contains:
 
 | Element | Meaning |
 |---|---|
-| ☑ Checkbox | Add to comparison (max 4) |
-| 🥇/🥈/🥉/# | Rank position + change indicator |
+| Checkbox | Add to comparison (max 4) |
+| # | Rank position + change indicator (the top 3 get a medal-coloured ring) |
 | ▲5 / ▼3 | Position change since the last check |
 | Δ+1.2k | **Score change** since the last snapshot (tooltip = full value) |
-| ☆/⭐ | Add/remove from watchlist |
-| Name | Click → expand details (📝 = you have a note on this player) |
+| Star | Add/remove from watchlist (filled = watched) |
+| Name | Click → expand details (a note icon means you have a note on this player) |
 | Alliance | The player's **full alliance name** — a clickable tag that filters the ranking to that alliance |
 | Score | With a progress bar (% of top 1) |
 
@@ -70,15 +70,15 @@ Click a **column header** (`#`, `Player`, `Alliance`, `Score`) to sort:
 ### Player details
 
 Expanding a player row shows:
-- 🏅 Honor, ⚔️ Might, 🏛 Glory, 📊 Level (legendary/regular)
+- Honor, Might, Glory, Level (legendary/regular)
 - Attack, defense and loot points
-- 📈 A **position-history chart** (sparkline) — when data from previous refreshes is available
+- A **position-history chart** (sparkline) — when data from previous refreshes is available
 - Clickable stats → jump to the matching ranking
-- 📋 **Copy card** — copies a nicely formatted PNG card with the player's stats to the clipboard (great for pasting into Discord). If the browser doesn't support image clipboard access, the card is downloaded instead.
-- 📝 Your note about the player (if watched and a note exists)
+- **Copy card** — copies a nicely formatted PNG card with the player's stats to the clipboard (great for pasting into Discord). If the browser doesn't support image clipboard access, the card is downloaded instead.
+- Your note about the player (if watched and a note exists)
 
-Icons next to a player's name:
-- ★ **Favorite** — player is on your watchlist
+Badges next to a player's name:
+- **Star** — player is on your watchlist
 
 ### Alliance details
 
@@ -86,21 +86,21 @@ Expanding an alliance row shows:
 - Aggregate stats: might, glory points, whether the alliance is open, member count, average might, and total attack / defense / loot points
 - The alliance **description** (when set), in its own full-width block
 - A member list (name · level · might) — click a member to look them up
-- A **👥 Show members** button that loads the full member list with stats (where the server is supported). Each member shows current **💪 Might**, **💰 Loot**, **🏆 Glory** and **❤ Honor**, plus a dimmer **All-time** line with their peak (record) values for the same stats. The **alliance leader** is highlighted (👑 gold accent), members under **protection** (peace mode) show a 🛡 badge with the expiry date, and every member carries their **in-alliance rank** badge. The list has **clickable sortable headers** — sort by **💪 Might**, **💰 Loot**, **🏆 Glory**, **❤ Honor**, **Level**, **🎖 Rank** or **🛡 Protection** (click a header again to flip the direction). Click a member to search for them.
+- A **Show members** button that loads the full member list with stats (where the server is supported). Each member shows current **Might**, **Loot**, **Glory** and **Honor**, plus a dimmer **All-time** line with their peak (record) values for the same stats. The **alliance leader** is highlighted with a crown badge and an accent rail, members under **protection** (peace mode) show a shield badge with the expiry date, and every member carries their **in-alliance rank** badge. The list has **clickable sortable headers** — sort by **Might**, **Loot**, **Glory**, **Honor**, **Level**, **Rank** or **Protection** (click a header again to flip the direction). Click a member to search for them.
 
-You can also **watch an alliance** straight from its detail panel (☆ Watch / ⭐ Watching).
+You can also **watch an alliance** straight from its detail panel (Watch / Watching).
 
 ---
 
 ## ⭐ Watching players and alliances
 
 ### Add to your watchlist
-- Click **☆** next to a name in the table — adds instantly
-- Or **+ Track** in the top-right corner — a modal with server selection
-- For alliances, use the ☆ Watch button inside the alliance detail panel
+- Click the **star** next to a name in the table — adds instantly
+- Or **Track** in the top-right corner — a modal with server selection
+- For alliances, use the Watch button inside the alliance detail panel
 
 ### Browse your watchlist
-The **⭐ Favorites** tab shows cards with current positions across available events, plus a **position-history chart**. On each card you can add a **📝 note** (e.g. "enemy / ally / target") — it's stored locally and also appears in the table and in player details.
+The **Favorites** tab shows cards with current positions across available events, plus a **position-history chart**. On each card you can add a **note** (e.g. "enemy / ally / target") — it's stored locally and also appears in the table and in player details.
 
 ### Notifications
 A toast pops up when:

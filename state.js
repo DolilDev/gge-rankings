@@ -58,6 +58,9 @@ const S = {
 
 // ── Helpers ──
 const $ = id => document.getElementById(id);
+// Inline SVG icon referencing the sprite at the bottom of index.html. Icons inherit
+// currentColor, so they take the colour of whatever element they are dropped into.
+function ico(name,cls){return `<svg class="ic${cls?' '+cls:''}" aria-hidden="true"><use href="#i-${name}"></use></svg>`}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(x)?String(n):x.toLocaleString(curLocale())}
 function isFav(n,g,s){return S.favs.some(f=>f.name===n&&f.game===g&&f.server===s)}
@@ -81,7 +84,7 @@ function applyTheme(t){
   S.theme=t;
   if(t==='light') document.documentElement.setAttribute('data-theme','light');
   else document.documentElement.removeAttribute('data-theme');
-  const b=$('themeBtn'); if(b) b.textContent = t==='light'?'☀️':'🌙';
+  const b=$('themeBtn'); if(b) b.innerHTML = ico(t==='light'?'sun':'moon');
   localStorage.setItem('gge_theme',t);
 }
 function toggleTheme(){applyTheme(S.theme==='light'?'dark':'light')}

@@ -3,40 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0e0c0c">
+  <meta name="theme-color" content="#14120f">
   <meta name="description" content="Rankingi graczy i sojuszów Goodgame Empire na żywo / Live Goodgame Empire player & alliance rankings.">
   <title>GGE Rankings</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="style.css?v=20260811-1">
+  <link rel="stylesheet" href="style.css?v=20260815-1">
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 </head>
 <body>
 
-<div class="header">
-  <a class="logo" href="https://dolildev.github.io/gge-rankings/" style="text-decoration:none;color:inherit">🏰 GGE Rankings</a>
+<header class="header">
+  <a class="logo" href="https://dolildev.github.io/gge-rankings/">
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path class="lm-bg" d="M12 2 3.5 4.8v7.2c0 4.9 3.4 8.7 8.5 10 5.1-1.3 8.5-5.1 8.5-10V4.8z"/>
+        <path class="lm-fg" d="M12 7.4 16.6 13h-2.4L12 10.2 9.8 13H7.4z"/>
+        <path class="lm-fg" d="M12 12.2 16.6 17.8h-2.4L12 15 9.8 17.8H7.4z"/>
+      </svg>
+    </span>
+    <span class="logo-txt">GGE<span class="logo-sub">Rankings</span></span>
+  </a>
   <nav class="nav" role="tablist">
-    <button class="nav-btn on" data-p="ranking" data-t="⚔️ Ranking" role="tab" aria-selected="true">⚔️ Ranking</button>
-    <button class="nav-btn" data-p="favorites" data-t="⭐ Ulubieni" role="tab" aria-selected="false">⭐ Ulubieni</button>
+    <button class="nav-btn on" data-p="ranking" role="tab" aria-selected="true"><svg class="ic"><use href="#i-trophy"></use></svg><span data-t="Ranking">Ranking</span></button>
+    <button class="nav-btn" data-p="favorites" role="tab" aria-selected="false"><svg class="ic"><use href="#i-star"></use></svg><span data-t="Ulubieni">Ulubieni</span></button>
   </nav>
   <div class="header-right">
     <button class="btn icon-btn" id="langBtn" data-ttl="Język / Language" title="Język / Language" aria-label="Język / Language">PL</button>
-    <button class="btn icon-btn" id="themeBtn" data-ttl="Zmień motyw (Shift+D)" data-tar="Zmień motyw" title="Zmień motyw (Shift+D)" aria-label="Zmień motyw">🌙</button>
-    <button class="btn icon-btn" id="compactBtn" data-ttl="Tryb kompaktowy (Shift+C)" data-tar="Tryb kompaktowy (Shift+C)" title="Tryb kompaktowy (Shift+C)" aria-label="Tryb kompaktowy (Shift+C)">≣</button>
-    <button class="btn" id="favBtn" data-tar="Pokaż ulubionych" aria-label="Pokaż ulubionych">⭐ <span class="fav-n" id="favCnt">0</span></button>
-    <button class="btn primary" id="addBtn" data-t="+ Śledź" data-tar="Dodaj gracza do śledzenia" aria-label="Dodaj gracza do śledzenia">+ Śledź</button>
+    <button class="btn icon-btn" id="themeBtn" data-ttl="Zmień motyw (Shift+D)" data-tar="Zmień motyw" title="Zmień motyw (Shift+D)" aria-label="Zmień motyw"><svg class="ic"><use href="#i-moon"></use></svg></button>
+    <button class="btn icon-btn" id="compactBtn" data-ttl="Tryb kompaktowy (Shift+C)" data-tar="Tryb kompaktowy (Shift+C)" title="Tryb kompaktowy (Shift+C)" aria-label="Tryb kompaktowy (Shift+C)"><svg class="ic"><use href="#i-rows"></use></svg></button>
+    <button class="btn" id="favBtn" data-tar="Pokaż ulubionych" aria-label="Pokaż ulubionych"><svg class="ic"><use href="#i-star"></use></svg><span class="fav-n" id="favCnt">0</span></button>
+    <button class="btn primary" id="addBtn" data-tar="Dodaj gracza do śledzenia" aria-label="Dodaj gracza do śledzenia"><svg class="ic"><use href="#i-plus"></use></svg><span data-t="Śledź">Śledź</span></button>
   </div>
-</div>
+</header>
 
 <div class="toolbar">
   <span class="tlbl" data-t="Serwer">Serwer</span>
   <div class="srv-wrap" id="srvWrap">
     <button class="srv-btn" id="srvBtn" type="button" data-tar="Wybierz serwer" aria-label="Wybierz serwer" aria-haspopup="listbox">
-      <span id="srvBtnFlag"></span>
-      <span id="srvBtnCode"></span>
-      <span id="srvBtnName">Ładowanie...</span>
-      <span class="srv-arrow">▾</span>
+      <span id="srvBtnFlag" class="srv-btn-flag"></span>
+      <span id="srvBtnCode" class="srv-btn-code"></span>
+      <span id="srvBtnName" class="srv-btn-name">Ładowanie...</span>
+      <svg class="ic srv-arrow"><use href="#i-chevron-down"></use></svg>
     </button>
     <div class="srv-drop h" id="srvDrop" role="listbox">
       <div class="srv-search-wrap">
@@ -45,34 +54,40 @@
       <div class="srv-list" id="srvList"></div>
     </div>
   </div>
+  <span class="tsep" aria-hidden="true"></span>
   <span class="tlbl" data-t="Ranking">Ranking</span>
   <select id="eventSelect" style="min-width:190px" data-tar="Wybierz typ rankingu" aria-label="Wybierz typ rankingu"><option>Ładowanie...</option></select>
   <div class="seg" id="typeSeg" role="tablist">
-    <button class="seg-b on" data-v="player" data-t="👤 Gracze" role="tab" aria-selected="true">👤 Gracze</button>
-    <button class="seg-b" data-v="alliance" data-t="🛡 Sojusze" role="tab" aria-selected="false">🛡 Sojusze</button>
+    <button class="seg-b on" data-v="player" role="tab" aria-selected="true"><svg class="ic"><use href="#i-user"></use></svg><span data-t="Gracze">Gracze</span></button>
+    <button class="seg-b" data-v="alliance" role="tab" aria-selected="false"><svg class="ic"><use href="#i-shield"></use></svg><span data-t="Sojusze">Sojusze</span></button>
   </div>
-  <div class="sw"><input type="text" id="searchInput" placeholder="Rank lub nick... (/)" data-tph="Rank lub nick... (/)" data-tar="Wyszukaj rank lub nick" aria-label="Wyszukaj rank lub nick"></div>
-  <button class="btn" id="goSearch" title="Szukaj (Enter)" data-ttl="Szukaj (Enter)" data-tar="Szukaj" aria-label="Szukaj">↵</button>
-  <button class="btn" id="refreshBtn" title="Odśwież (R)" data-ttl="Odśwież (R)" data-tar="Odśwież" aria-label="Odśwież">↺</button>
-  <button class="btn" id="filterBtn" title="Filtry (F)" data-t="⚙ Filtry" data-ttl="Filtry (F)" data-tar="Pokaż filtry" aria-label="Pokaż filtry" aria-expanded="false">⚙ Filtry</button>
+  <span class="tsep" aria-hidden="true"></span>
+  <div class="sw">
+    <svg class="ic sw-ic"><use href="#i-search"></use></svg>
+    <input type="text" id="searchInput" placeholder="Rank lub nick... (/)" data-tph="Rank lub nick... (/)" data-tar="Wyszukaj rank lub nick" aria-label="Wyszukaj rank lub nick">
+  </div>
+  <button class="btn icon-btn" id="goSearch" title="Szukaj (Enter)" data-ttl="Szukaj (Enter)" data-tar="Szukaj" aria-label="Szukaj"><svg class="ic"><use href="#i-arrow-right"></use></svg></button>
+  <button class="btn icon-btn" id="refreshBtn" title="Odśwież (R)" data-ttl="Odśwież (R)" data-tar="Odśwież" aria-label="Odśwież"><svg class="ic"><use href="#i-refresh"></use></svg></button>
+  <button class="btn" id="filterBtn" title="Filtry (F)" data-ttl="Filtry (F)" data-tar="Pokaż filtry" aria-label="Pokaż filtry" aria-expanded="false"><svg class="ic"><use href="#i-sliders"></use></svg><span data-t="Filtry">Filtry</span></button>
   <div class="dwrap">
-    <button class="btn" id="exportBtn" title="Eksport (E)" data-t="⬇ Eksport" data-ttl="Eksport (E)" data-tar="Eksportuj" aria-label="Eksportuj" aria-haspopup="menu">⬇ Eksport</button>
+    <button class="btn" id="exportBtn" title="Eksport (E)" data-ttl="Eksport (E)" data-tar="Eksportuj" aria-label="Eksportuj" aria-haspopup="menu"><svg class="ic"><use href="#i-download"></use></svg><span data-t="Eksport">Eksport</span></button>
     <div class="mini-drop h" id="expDrop" role="menu">
-      <button class="mini-opt" data-fmt="csv" data-t="📄 CSV (.csv)">📄 CSV (.csv)</button>
-      <button class="mini-opt" data-fmt="json" data-t="{} JSON (.json)">{} JSON (.json)</button>
-      <button class="mini-opt" data-fmt="link" data-t="🔗 Kopiuj link">🔗 Kopiuj link</button>
+      <button class="mini-opt" data-fmt="csv"><svg class="ic"><use href="#i-file"></use></svg><span>CSV (.csv)</span></button>
+      <button class="mini-opt" data-fmt="json"><svg class="ic"><use href="#i-braces"></use></svg><span>JSON (.json)</span></button>
+      <button class="mini-opt" data-fmt="link"><svg class="ic"><use href="#i-link"></use></svg><span data-t="Kopiuj link">Kopiuj link</span></button>
     </div>
   </div>
   <div class="dwrap">
-    <button class="btn" id="autoRefBtn" title="Auto-odświeżanie" data-ttl="Auto-odświeżanie" data-tar="Auto-odświeżanie" aria-label="Auto-odświeżanie" aria-haspopup="menu">⏱ Auto</button>
+    <button class="btn" id="autoRefBtn" title="Auto-odświeżanie" data-ttl="Auto-odświeżanie" data-tar="Auto-odświeżanie" aria-label="Auto-odświeżanie" aria-haspopup="menu"><svg class="ic"><use href="#i-clock"></use></svg><span id="autoRefLbl">Auto</span></button>
     <div class="mini-drop h" id="autoRefDrop" role="menu">
-      <button class="mini-opt" data-v="0" data-t="⏹ Wyłącz">⏹ Wyłącz</button>
-      <button class="mini-opt" data-v="30" data-t="30 sekund">30 sekund</button>
-      <button class="mini-opt" data-v="60" data-t="1 minuta">1 minuta</button>
-      <button class="mini-opt" data-v="300" data-t="5 minut">5 minut</button>
-      <button class="mini-opt" data-v="600" data-t="10 minut">10 minut</button>
+      <button class="mini-opt" data-v="0"><svg class="ic"><use href="#i-power"></use></svg><span data-t="Wyłącz">Wyłącz</span></button>
+      <button class="mini-opt" data-v="30"><span class="ic"></span><span data-t="30 sekund">30 sekund</span></button>
+      <button class="mini-opt" data-v="60"><span class="ic"></span><span data-t="1 minuta">1 minuta</span></button>
+      <button class="mini-opt" data-v="300"><span class="ic"></span><span data-t="5 minut">5 minut</span></button>
+      <button class="mini-opt" data-v="600"><span class="ic"></span><span data-t="10 minut">10 minut</span></button>
     </div>
   </div>
+  <span class="tsep" aria-hidden="true"></span>
   <span class="tlbl" data-t="Wierszy">Wierszy</span>
   <select id="pageSizeSel" data-tar="Wierszy na stronę" aria-label="Wierszy na stronę" style="min-width:62px">
     <option value="10">10</option>
@@ -92,14 +107,17 @@
   </div>
   <div class="fgrp">
     <span class="tlbl" data-t="Nazwa sojuszu:">Nazwa sojuszu:</span>
-    <div class="sw"><input type="text" id="fAlName" placeholder="Filtruj po sojuszu..." data-tph="Filtruj po sojuszu..." data-tar="Filtruj po nazwie sojuszu" aria-label="Filtruj po nazwie sojuszu"></div>
+    <div class="sw">
+      <svg class="ic sw-ic"><use href="#i-search"></use></svg>
+      <input type="text" id="fAlName" placeholder="Filtruj po sojuszu..." data-tph="Filtruj po sojuszu..." data-tar="Filtruj po nazwie sojuszu" aria-label="Filtruj po nazwie sojuszu">
+    </div>
   </div>
   <div class="fgrp">
     <span class="tlbl" data-t="Min. wynik:">Min. wynik:</span>
     <input type="number" id="fMinScore" placeholder="0" min="0" style="width:110px" data-tar="Minimalny wynik" aria-label="Minimalny wynik">
   </div>
-  <button class="btn" id="fClear" data-t="× Wyczyść" data-tar="Wyczyść filtry" aria-label="Wyczyść filtry">× Wyczyść</button>
-  <span class="fhint" data-t="ℹ Filtry obejmują do 2000 graczy" data-ttl="Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich" title="Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich">ℹ Filtry obejmują do 2000 graczy</span>
+  <button class="btn" id="fClear" data-tar="Wyczyść filtry" aria-label="Wyczyść filtry"><svg class="ic"><use href="#i-x"></use></svg><span data-t="Wyczyść">Wyczyść</span></button>
+  <span class="fhint" data-ttl="Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich" title="Po włączeniu filtra pobieramy do 2000 najlepszych graczy i filtrujemy wśród nich"><svg class="ic"><use href="#i-info"></use></svg><span data-t="Filtry obejmują do 2000 graczy">Filtry obejmują do 2000 graczy</span></span>
 </div>
 
 <div class="cats" id="catBar" style="display:none"></div>
@@ -110,7 +128,7 @@
   <div class="r">
     <span><span data-t="Razem:">Razem:</span> <b id="sTotal">—</b></span>
     <span><span data-t="Strona:">Strona:</span> <b id="sPage">—</b></span>
-    <span id="sAutoR" style="display:none">⏱ <b id="sAutoRT">—</b></span>
+    <span id="sAutoR" style="display:none"><svg class="ic"><use href="#i-clock"></use></svg> <b id="sAutoRT">—</b></span>
   </div>
 </div>
 
@@ -119,33 +137,33 @@
 
 <div id="favView" style="display:none" class="fp">
   <div class="fph">
-    <div class="fpt" data-t="⭐ Obserwowani gracze">⭐ Obserwowani gracze</div>
+    <div class="fpt"><svg class="ic"><use href="#i-star"></use></svg><span data-t="Obserwowani gracze">Obserwowani gracze</span></div>
     <div class="fph-actions">
-      <button class="btn" id="notifBtn" data-t="🔔 Powiadomienia">🔔 Powiadomienia</button>
-      <button class="btn" id="clearFavBtn" data-t="🗑 Wyczyść">🗑 Wyczyść</button>
+      <button class="btn" id="notifBtn"><svg class="ic"><use href="#i-bell"></use></svg><span data-t="Powiadomienia">Powiadomienia</span></button>
+      <button class="btn" id="clearFavBtn"><svg class="ic"><use href="#i-trash"></use></svg><span data-t="Wyczyść">Wyczyść</span></button>
     </div>
   </div>
   <div class="fg" id="favGrid"></div>
 </div>
 
 <div class="cbar h" id="cBar" role="region" data-tar="Pasek porównania" aria-label="Pasek porównania">
-  <span class="ctitle"><span data-t="📊 Porównaj">📊 Porównaj</span> <span class="ccnt" id="cCount">0</span> / 4</span>
+  <span class="ctitle"><svg class="ic"><use href="#i-columns"></use></svg><span data-t="Porównaj">Porównaj</span> <span class="ccnt" id="cCount">0</span> / 4</span>
   <div class="cChips" id="cChips"></div>
-  <button class="btn primary" id="cOpenBtn" data-t="Porównaj →">Porównaj →</button>
+  <button class="btn primary" id="cOpenBtn"><span data-t="Porównaj">Porównaj</span><svg class="ic"><use href="#i-arrow-right"></use></svg></button>
   <button class="btn" id="cClearBtn" data-t="Wyczyść">Wyczyść</button>
 </div>
 
 <div class="mb h" id="mBackdrop" role="dialog" data-tar="Dodaj gracza" aria-label="Dodaj gracza" aria-modal="true">
   <div class="mo">
-    <h3 data-t="⭐ Śledź gracza">⭐ Śledź gracza</h3>
+    <h3><svg class="ic"><use href="#i-star"></use></svg><span data-t="Śledź gracza">Śledź gracza</span></h3>
     <label for="mName" data-t="Nick gracza">Nick gracza</label><input type="text" id="mName" placeholder="Wpisz nick..." data-tph="Wpisz nick...">
     <label data-t="Serwer">Serwer</label>
     <div class="srv-wrap" id="mSrvWrap">
       <button class="srv-btn" id="mSrvBtn" type="button" aria-haspopup="listbox">
-        <span id="mSrvBtnFlag"></span>
-        <span id="mSrvBtnCode"></span>
-        <span id="mSrvBtnName" data-t="Wybierz serwer">Wybierz serwer</span>
-        <span class="srv-arrow">▾</span>
+        <span id="mSrvBtnFlag" class="srv-btn-flag"></span>
+        <span id="mSrvBtnCode" class="srv-btn-code"></span>
+        <span id="mSrvBtnName" class="srv-btn-name" data-t="Wybierz serwer">Wybierz serwer</span>
+        <svg class="ic srv-arrow"><use href="#i-chevron-down"></use></svg>
       </button>
       <div class="srv-drop h" id="mSrvDrop" role="listbox">
         <div class="srv-search-wrap">
@@ -157,7 +175,7 @@
     <div class="me" id="mErr"></div>
     <div class="ma">
       <button class="btn" id="mCancel" data-t="Anuluj">Anuluj</button>
-      <button class="btn primary" id="mOk" data-t="⭐ Śledź">⭐ Śledź</button>
+      <button class="btn primary" id="mOk"><svg class="ic"><use href="#i-star"></use></svg><span data-t="Śledź">Śledź</span></button>
     </div>
   </div>
 </div>
@@ -165,8 +183,8 @@
 <div class="mb h" id="cmpBackdrop" role="dialog" data-tar="Porównanie" aria-label="Porównanie" aria-modal="true">
   <div class="mo cmt">
     <div class="cmt-head">
-      <h3 data-t="📊 Porównanie">📊 Porównanie</h3>
-      <button class="btn icon-btn" id="cmpClose" data-tar="Zamknij" aria-label="Zamknij">×</button>
+      <h3><svg class="ic"><use href="#i-columns"></use></svg><span data-t="Porównanie">Porównanie</span></h3>
+      <button class="btn icon-btn" id="cmpClose" data-tar="Zamknij" aria-label="Zamknij"><svg class="ic"><use href="#i-x"></use></svg></button>
     </div>
     <div id="cmpBody"></div>
   </div>
@@ -174,14 +192,50 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- Icon sprite: one stroked 24x24 set, inherits currentColor (see .ic in style.css). -->
+<svg class="sprite" aria-hidden="true" focusable="false"><defs>
+  <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5.5H4V8a3 3 0 0 0 3 3"/><path d="M17 5.5h3V8a3 3 0 0 1-3 3"/><path d="M12 14v3"/><path d="M8.5 20h7l-1-3h-5z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.8 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 10l5.9-.9z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.7-3.7"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 5v5h-5"/><path d="M19.4 10a7.5 7.5 0 1 0 .3 4.5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h4M14 17h6"/><circle cx="16" cy="7" r="2.2"/><circle cx="11" cy="17" r="2.2"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4.5 19.5h15"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.4 13.6a3.8 3.8 0 0 0 5.4 0l2.4-2.4a3.8 3.8 0 1 0-5.4-5.4l-1.2 1.2"/><path d="M13.6 10.4a3.8 3.8 0 0 0-5.4 0l-2.4 2.4a3.8 3.8 0 1 0 5.4 5.4l1.2-1.2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 1.8"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9.5a6 6 0 1 0-12 0c0 4.5-2 6-2 6h16s-2-1.5-2-6"/><path d="M13.8 19a2 2 0 0 1-3.6 0"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15"/><path d="M9.5 7V4.8h5V7"/><path d="M6.5 7v12a1.5 1.5 0 0 0 1.5 1.5h8a1.5 1.5 0 0 0 1.5-1.5V7"/><path d="M10.5 11v6M13.5 11v6"/></symbol>
+  <symbol id="i-columns" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 19.5a6.5 6.5 0 0 1 13 0"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9.5" cy="8.5" r="3.2"/><path d="M3.5 19.5a6 6 0 0 1 12 0"/><path d="M16.5 5.6a3.2 3.2 0 0 1 0 5.8"/><path d="M18 13.8a6 6 0 0 1 2.5 5.7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.4 19 5.8v6c0 4.2-2.9 7.4-7 8.8-4.1-1.4-7-4.6-7-8.8v-6z"/></symbol>
+  <symbol id="i-crown" viewBox="0 0 24 24"><path d="m4 7.5 4 3.5 4-6 4 6 4-3.5-1.6 10H5.6z"/><path d="M6.5 20.5h11"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.4 8.4 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6 7.2 7.2M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/></symbol>
+  <symbol id="i-rows" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 9.7h16M4 14.3h16"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5.5v13M5.5 12h13"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 11.2v4.6"/><path d="M12 8.3h.01"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5.5 15V6a1.5 1.5 0 0 1 1.5-1.5h8.5"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="m4 15.5 4.5-6.5 3.5 4 3-6 5 8.5"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M6.5 3.5h8L19 8v12.5H6.5z"/><path d="M14 3.5V8h4.5"/><path d="M9.5 12.5h6M9.5 16h4"/></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M4.5 12h14"/><path d="m13 6.5 5.5 5.5-5.5 5.5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6.5 3.5h8L19 8v12.5H6.5z"/><path d="M14 3.5V8h4.5"/><path d="M9.5 13h6M9.5 16.5h6"/></symbol>
+  <symbol id="i-braces" viewBox="0 0 24 24"><path d="M10 4.5H9A2 2 0 0 0 7 6.5v3a2.5 2.5 0 0 1-2.5 2.5A2.5 2.5 0 0 1 7 14.5v3a2 2 0 0 0 2 2h1"/><path d="M14 4.5h1a2 2 0 0 1 2 2v3a2.5 2.5 0 0 0 2.5 2.5A2.5 2.5 0 0 0 17 14.5v3a2 2 0 0 1-2 2h-1"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 4v8"/><path d="M7.5 7a7 7 0 1 0 9 0"/></symbol>
+  <symbol id="i-offline" viewBox="0 0 24 24"><path d="m4 4 16 16"/><path d="M4.5 10.5a13 13 0 0 1 3.7-2.4"/><path d="M19.5 10.5a13 13 0 0 0-4.6-2.7"/><path d="M8.2 14.2a7 7 0 0 1 2.3-1.4"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13.5h4l1.5 3h5l1.5-3h4"/><path d="M6.6 4.5h10.8l2.6 9v6H4v-6z"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="4" y="4.5" width="16" height="6.5" rx="1.8"/><rect x="4" y="13" width="16" height="6.5" rx="1.8"/><path d="M7.5 7.8h.01M7.5 16.2h.01"/></symbol>
+</defs></svg>
+
 <!-- app.js was split into these 7 files; load order matters (main.js holds all wiring + init and must be last). -->
-<script src="config.js?v=20260811-1"></script>
-<script src="i18n.js?v=20260811-1"></script>
-<script src="state.js?v=20260811-1"></script>
-<script src="api.js?v=20260811-1"></script>
-<script src="crest.js?v=20260811-1"></script>
-<script src="render.js?v=20260811-1"></script>
-<script src="features.js?v=20260811-1"></script>
-<script src="main.js?v=20260811-1"></script>
+<script src="config.js?v=20260815-1"></script>
+<script src="i18n.js?v=20260815-1"></script>
+<script src="state.js?v=20260815-1"></script>
+<script src="api.js?v=20260815-1"></script>
+<script src="crest.js?v=20260815-1"></script>
+<script src="render.js?v=20260815-1"></script>
+<script src="features.js?v=20260815-1"></script>
+<script src="main.js?v=20260815-1"></script>
 </body>
 </html>

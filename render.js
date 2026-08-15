@@ -46,7 +46,7 @@ function setupMiniDrop(btnId,dropId,onSelect){
   drop.querySelectorAll('.mini-opt').forEach(opt=>{
     opt.addEventListener('click',e=>{e.stopPropagation();drop.classList.add('h');onSelect(opt)});
   });
-  document.addEventListener('click',e=>{if(!drop.contains(e.target)&&e.target!==btn)drop.classList.add('h')});
+  document.addEventListener('click',e=>{if(!drop.contains(e.target)&&!btn.contains(e.target))drop.classList.add('h')});
 }
 
 // ── Render ──
@@ -137,12 +137,12 @@ function renderTable(){
   rows.forEach(r=>{
     const fv=isFav(r.name,game,S.server);
     const pct=Math.min(100,Math.round(((r.score||0)/max)*100));
-    const badge=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':r.rank;
+    const badge=r.rank;
     const rkCls=r.rank<=3?'rk'+r.rank:'';
     const exp=S.expandedRank===r.rank;
-    const fvb=fv?'<span class="badge b-fav">★</span>':'';
+    const fvb=fv?`<span class="badge b-fav">${ico('star')}</span>`:'';
     const favNote=fv?(S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server)||{}).note:'';
-    const noteBadge=favNote?`<span class="badge b-note" title="${esc(favNote)}">📝</span>`:'';
+    const noteBadge=favNote?`<span class="badge b-note" title="${esc(favNote)}">${ico('note')}</span>`:'';
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
     const inCmp=S.compare.some(c=>c.name===r.name&&c.server===S.server);
     const chg=chgIndicator(r.name,r.rank);
@@ -156,7 +156,7 @@ function renderTable(){
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}"><div class="rk-stack"><span class="rk-value">${badge}</span>${chg}</div></td>
-      <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${fv?'⭐':'☆'}</button></td>
+      <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${ico('star')}</button></td>
       <td class="c-name">${nameContent}</td>
       ${alCell}
       <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><div class="score-values"><span class="sv">${fmtN(r.score)}</span>${scd}</div></div></td>
@@ -169,16 +169,16 @@ function renderTable(){
   // Alliance aggregates banner — shown when filtering players by a single alliance
   let banner='';
   if(synth&&full.length){
-    banner=`<div class="al-summary">🏆 ${L('Ranking chwały złożony z {n} najlepszych graczy serwera (brak rankingu chwały w grze).',{n:fmtN(full.length)})}</div>`;
+    banner=`<div class="al-summary">${ico('trophy')} ${L('Ranking chwały złożony z {n} najlepszych graczy serwera (brak rankingu chwały w grze).',{n:fmtN(full.length)})}</div>`;
   }
   if(filt&&S.filter.alName&&!S.allianceMode&&full.length){
     const sum=full.reduce((s,x)=>s+(x.score||0),0);
     const avg=Math.round(sum/full.length);
-    banner=`<div class="al-summary">📊 ${L('Sojusz {n}: {c} graczy · suma {sum} · śr. {avg}',{n:esc(S.filter.alName),c:full.length,sum:fmtN(sum),avg:fmtN(avg)})}</div>`;
+    banner=`<div class="al-summary">${ico('columns')} ${L('Sojusz {n}: {c} graczy · suma {sum} · śr. {avg}',{n:esc(S.filter.alName),c:full.length,sum:fmtN(sum),avg:fmtN(avg)})}</div>`;
   }
   if(!rows.length&&(filt||S.rows.length)){
     const sub=filt?L('Wśród {n} pobranych graczy nikt nie pasuje do filtrów.',{n:fmtN((S.pool||[]).length)}):L('Spróbuj wyczyścić filtry lub zmienić kryteria.');
-    h=`<div class="st"><div class="si">🔍</div><div class="sm">${L('Brak wyników po filtrach')}</div><div class="ss">${sub}</div></div>`;
+    h=`<div class="st"><div class="si">${ico('search')}</div><div class="sm">${L('Brak wyników po filtrach')}</div><div class="ss">${sub}</div></div>`;
     banner='';
   }
   $('mainView').classList.remove('stale');
@@ -235,8 +235,8 @@ function updateCompareBar(){
   document.body.classList.add('with-cbar');
   $('cCount').textContent=S.compare.length;
   $('cChips').innerHTML=S.compare.map((c,i)=>{
-    const icon=c.type==='alliance'?'🛡':'👤';
-    return`<span class="cChip">${icon} ${esc(c.name)} <button class="cChip-rm" data-i="${i}" aria-label="${L('Usuń')}">×</button></span>`;
+    const icon=c.type==='alliance'?ico('shield'):ico('user');
+    return`<span class="cChip">${icon}${esc(c.name)}<button class="cChip-rm" data-i="${i}" aria-label="${L('Usuń')}">×</button></span>`;
   }).join('');
   $('cChips').querySelectorAll('.cChip-rm').forEach(b=>b.addEventListener('click',e=>{
     e.stopPropagation();
@@ -273,7 +273,7 @@ function openCompareModal(){
         return`<div class="cmp-row ${cls}"><span class="l">${L(label)}</span><span class="v">${display}</span></div>`;
       }).join('');
       return`<div class="cmp-col">
-        <div class="cmp-name">${(c.type==='alliance'?'🛡 ':'👤 ')+esc(c.name)} <button class="cmp-rm" data-i="${idx}" aria-label="${L('Usuń')}">×</button></div>
+        <div class="cmp-name"><span>${c.type==='alliance'?ico('shield'):ico('user')}<span>${esc(c.name)}</span></span><button class="cmp-rm" data-i="${idx}" aria-label="${L('Usuń')}">×</button></div>
         <div class="cmp-srv">${srv?srv.flag+' '+srv.name:esc(c.server)}${c.data.al?' · '+esc(c.data.al):''}</div>
         ${rowsHtml||'<div class="cmp-row"><span class="l">Brak danych</span></div>'}
       </div>`;
@@ -296,7 +296,7 @@ function openCompareModal(){
 }
 
 // ── Alliance members via gge-tracker (opt-in button in the alliance detail panel) ──
-function ggtMembersBtn(rank){return `<button class="btn" id="ggtm_btn_${rank}">${L('👥 Pokaż członków')}</button>`}
+function ggtMembersBtn(rank){return `<button class="btn" id="ggtm_btn_${rank}">${ico('users')}<span>${L('Pokaż członków')}</span></button>`}
 function wireGgtMembers(rank,allianceName){
   const btn=$(`ggtm_btn_${rank}`),box=$(`ggtm_${rank}`);
   if(!btn||!box)return;
@@ -323,13 +323,13 @@ function fmtDur(ms){
 // Sortable columns for the member-stats list — rendered as clickable headers.
 // `rank` sorts by in-alliance role (leader = 0 first); negate so the default DESC click lifts the leader to the top.
 const GGT_SORTS=[
-  {k:'might',l:'Moc',ic:'💪',get:p=>p.might_current??0},
-  {k:'loot',l:'Rabunek',ic:'💰',get:p=>p.loot_current??0},
-  {k:'glory',l:'Chwała',ic:'🏆',get:p=>p.current_fame??0},
-  {k:'honor',l:'Honor',ic:'❤',get:p=>p.honor??0},
-  {k:'level',l:'Poziom',ic:'',get:p=>(p.legendary_level>0?1e6+p.legendary_level:(p.level??0))},
-  {k:'rank',l:'Ranga',ic:'🎖',get:p=>-(p.alliance_rank??999)},
-  {k:'prot',l:'Ochrona',ic:'🛡',get:p=>ggtProtectedUntil(p)},
+  {k:'might',l:'Moc',get:p=>p.might_current??0},
+  {k:'loot',l:'Rabunek',get:p=>p.loot_current??0},
+  {k:'glory',l:'Chwała',get:p=>p.current_fame??0},
+  {k:'honor',l:'Honor',get:p=>p.honor??0},
+  {k:'level',l:'Poziom',get:p=>(p.legendary_level>0?1e6+p.legendary_level:(p.level??0))},
+  {k:'rank',l:'Ranga',get:p=>-(p.alliance_rank??999)},
+  {k:'prot',l:'Ochrona',get:p=>ggtProtectedUntil(p)},
 ];
 function renderGgtMembers(box,res){
   const msg=t=>`<div style="color:var(--c-muted);font-size:12px;padding:8px 0">${esc(t)}</div>`;
@@ -340,6 +340,8 @@ function renderGgtMembers(box,res){
   box._players=players;box._sortK='might';box._sortD=-1;
   paintGgtMembers(box);
 }
+// Member stat: a small caps key next to the value — replaces the old emoji-per-metric line.
+function ggtStat(label,value){return`<span><i class="gtm-k">${L(label)}</i><b>${esc(fmtN(value))}</b></span>`}
 function paintGgtMembers(box){
   const players=box._players||[];
   const col=GGT_SORTS.find(s=>s.k===box._sortK)||GGT_SORTS[0],dir=box._sortD;
@@ -355,28 +357,28 @@ function paintGgtMembers(box){
     const allianceRank=p.alliance_rank!==null&&p.alliance_rank!==''&&Number.isFinite(+p.alliance_rank)?+p.alliance_rank:null;
     const isLeader=allianceRank===0;
     const roleBadge=isLeader
-      ?`<span class="gtm-role gtm-leader" title="${L('Lider sojuszu')}">👑 ${L('Lider')}</span>`
-      :(allianceRank!=null?`<span class="gtm-role" title="${L('Ranga w sojuszu')}: ${allianceRank}">🎖 ${allianceRank}</span>`:'');
+      ?`<span class="gtm-role gtm-leader" title="${L('Lider sojuszu')}">${ico('crown')}${L('Lider')}</span>`
+      :(allianceRank!=null?`<span class="gtm-role" title="${L('Ranga w sojuszu')}: ${allianceRank}">${L('Ranga')} ${allianceRank}</span>`:'');
     const protUntil=ggtProtectedUntil(p);
     const protLeft=protUntil?fmtDur(protUntil-Date.now()):'';
-    const protBadge=protUntil?`<span class="gtm-prot" title="${L('Ochrona jeszcze {n} (do {d})',{n:protLeft,d:new Date(protUntil).toLocaleString(curLocale())})}">🛡 ${protLeft}</span>`:'';
+    const protBadge=protUntil?`<span class="gtm-prot" title="${L('Ochrona jeszcze {n} (do {d})',{n:protLeft,d:new Date(protUntil).toLocaleString(curLocale())})}">${ico('shield')}${protLeft}</span>`:'';
     // All-time / peak values (record might, loot, glory, honor) on a dimmer second line.
     const at=[];
-    if(p.might_all_time)at.push(`<span>💪 <b>${esc(fmtN(p.might_all_time))}</b></span>`);
-    if(p.loot_all_time)at.push(`<span>💰 <b>${esc(fmtN(p.loot_all_time))}</b></span>`);
-    if(p.highest_fame)at.push(`<span>🏆 <b>${esc(fmtN(p.highest_fame))}</b></span>`);
-    if(p.max_honor)at.push(`<span>❤ <b>${esc(fmtN(p.max_honor))}</b></span>`);
+    if(p.might_all_time)at.push(ggtStat('Moc',p.might_all_time));
+    if(p.loot_all_time)at.push(ggtStat('Rabunek',p.loot_all_time));
+    if(p.highest_fame)at.push(ggtStat('Chwała',p.highest_fame));
+    if(p.max_honor)at.push(ggtStat('Honor',p.max_honor));
     const atRow=at.length?`<div class="gtm-sub gtm-at"><span class="gtm-at-tag" title="${L('Wartości all-time (rekordowe)')}">${L('Rekord')}</span>${at.join('')}</div>`:'';
     return`<div class="gtm-row${isLeader?' gtm-leader-row':''}" data-search-player="${esc(p.player_name||'')}">
       <div class="gtm-rk${rkCls}">${i+1}</div>
       <div class="gtm-nm">${esc(p.player_name||'—')}${protBadge}${roleBadge}<span class="gtm-lv">Lv ${ll}</span></div>
-      <div class="gtm-sub"><span>💪 <b>${esc(fmtN(p.might_current))}</b></span><span>💰 <b>${esc(fmtN(p.loot_current))}</b></span><span>🏆 <b>${esc(fmtN(p.current_fame))}</b></span><span>❤ <b>${esc(fmtN(p.honor))}</b></span></div>
+      <div class="gtm-sub">${ggtStat('Moc',p.might_current)}${ggtStat('Rabunek',p.loot_current)}${ggtStat('Chwała',p.current_fame)}${ggtStat('Honor',p.honor)}</div>
       ${atRow}
     </div>`;
   }).join('');
   const headHtml=GGT_SORTS.map(s=>{
     const on=s.k===box._sortK,arr=on?(dir<0?' ▼':' ▲'):'';
-    return`<button class="gtm-sb${on?' active':''}" data-gsort="${s.k}">${s.ic?s.ic+' ':''}${L(s.l)}${arr}</button>`;
+    return`<button class="gtm-sb${on?' active':''}" data-gsort="${s.k}">${L(s.l)}${arr}</button>`;
   }).join('');
   const upd=players.map(p=>p.updated_at).filter(Boolean).sort().pop();
   const updHtml=upd?`<span class="gtm-upd">${L('Zaktualizowano {t}',{t:new Date(upd).toLocaleDateString(curLocale())})}</span>`:'';
@@ -471,7 +473,7 @@ async function renderAllianceDetail(r,panel){
       <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
         <div class="ds">${statHtml}</div>
         <div class="da">
-          <button class="btn${favAl?' primary':''}" id="dfaval_${r.rank}">${favAl?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
+          <button class="btn${favAl?' primary':''}" id="dfaval_${r.rank}">${ico('star')}<span>${favAl?L('Obserwowany'):L('Obserwuj')}</span></button>
           ${ggtMembersBtn(r.rank)}
         </div>
       </div>
@@ -547,7 +549,7 @@ function renderDetailContent(rank){
   const statHtml=stats.map(st=>{
     if(st.link){
       const eventName=evname(st.link);
-      return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"><div class="db-v">${esc(st.v)}</div><div class="db-l">${esc(L(st.l))}</div><div class="db-hint">→ ${esc(eventName)}</div></div>`;
+      return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"><div class="db-v">${esc(st.v)}</div><div class="db-l">${esc(L(st.l))}</div><div class="db-hint">${ico('arrow-right')}<span>${esc(eventName)}</span></div></div>`;
     }
     return`<div class="db db-plain"><div class="db-v">${esc(st.v)}</div><div class="db-l">${esc(L(st.l))}</div></div>`;
   }).join('');
@@ -555,18 +557,18 @@ function renderDetailContent(rank){
   const series=getRankSeriesForKey(r.name,histKey(),12);
   const spkHtml=series.length>=2?`
     <div class="spk-wrap" style="width:100%">
-      <div class="spk-lbl"><span>${L('📈 Historia pozycji ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${r.rank}</span></div>
+      <div class="spk-lbl"><span>${ico('activity')}${L('Historia pozycji ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${r.rank}</span></div>
       ${renderSparklineSVG(series)}
     </div>`:'';
   const favObj=S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server);
-  const noteHtml=favObj&&favObj.note?`<div class="dnote">📝 ${esc(favObj.note)}</div>`:'';
+  const noteHtml=favObj&&favObj.note?`<div class="dnote">${ico('note')}<span>${esc(favObj.note)}</span></div>`:'';
   const dc=crestImg(r.emblem,88,'dcrest');
   panel.innerHTML=`
     ${dc?`<div class="dcrest-box">${dc}</div>`:''}
     <div class="ds">${statHtml||`<span style="color:var(--c-muted);font-size:12px">${L('Brak szczegółowych danych')}</span>`}</div>
     <div class="da">
-      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${fv?L('⭐ Obserwowany'):L('☆ Obserwuj')}</button>
-      <button class="btn" id="dpng_${rank}">${L('📋 Kopiuj kartę')}</button>
+      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${ico('star')}<span>${fv?L('Obserwowany'):L('Obserwuj')}</span></button>
+      <button class="btn" id="dpng_${rank}">${ico('copy')}<span>${L('Kopiuj kartę')}</span></button>
     </div>
     ${noteHtml}
     ${spkHtml}`;
@@ -588,7 +590,7 @@ function renderDetailContent(rank){
   });
   $(`dfav_${rank}`)?.addEventListener('click',e=>{
     e.stopPropagation();toggleFav(r.name,game,S.server,null);
-    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.textContent=now?L('⭐ Obserwowany'):L('☆ Obserwuj');btn.classList.toggle('primary',now)}
+    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('primary',now)}
   });
   $(`dpng_${rank}`)?.addEventListener('click',e=>{e.stopPropagation();exportPlayerCard(r)});
 }

@@ -121,7 +121,7 @@ $('mOk').addEventListener('click',()=>{
   if(!name){err.textContent=L('Wpisz nick!');err.style.display='block';return}
   if(isFav(name,game,server)){err.textContent=L('Już obserwujesz!');err.style.display='block';return}
   S.favs.push({name,game,server});saveFavs();updFavCnt();
-  $('mBackdrop').classList.add('h');toast(L('Obserwujesz {n} ⭐',{n:name}),'success');
+  $('mBackdrop').classList.add('h');toast(L('Obserwujesz {n}',{n:name}),'success');
   if(S.page==='favorites')renderFavPage();
 });
 $('mName').addEventListener('keydown',e=>{if(e.key==='Enter')$('mOk').click()});
@@ -151,7 +151,7 @@ setupKeyboard();
 
 // ── Init ──
 let initDone=false;
-setTimeout(()=>{if(!initDone){setSt('err',L('Przekroczono czas'));showSt('⏱',L('Ładowanie trwało zbyt długo'),L('Odśwież stronę (F5).'))}},20000);
+setTimeout(()=>{if(!initDone){setSt('err',L('Przekroczono czas'));showSt(ico('clock'),L('Ładowanie trwało zbyt długo'),L('Odśwież stronę (F5).'))}},20000);
 
 async function init(){
   loadHistory();
