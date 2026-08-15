@@ -61,6 +61,8 @@ const $ = id => document.getElementById(id);
 // Inline SVG icon referencing the sprite at the bottom of index.html. Icons inherit
 // currentColor, so they take the colour of whatever element they are dropped into.
 function ico(name,cls){return `<svg class="ic${cls?' '+cls:''}" aria-hidden="true"><use href="#i-${name}"></use></svg>`}
+// The shell scrolls inside .view, not the document, so "back to top" targets that region.
+function scrollViewTop(){const v=$("view");if(v)v.scrollTo({top:0,behavior:"smooth"});else window.scrollTo({top:0,behavior:"smooth"})}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(x)?String(n):x.toLocaleString(curLocale())}
 function isFav(n,g,s){return S.favs.some(f=>f.name===n&&f.game===g&&f.server===s)}

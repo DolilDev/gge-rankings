@@ -11,41 +11,44 @@
 
 /* ── Tokens: dark is the default theme ── */
 :root{
-  --canvas:#14120f;
-  --surface:#1b1815;
-  --raised:#231f1a;
-  --c-border:#312b25;
-  --c-border2:#241f1b;
-  --c-text:#e6ded2;
-  --c-muted:#9a8e80;
-  --bright:#faf6ef;
+  /* Surfaces are a near-neutral graphite ladder with no hue of their own, so gold is the
+     only chroma in the chrome and reads as a deliberate accent rather than more brown. */
+  --canvas:#0f1114;
+  --surface:#15181d;
+  --raised:#1c2027;
+  --c-border:#282d36;
+  --c-border2:#1f232a;
+  --c-text:#ced3db;
+  --c-muted:#858d9a;
+  --bright:#f2f5f9;
 
-  --acc:#d8a33c;
-  --acc-hi:#e8b455;
-  --acc-bg:rgba(216,163,60,.14);
-  --acc-soft:rgba(216,163,60,.07);
-  --acc-bd:rgba(216,163,60,.40);
-  --on-acc:#1a1206;
+  --acc:#f0b03e;
+  --acc-hi:#ffc55f;
+  --acc-bg:rgba(240,176,62,.14);
+  --acc-soft:rgba(240,176,62,.07);
+  --acc-bd:rgba(240,176,62,.42);
+  --on-acc:#1a1204;
 
-  --pos:#5fbf6b;
-  --neg:#e8635c;
-  --pos-bg:rgba(95,191,107,.13);
-  --neg-bg:rgba(232,99,92,.13);
+  --pos:#42c97e;
+  --neg:#f2606a;
+  --pos-bg:rgba(66,201,126,.14);
+  --neg-bg:rgba(242,96,106,.14);
 
-  --gold:#d9a441;
-  --silver:#a8afba;
-  --bronze:#b9793f;
+  /* Medals are muted metals on purpose — they must not be mistaken for the accent. */
+  --gold:#cfa855;
+  --silver:#9ba4b2;
+  --bronze:#b0794a;
 
-  --hover:rgba(230,222,210,.045);
-  --hover2:#272220;
-  --fav-bg:rgba(216,163,60,.06);
-  --exp-bg:rgba(230,222,210,.035);
-  --match-bg:rgba(216,163,60,.12);
-  --input-bg:#211d19;
-  --overlay:rgba(10,8,6,.72);
+  --hover:rgba(206,211,219,.045);
+  --hover2:#20242c;
+  --fav-bg:rgba(240,176,62,.06);
+  --exp-bg:rgba(206,211,219,.035);
+  --match-bg:rgba(240,176,62,.12);
+  --input-bg:#1a1e25;
+  --overlay:rgba(5,7,10,.72);
 
-  --sh-1:0 1px 2px rgba(0,0,0,.3);
-  --sh-2:0 14px 38px -12px rgba(0,0,0,.65);
+  --sh-1:0 1px 2px rgba(0,0,0,.35);
+  --sh-2:0 14px 38px -12px rgba(0,0,0,.7);
 
   --r1:4px;
   --r2:7px;
@@ -68,41 +71,43 @@
 }
 
 [data-theme="light"]{
-  --canvas:#f4f2ed;
-  --surface:#fffefb;
+  --canvas:#f3f4f6;
+  --surface:#ffffff;
   --raised:#ffffff;
-  --c-border:#e3ddd3;
-  --c-border2:#ece7de;
-  --c-text:#2a2521;
-  --c-muted:#7a6f62;
-  --bright:#14110e;
+  --c-border:#dfe2e8;
+  --c-border2:#ebedf1;
+  --c-text:#333a45;
+  --c-muted:#6c757f;
+  --bright:#111620;
 
-  --acc:#96660f;
-  --acc-hi:#7b5309;
-  --acc-bg:rgba(150,102,15,.10);
-  --acc-soft:rgba(150,102,15,.05);
-  --acc-bd:rgba(150,102,15,.34);
-  --on-acc:#fffdf7;
+  /* Gold has no contrast on white, so the light theme uses burnt amber for anything
+     that carries text, and reserves the bright tone for fills. */
+  --acc:#b45309;
+  --acc-hi:#8f4108;
+  --acc-bg:rgba(180,83,9,.10);
+  --acc-soft:rgba(180,83,9,.045);
+  --acc-bd:rgba(180,83,9,.32);
+  --on-acc:#ffffff;
 
-  --pos:#2c7a3d;
-  --neg:#b03028;
-  --pos-bg:rgba(44,122,61,.11);
-  --neg-bg:rgba(176,48,40,.10);
+  --pos:#15803d;
+  --neg:#be123c;
+  --pos-bg:rgba(21,128,61,.10);
+  --neg-bg:rgba(190,18,60,.09);
 
   --gold:#a97c16;
-  --silver:#6f7681;
-  --bronze:#8d5624;
+  --silver:#64748b;
+  --bronze:#92551f;
 
-  --hover:rgba(42,37,33,.04);
-  --hover2:#f2ede4;
-  --fav-bg:rgba(150,102,15,.05);
-  --exp-bg:rgba(42,37,33,.03);
-  --match-bg:rgba(150,102,15,.10);
-  --input-bg:#f4f2ed;
-  --overlay:rgba(40,33,25,.34);
+  --hover:rgba(17,22,32,.035);
+  --hover2:#eff1f4;
+  --fav-bg:rgba(180,83,9,.05);
+  --exp-bg:rgba(17,22,32,.028);
+  --match-bg:rgba(180,83,9,.09);
+  --input-bg:#f7f8fa;
+  --overlay:rgba(15,20,28,.35);
 
-  --sh-1:0 1px 2px rgba(60,50,35,.06);
-  --sh-2:0 14px 38px -14px rgba(60,50,35,.32);
+  --sh-1:0 1px 2px rgba(15,20,28,.07);
+  --sh-2:0 14px 38px -14px rgba(15,20,28,.3);
 }
 
 /* ── Base ── */

@@ -130,7 +130,7 @@ function filterByAlliance(name){
   if(bar&&bar.classList.contains('h')){bar.classList.remove('h');$('filterBtn').setAttribute('aria-expanded','true');$('filterBtn').classList.add('on')}
   S.curPage=1;clearExpanded();
   runFilter();
-  window.scrollTo({top:0,behavior:'smooth'});
+  scrollViewTop();
 }
 // ── Favorites ──
 function updFavCnt(){const n=S.favs.length+S.favAls.length;const el=$('favCnt');el.textContent=n;el.classList.toggle('has',n>0)}
@@ -309,8 +309,8 @@ function exportPlayerCard(r){
   const FONT=`-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif`;
   const dark=S.theme!=='light';
   const C=dark
-    ?{bg:'#14120f',surface:'#1b1815',border:'#312b25',bright:'#faf6ef',muted:'#9a8e80',acc:'#d8a33c'}
-    :{bg:'#fffdfa',surface:'#f6f4ef',border:'#e2dbd0',bright:'#14110e',muted:'#7a6f62',acc:'#96660f'};
+    ?{bg:'#0f1114',surface:'#15181d',border:'#282d36',bright:'#f2f5f9',muted:'#858d9a',acc:'#f0b03e'}
+    :{bg:'#ffffff',surface:'#f3f4f6',border:'#dfe2e8',bright:'#111620',muted:'#6c757f',acc:'#b45309'};
   const W=640,H=360,scale=2;
   const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
   const ctx=cv.getContext('2d');if(!ctx){toast(L('Brak danych do eksportu'),'error');return}
@@ -327,7 +327,7 @@ function exportPlayerCard(r){
   ctx.fillStyle=C.acc;ctx.font=`600 14px ${FONT}`;
   const catTxt=catname(curCat());
   ctx.fillText(_fit(ctx,evname(S.eventKey)+(catTxt?` · ${catTxt}`:''),W-220),24,118);
-  const medal=r.rank===1?'#d9a441':r.rank===2?(dark?'#a8afba':'#6f7681'):r.rank===3?(dark?'#b9793f':'#8d5624'):C.bright;
+  const medal=r.rank===1?(dark?'#cfa855':'#a97c16'):r.rank===2?(dark?'#9ba4b2':'#64748b'):r.rank===3?(dark?'#b0794a':'#92551f'):C.bright;
   ctx.textAlign='right';ctx.fillStyle=medal;ctx.font=`800 56px ${FONT}`;
   ctx.fillText('#'+r.rank,W-24,100);ctx.textAlign='left';
   ctx.strokeStyle=C.border;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(24,140);ctx.lineTo(W-24,140);ctx.stroke();

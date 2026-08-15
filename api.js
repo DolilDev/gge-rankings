@@ -378,7 +378,7 @@ async function goPage(page){
     S.curPage=Math.min(Math.max(1,page),totalPgs);
     clearExpanded();
     renderSynthStatus();renderTable();renderPg();writeHash();
-    window.scrollTo({top:0,behavior:'smooth'});
+    scrollViewTop();
     return;
   }
   if(filterActive()&&S.filtered){
@@ -386,11 +386,11 @@ async function goPage(page){
     S.curPage=Math.min(Math.max(1,page),totalPgs);
     clearExpanded();
     renderFilteredStatus();renderTable();renderPg();writeHash();
-    window.scrollTo({top:0,behavior:'smooth'});
+    scrollViewTop();
     return;
   }
   S.curPage=page;
   await loadRanking(String((page-1)*S.pageSize+1));
-  window.scrollTo({top:0,behavior:'smooth'});
+  scrollViewTop();
 }
 window.goPage=goPage;
