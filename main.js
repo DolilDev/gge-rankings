@@ -31,6 +31,9 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});
   b.classList.add('on');b.setAttribute('aria-selected','true');
   S.page=b.dataset.p;
+  // The toolbar/status/filters drive the ranking view only, so they are hidden on the
+  // favourites tab instead of sitting there inert (see body.page-fav in style.css).
+  document.body.classList.toggle('page-fav',S.page==='favorites');
   $('mainView').style.display=S.page==='ranking'?'block':'none';
   $('pgBar').style.display=S.page==='ranking'&&S.rows.length?'flex':'none';
   $('favView').style.display=S.page==='favorites'?'block':'none';
@@ -40,7 +43,8 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
 $('favBtn').addEventListener('click',()=>{
   document.querySelectorAll('.nav-btn').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false')});
   const tab=document.querySelector('[data-p="favorites"]');tab.classList.add('on');tab.setAttribute('aria-selected','true');
-  S.page='favorites';$('mainView').style.display='none';$('pgBar').style.display='none';$('favView').style.display='block';renderFavPage();
+  S.page='favorites';document.body.classList.add('page-fav');
+  $('mainView').style.display='none';$('pgBar').style.display='none';$('favView').style.display='block';renderFavPage();
 });
 
 $('themeBtn').addEventListener('click',toggleTheme);

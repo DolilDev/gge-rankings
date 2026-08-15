@@ -145,7 +145,7 @@ function toggleFavAl(name,server,allianceId,btn){
     toast(L('Obserwujesz sojusz {n}',{n:name}),'success');
   }
   saveFavAls();updFavCnt();
-  if(btn){const now=isFavAl(name,server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('primary',now)}
+  if(btn){const now=isFavAl(name,server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('on',now)}
 }
 function toggleFav(name,game,server,tr){
   if(isFav(name,game,server)){S.favs=S.favs.filter(f=>!(f.name===name&&f.game===game&&f.server===server));toast(L('Usunięto z obserwowanych'))}

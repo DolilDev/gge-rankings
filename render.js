@@ -111,7 +111,6 @@ function renderTable(){
     S.expandedRank=m?m.rank:null;
     if(!m)S.expandedName=null;
   }
-  const max=(synth?S.synthRows[0]?.score:filt?S.pool[0]?.score:S.rows[0]?.score)||rows[0]?.score||1;
   const sortCol=S.sort?.col, sortDir=S.sort?.dir;
   const sortable=(col,extraClass='')=>{
     let cls=`sortable ${extraClass}`;
@@ -120,27 +119,26 @@ function renderTable(){
   };
   // Glory lives in its own ranking (the "Chwała" dropdown entry) and in the player detail panel,
   // so it is no longer shown as a permanent extra column in the table.
-  // Data columns carry no width: with table-layout:fixed the leftover space is split
-  // equally among them, so they spread evenly across the full width (and stay put per page).
+  // Every column but the name carries an explicit width: with table-layout:fixed the name
+  // absorbs the leftover space, so the score stays anchored near the right edge instead of
+  // drifting far from the rank on wide screens.
   const ncols=6;
   let h=`<div class="twrap${isAl?' al-mode':''}"><table><thead><tr>
-    <th style="width:34px"></th>
-    <th class="${sortable('rank')}" data-sort="rank" style="width:48px;text-align:center">#</th>
-    <th style="width:26px"></th>
+    <th style="width:38px"></th>
+    <th class="${sortable('rank')}" data-sort="rank" style="width:58px;text-align:center">#</th>
+    <th style="width:30px"></th>
     <th class="${sortable('name')}" data-sort="name">${isAl?L('Sojusz'):L('Gracz')}</th>
-    <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    <th class="${sortable('score','r')}" data-sort="score">${synth?L('Chwała'):L('Wynik')}</th>
+    <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'130px':'clamp(140px,24%,300px)'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
+    <th class="${sortable('score','r')}" data-sort="score" style="width:150px">${synth?L('Chwała'):L('Wynik')}</th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
   const sq=S.lastSearch;
   rows.forEach(r=>{
     const fv=isFav(r.name,game,S.server);
-    const pct=Math.min(100,Math.round(((r.score||0)/max)*100));
     const badge=r.rank;
     const rkCls=r.rank<=3?'rk'+r.rank:'';
     const exp=S.expandedRank===r.rank;
-    const fvb=fv?`<span class="badge b-fav">${ico('star')}</span>`:'';
     const favNote=fv?(S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server)||{}).note:'';
     const noteBadge=favNote?`<span class="badge b-note" title="${esc(favNote)}">${ico('note')}</span>`:'';
     const isMatch=sq&&r.name.toLowerCase().includes(sq);
@@ -148,18 +146,18 @@ function renderTable(){
     const chg=chgIndicator(r.name,r.rank);
     const scd=scoreChgIndicator(r.name,r.score);
     const nameContent=isAl
-      ?`<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}`
-      :`<span class="player-name-line">${crestImg(r.emblem,20,'pcrest')}<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${fvb}${noteBadge}</span>`;
+      ?`<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${noteBadge}`
+      :`<span class="player-name-line">${crestImg(r.emblem,20,'pcrest')}<span class="pn" title="${esc(r.name)}">${esc(r.name)}</span>${noteBadge}</span>`;
     const alCell=isAl
-      ?`<td class="r" style="color:var(--c-muted);font-size:12px">${r.members!=null?fmtN(r.members):'—'}</td>`
-      :`<td style="font-size:11px;color:var(--c-muted)">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.al)}</button>`:'—'}</td>`;
+      ?`<td class="r c-members">${r.members!=null?fmtN(r.members):'—'}</td>`
+      :`<td class="c-al">${r.al?`<button class="badge b-al al-tag" data-al="${esc(r.al)}" title="${L('Pokaż graczy tego sojuszu')}">${esc(r.al)}</button>`:'<span class="c-none">—</span>'}</td>`;
     h+=`<tr class="dr ${rkCls}${fv?' fav':''}${exp?' exp':''}${isMatch?' match':''}${inCmp?' sel':''}" data-rk="${r.rank}">
       <td><input type="checkbox" class="ck" data-rk="${r.rank}" ${inCmp?'checked':''} aria-label="${L('Zaznacz do porównania')}" onclick="event.stopPropagation()"></td>
       <td class="rk ${rkCls}"><div class="rk-stack"><span class="rk-value">${badge}</span>${chg}</div></td>
       <td><button class="sb${fv?' on':''}" data-n="${esc(r.name)}" aria-label="${fv?L('Usuń z ulubionych'):L('Dodaj do ulubionych')}">${ico('star')}</button></td>
       <td class="c-name">${nameContent}</td>
       ${alCell}
-      <td class="r"><div class="sc"><div class="sbar2"><div class="sbf" style="width:${pct}%"></div></div><div class="score-values"><span class="sv">${fmtN(r.score)}</span>${scd}</div></div></td>
+      <td class="r"><div class="sc"><span class="sv">${fmtN(r.score)}</span>${scd}</div></td>
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
       <td colspan="${ncols}"><div class="dp" id="dp_${r.rank}"></div></td>
@@ -405,17 +403,19 @@ function paintGgtMembers(box){
   });
 }
 // Minimal panel used when empire-api has no data — still offers the gge-tracker member list.
+// `panel` is itself the .dp element, so these paths only switch it to column layout
+// instead of nesting a second .dp (which would double the padding).
 function allianceFallbackPanel(panel,r,msgText){
-  panel.innerHTML=`<div class="dp" style="flex-direction:column;gap:8px">
-    <span style="color:var(--c-muted);font-size:12px">${esc(msgText)}</span>
+  panel.className='dp dp-col';
+  panel.innerHTML=`<span class="dp-msg">${esc(msgText)}</span>
     <div class="da">${ggtMembersBtn(r.rank)}</div>
-    <div id="ggtm_${r.rank}"></div>
-  </div>`;
+    <div id="ggtm_${r.rank}"></div>`;
   wireGgtMembers(r.rank,r.name);
 }
 
 async function renderAllianceDetail(r,panel){
-  panel.innerHTML=`<div class="dp"><div class="st" style="padding:20px"><div class="spin"></div></div></div>`;
+  panel.className='dp dp-col';
+  panel.innerHTML=`<div class="st dp-load"><div class="spin"></div></div>`;
   if(!r.allianceId){allianceFallbackPanel(panel,r,L('Brak ID sojuszu'));return}
   try{
     const url=`${GGE_API}/${S.server}/ain/%22AID%22:${r.allianceId}`;
@@ -440,15 +440,15 @@ async function renderAllianceDetail(r,panel){
       if(totalRpt>0)stats.push({v:fmtN(totalRpt),l:'Punkty rabunku'});
       if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Punkty obrony'});
     }
-    // Description lives in its own full-width block below the tiles — inside .ds it would
-    // stretch the stat tiles sharing its flex row to its (tall) height.
+    // Description lives in its own full-width section below the tiles — inside .ds it would
+    // stretch the stat tiles sharing its grid row to its (tall) height.
     let descBlock='';
     if(al.D&&al.D!=='Opisz swój sojusz.'){
       const descHtml=al.D.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/&lt;br\s*\/?&gt;/gi,'<br>').replace(/&lt;\/?(b|i|u)&gt;/gi,'');
-      descBlock=`<div class="db db-plain" style="width:100%;cursor:default">
-        <div class="db-l" style="margin:0 0 3px">${L('Opis')}</div>
-        <div style="font-size:12px;line-height:1.5;color:var(--c-text)">${descHtml}</div>
+      descBlock=`<div class="dsec">
+        <div class="dsec-t">${L('Opis')}</div>
+        <div class="dsec-body">${descHtml}</div>
       </div>`;
     }
     const statHtml=stats.map(st=>
@@ -456,31 +456,30 @@ async function renderAllianceDetail(r,panel){
     ).join('');
     let membersHtml='';
     if(sorted.length){
-      membersHtml=`<div style="width:100%;margin-top:10px;border-top:1px solid var(--c-border);padding-top:10px">
-        <div style="font-size:10px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${L('Członkowie ({n})',{n:sorted.length})}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px">
+      membersHtml=`<div class="dsec">
+        <div class="dsec-t">${L('Członkowie ({n})',{n:sorted.length})}</div>
+        <div class="dmem">
         ${sorted.map(m=>{
           const lvl=m.LL>0?`✦${m.LL}`:(m.L>=70?`✦${m.L}`:(m.L>0?`${m.L}`:'?'));
-          return`<div class="db db-plain" style="min-width:0;padding:5px 8px;cursor:pointer" data-search-player="${esc(m.N||'')}">
-            <div class="db-v" style="font-size:12px">${esc(m.N||'—')}</div>
-            <div class="db-l">Lv ${lvl} · ${esc(fmtN(m.MP??0))}</div>
-          </div>`;
+          return`<button class="dmem-i" data-search-player="${esc(m.N||'')}">
+            <span class="dmem-n">${esc(m.N||'—')}</span>
+            <span class="dmem-m">Lv ${lvl} · ${esc(fmtN(m.MP??0))}</span>
+          </button>`;
         }).join('')}
         </div></div>`;
     }
     const favAl=isFavAl(r.name,S.server);
-    panel.innerHTML=`<div class="dp" style="flex-direction:column;gap:8px">
-      <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">
+    panel.className='dp dp-col';
+    panel.innerHTML=`<div class="dp-top">
         <div class="ds">${statHtml}</div>
         <div class="da">
-          <button class="btn${favAl?' primary':''}" id="dfaval_${r.rank}">${ico('star')}<span>${favAl?L('Obserwowany'):L('Obserwuj')}</span></button>
+          <button class="btn${favAl?' on':''}" id="dfaval_${r.rank}">${ico('star')}<span>${favAl?L('Obserwowany'):L('Obserwuj')}</span></button>
           ${ggtMembersBtn(r.rank)}
         </div>
       </div>
       ${descBlock}
       ${membersHtml}
-      <div id="ggtm_${r.rank}"></div>
-    </div>`;
+      <div id="ggtm_${r.rank}"></div>`;
     $(`dfaval_${r.rank}`)?.addEventListener('click',e=>{
       e.stopPropagation();
       toggleFavAl(r.name,S.server,r.allianceId,$(`dfaval_${r.rank}`));
@@ -529,6 +528,7 @@ function renderDetailContent(rank){
   const game=srvGame(S.server);
   const fv=isFav(r.name,game,S.server);
   if(S.allianceMode){renderAllianceDetail(r,panel);return}
+  panel.className='dp';
   const stats=[];
   const pn=r.name;
   if(r.honor!=null)stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn});
@@ -556,7 +556,7 @@ function renderDetailContent(rank){
   // Mini-sparkline of historical rank (current ranking only)
   const series=getRankSeriesForKey(r.name,histKey(),12);
   const spkHtml=series.length>=2?`
-    <div class="spk-wrap" style="width:100%">
+    <div class="spk-wrap dsec">
       <div class="spk-lbl"><span>${ico('activity')}${L('Historia pozycji ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${r.rank}</span></div>
       ${renderSparklineSVG(series)}
     </div>`:'';
@@ -567,7 +567,7 @@ function renderDetailContent(rank){
     ${dc?`<div class="dcrest-box">${dc}</div>`:''}
     <div class="ds">${statHtml||`<span style="color:var(--c-muted);font-size:12px">${L('Brak szczegółowych danych')}</span>`}</div>
     <div class="da">
-      <button class="btn${fv?' primary':''}" id="dfav_${rank}">${ico('star')}<span>${fv?L('Obserwowany'):L('Obserwuj')}</span></button>
+      <button class="btn${fv?' on':''}" id="dfav_${rank}">${ico('star')}<span>${fv?L('Obserwowany'):L('Obserwuj')}</span></button>
       <button class="btn" id="dpng_${rank}">${ico('copy')}<span>${L('Kopiuj kartę')}</span></button>
     </div>
     ${noteHtml}
@@ -590,7 +590,7 @@ function renderDetailContent(rank){
   });
   $(`dfav_${rank}`)?.addEventListener('click',e=>{
     e.stopPropagation();toggleFav(r.name,game,S.server,null);
-    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('primary',now)}
+    const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('on',now)}
   });
   $(`dpng_${rank}`)?.addEventListener('click',e=>{e.stopPropagation();exportPlayerCard(r)});
 }

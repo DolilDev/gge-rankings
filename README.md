@@ -56,7 +56,7 @@ Click any row to expand its details. Each row contains:
 | Star | Add/remove from watchlist (filled = watched) |
 | Name | Click → expand details (a note icon means you have a note on this player) |
 | Alliance | The player's **full alliance name** — a clickable tag that filters the ranking to that alliance |
-| Score | With a progress bar (% of top 1) |
+| Score | The row's headline number, right-aligned on a shared decimal grid |
 
 In **alliance** mode the "Alliance" column becomes **Members** (member count), and long alliance names wrap so the full name is always visible.
 
@@ -77,8 +77,7 @@ Expanding a player row shows:
 - **Copy card** — copies a nicely formatted PNG card with the player's stats to the clipboard (great for pasting into Discord). If the browser doesn't support image clipboard access, the card is downloaded instead.
 - Your note about the player (if watched and a note exists)
 
-Badges next to a player's name:
-- **Star** — player is on your watchlist
+Watched players are marked by the filled star in their row and a faint row tint.
 
 ### Alliance details
 
