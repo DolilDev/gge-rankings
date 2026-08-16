@@ -371,7 +371,18 @@ function _fit(ctx,text,maxW){
   while(t.length>1&&ctx.measureText(t+'…').width>maxW)t=t.slice(0,-1);
   return t+'…';
 }
-function exportPlayerCard(r){
+// Loot points aren't part of a ranking row unless the plunder board is the one open, so they come
+// from gge-tracker otherwise. Null when that server isn't tracked, the player is unknown or the
+// API is slow/down — the card then simply leaves the tile out.
+async function lootPointsFor(r){
+  if(S.eventKey===NOBILITY_EVENT&&r.score!=null)return r.score;
+  try{
+    const p=await timeout(ggtPlayer(r.name,srvInfo(S.server)?.code),3000);
+    const v=p?Number(p.loot_current):NaN;
+    return Number.isFinite(v)?v:null;
+  }catch{return null}
+}
+function drawPlayerCard(r,loot){
   const FONT=`-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif`;
   const dark=S.theme!=='light';
   const C=dark
@@ -397,11 +408,10 @@ function exportPlayerCard(r){
   ctx.textAlign='right';ctx.fillStyle=medal;ctx.font=`800 56px ${FONT}`;
   ctx.fillText('#'+r.rank,W-24,100);ctx.textAlign='left';
   ctx.strokeStyle=C.border;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(24,140);ctx.lineTo(W-24,140);ctx.stroke();
-  const stats=[[L('Wynik'),fmtN(r.score)]];
+  const stats=[];
   if(r.honor!=null)stats.push(['Honor',fmtN(r.honor)]);
   if(r.might!=null)stats.push([L('Moc'),fmtN(r.might)]);
-  if(r.legendLevel>0)stats.push([L('Poziom legendarny'),'✦ '+r.legendLevel]);
-  else if(r.level!=null)stats.push([L('Poziom'),fmtN(r.level)]);
+  if(loot!=null)stats.push([evname(NOBILITY_EVENT),fmtN(loot)]);
   if(r.glory!=null)stats.push([L('Punkty chwały'),fmtN(r.glory)]);
   if(r.al)stats.push([L('Sojusz'),r.al]);
   const cells=stats.slice(0,6),cols=3,gap=12,gx=24,gy=160,bw=(W-gx*2-gap*(cols-1))/cols,bh=78;
@@ -418,10 +428,16 @@ function exportPlayerCard(r){
   ctx.fillText(new Date().toLocaleString(curLocale()),W-24,H-16);
   ctx.textAlign='left';ctx.fillStyle=C.acc;ctx.font=`600 12px ${FONT}`;
   ctx.fillText('dolildev.github.io/gge-rankings',24,H-16);
+  return cv;
+}
+function exportPlayerCard(r){
   const safe=r.name.replace(/[^\w-]+/g,'_').slice(0,40)||'player';
   const fname=`gge_${safe}_${new Date().toISOString().slice(0,10)}.png`;
-  // Pass the blob-producing promise straight to ClipboardItem so Safari/Firefox keep the user gesture.
-  const blobPromise=new Promise(res=>cv.toBlob(res,'image/png'));
+  // Pass the blob-producing promise straight to ClipboardItem so Safari/Firefox keep the user
+  // gesture — which is also what lets the loot lookup happen without losing the right to copy.
+  const blobPromise=lootPointsFor(r)
+    .then(loot=>drawPlayerCard(r,loot))
+    .then(cv=>cv?new Promise(res=>cv.toBlob(res,'image/png')):null);
   const download=()=>blobPromise.then(b=>{
     if(!b){toast(L('Brak danych do eksportu'),'error');return false}
     downloadFile(fname,b,'image/png');return true;

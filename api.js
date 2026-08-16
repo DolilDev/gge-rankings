@@ -86,11 +86,15 @@ async function ggtAllianceMembers(name,code){
 // ── gge-tracker history (backfill for the detail-panel chart) ──
 // Resolve a player name to gge-tracker's id. Returns null when the server isn't tracked, the
 // player is unknown, or the API is unreachable — every caller treats that as "no backfill".
-async function ggtPlayerId(name,code){
+async function ggtPlayer(name,code){
   const srv=ggtServer(code);
   if(!srv||!name)return null;
   const d=await ggtGet(`players/${encodeURIComponent(name)}`,srv);
-  return d&&!d.error&&d.player_id?String(d.player_id):null;
+  return d&&!d.error&&d.player_id?d:null;
+}
+async function ggtPlayerId(name,code){
+  const p=await ggtPlayer(name,code);
+  return p?String(p.player_id):null;
 }
 // Evenly thin a series down to `max` points, always keeping the first and last so the endpoints
 // (and the dates printed under the chart) stay exact.

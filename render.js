@@ -752,7 +752,6 @@ function renderDetailContent(rank){
   // Nobility board: titles (PRE/SUF) and the noble rank (R) are awarded there, so those tiles
   // link to it. Synthetic boards (playerGlory/Attack/Defense/Loot) cover the fields the game
   // publishes no leaderboard for — see SYNTHETIC_PLAYER_EVENTS.
-  const nobility='dialog_BeggingKnights_nobilityPoints';
   // `metric` is the history field the tile charts on hover — see CHART_METRICS / wireStatChart.
   stats.push({v:'#'+fmtN(r.rank),l:'Pozycja',link:S.eventKey,mode:'player',search:pn,metric:'rank'});
   if(r.honor!=null)stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn,metric:'honor'});
@@ -764,9 +763,9 @@ function renderDetailContent(rank){
   if(r.avp!=null)stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:'playerAttack',mode:'player',search:pn,metric:'avp'});
   if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Najwyższa chwała',link:'playerHighestFame',mode:'player',search:pn,metric:'hf'});
   if(r.rpt!=null)stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:'playerLoot',mode:'player',search:pn,metric:'rpt'});
-  if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga',link:nobility,mode:'player',search:pn,metric:'rank2'});
-  if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:nobility,mode:'player',search:pn,metric:'pre'});
-  if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:nobility,mode:'player',search:pn,metric:'suf'});
+  if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga',link:NOBILITY_EVENT,mode:'player',search:pn,metric:'rank2'});
+  if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:NOBILITY_EVENT,mode:'player',search:pn,metric:'pre'});
+  if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:NOBILITY_EVENT,mode:'player',search:pn,metric:'suf'});
   // No search term: the score tile opens the current ranking at its top, so it isn't a no-op
   // click that just reloads the same view around this player.
   if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:S.eventKey,mode:'player',metric:'score'});

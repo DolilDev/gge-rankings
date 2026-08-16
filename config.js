@@ -48,6 +48,9 @@ const DEFAULT_CHART_METRIC = 'might';
 // would end up showing whichever one the pointer happened to cross last.
 const HOVER_DWELL_MS = 160;
 
+// The plunder/nobility board — the source of loot points, titles and the noble rank.
+const NOBILITY_EVENT = 'dialog_BeggingKnights_nobilityPoints';
+
 // ── Backfill from gge-tracker ──
 // The app's own history only starts when you first open a ranking. gge-tracker keeps up to a year
 // of point history per player, so charts for the metrics below can be filled in from it.
@@ -65,7 +68,7 @@ const GGT_METRIC_HISTORY = {
 // boards were inactive (empty lists) when this was written, so they could not be checked against
 // live scores — the two Berimond ones are the pair most worth re-checking during an event.
 const GGT_EVENT_HISTORY = {
-  dialog_BeggingKnights_nobilityPoints:'player_loot_history',
+  [NOBILITY_EVENT]:'player_loot_history',
   event_title_72:'player_event_nomad_history',
   event_title_80:'player_event_samurai_history',
   event_title_71:'player_event_war_realms_history',
