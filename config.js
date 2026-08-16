@@ -17,6 +17,27 @@ const FILTER_POOL_MAX = 2000;
 const FILTER_FETCH_CONC = 10;
 const MAX_COMPARE = 4;
 const HIST_MAX_PER_PLAYER = 12;
+
+// Per-snapshot stat values kept alongside rank/score, so the detail panel can chart any stat and
+// not just the position. History lives in localStorage under a quota, hence the one-letter keys.
+// field (a parsed row property, see parseRows) → storage key.
+const HIST_FIELDS = {
+  honor:'h', might:'m', glory:'g', level:'l', legendLevel:'n',
+  avp:'a', hf:'d', rpt:'p', rank2:'r', pre:'x', suf:'y', members:'c',
+};
+// Stats the detail-panel chart can draw. Key = row field ('rank' and 'score' come straight from
+// the snapshot, the rest from HIST_FIELDS); `lower` marks metrics where a smaller number is
+// better, so the line still reads "up = improving". Order is the fallback order when the default
+// metric has no history yet.
+const CHART_METRICS = {
+  might:{l:'Moc'}, honor:{l:'Honor'}, glory:{l:'Punkty chwały'},
+  score:{l:'Wynik rankingu'}, rank:{l:'Pozycja',lower:true},
+  legendLevel:{l:'Poziom legendarny'}, level:{l:'Poziom'},
+  avp:{l:'Punkty ataku'}, hf:{l:'Punkty obrony'}, rpt:{l:'Punkty rabunku'},
+  rank2:{l:'Ranga',lower:true}, pre:{l:'Tytuł (prefix)'}, suf:{l:'Tytuł (suffix)'},
+  members:{l:'Członkowie'},
+};
+const DEFAULT_CHART_METRIC = 'might';
 const HIST_DEDUPE_MS = 60 * 1000;
 const HIST_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 

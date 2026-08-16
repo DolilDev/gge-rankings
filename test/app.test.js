@@ -177,7 +177,7 @@ function tileApi(events){
     evname:k=>k,ico:()=> ''
   };
   vm.createContext(context);
-  vm.runInContext(`${source('render.js')}\nglobalThis.testApi={statTilesHtml,levelCatIdx};`,context);
+  vm.runInContext(`${source('render.js')}\nglobalThis.testApi={statTilesHtml,levelCatIdx,renderSparklineSVG};`,context);
   return context.testApi;
 }
 
@@ -215,4 +215,55 @@ test('the level tile targets the honor bracket containing that level',()=>{
   assert.equal(levelCatIdx(90),2);
   assert.equal(levelCatIdx(null),null);
   assert.equal(levelCatIdx(45),null);
+});
+
+function historyContext(){
+  const context={
+    localStorage:storage(),
+    document:{getElementById:()=>null,documentElement:{}},
+    location:{hash:''},history:{replaceState(){}},
+    URLSearchParams,console,setTimeout,clearTimeout
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source('config.js')}\n${source('state.js')}\nloadHistory();S.eventKey='honorPoints';`
+    +`\nglobalThis.testApi={S,histKey,captureSnapshot,getStatSeriesForKey,getPrevRank,`
+    +`seed:entries=>{HIST[histKey()]={Player:entries}}};`,context);
+  return context.testApi;
+}
+
+test('snapshots record every stat so any of them can be charted',()=>{
+  const {histKey,captureSnapshot,getStatSeriesForKey}=historyContext();
+  captureSnapshot([{name:'Player',rank:7,score:3478,honor:3478,might:253866411,avp:133720,rpt:null}]);
+  const k=histKey();
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'might'),p=>p.v),[253866411]);
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'avp'),p=>p.v),[133720]);
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'rank'),p=>p.v),[7]);
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'score'),p=>p.v),[3478]);
+  // Stats the row doesn't carry are simply absent rather than stored as null.
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'rpt')),[]);
+  assert.deepEqual(Array.from(getStatSeriesForKey('Missing',k,'might')),[]);
+});
+
+test('history entries written before stats existed still chart rank and score',()=>{
+  const {histKey,getStatSeriesForKey,getPrevRank,seed}=historyContext();
+  seed([[1,9,3000],[2,8,3200],[3,7,3478,{m:253866411}]]);
+  const k=histKey();
+  // Legacy 3-element entries keep working for the metrics they did store …
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'rank'),p=>p.v),[9,8,7]);
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'score'),p=>p.v),[3000,3200,3478]);
+  // … and are skipped for stats they never had, instead of charting as gaps or zeros.
+  assert.deepEqual(Array.from(getStatSeriesForKey('Player',k,'might'),p=>p.v),[253866411]);
+  assert.equal(getPrevRank('Player',k),7);
+});
+
+test('the chart puts the better value on top for both stat and position metrics',()=>{
+  const {renderSparklineSVG}=tileApi({player:{},alliance:{}});
+  const y=svg=>[...svg.matchAll(/(\d+\.\d),(\d+\.\d)/g)].map(m=>+m[2]);
+  // Might grows 10 → 30: a bigger number is better, so the line must end higher (smaller y).
+  const rising=y(renderSparklineSVG([{v:10},{v:20},{v:30}]));
+  assert.ok(rising[0]>rising[2],`expected ${rising[0]} > ${rising[2]}`);
+  // Position 30 → 10 is an improvement, so with `lower` it must also end higher.
+  const climbing=y(renderSparklineSVG([{v:30},{v:20},{v:10}],{lower:true}));
+  assert.deepEqual(climbing,rising);
+  assert.match(renderSparklineSVG([{v:1}]),/spk-empty/);
 });

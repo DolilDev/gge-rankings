@@ -459,6 +459,8 @@ body.compact .pcrest{width:17px;height:17px;margin-right:7px}
 .db-hint .ic{width:11px;height:11px}
 .db-plain{cursor:default}
 .db-plain:hover{border-color:var(--c-border);background:var(--canvas)}
+/* Tile whose stat the sparkline below is currently drawing — wins over .db-plain:hover. */
+.db.charted,.db-plain.charted:hover{border-color:var(--acc-bd);background:var(--acc-soft)}
 .da{display:flex;flex-direction:column;gap:6px;align-self:flex-start}
 
 .dsec{width:100%;border-top:1px solid var(--c-border);padding-top:12px}
@@ -597,7 +599,14 @@ body.compact .sv{font-size:var(--t-sm)}
 .spk{display:block;width:100%;height:32px}
 .spk-line{fill:none;stroke:var(--acc);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
 .spk-dot{fill:var(--acc)}
-.spk-empty{font-size:var(--t-micro);color:var(--c-muted);text-align:center;padding:6px}
+/* Height comes from the caller (see renderSparklineSVG) so the placeholder occupies exactly
+   the chart's slot — the detail panel swaps metric on hover and must not resize. */
+.spk-empty{
+  font-size:var(--t-micro);color:var(--c-muted);
+  display:flex;align-items:center;justify-content:center;
+}
+.spk-delta.up{color:var(--pos)}
+.spk-delta.down{color:var(--neg)}
 
 /* ── Compare bar: a row of the shell, not a floating overlay ── */
 .cbar{

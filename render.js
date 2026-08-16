@@ -537,10 +537,13 @@ function statLinkOk(st){
 function statTilesHtml(stats){
   return stats.map(st=>{
     const val=String(st.v);
-    if(!statLinkOk(st))return`<div class="db db-plain"><div class="db-v">${esc(val)}</div><div class="db-l">${esc(L(st.l))}</div></div>`;
+    // `metric` opts the tile into the hover-driven chart below the grid (see wireStatChart).
+    const metric=st.metric&&CHART_METRICS[st.metric]?` data-metric="${esc(st.metric)}"`:'';
+    const body=`<div class="db-v">${esc(val)}</div><div class="db-l">${esc(L(st.l))}</div>`;
+    if(!statLinkOk(st))return`<div class="db db-plain"${metric}>${body}</div>`;
     const eventName=evname(st.link);
     const cat=st.cat!=null?` data-cat="${esc(String(st.cat))}"`:'';
-    return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"${cat}><div class="db-v">${esc(val)}</div><div class="db-l">${esc(L(st.l))}</div><div class="db-hint">${ico('arrow-right')}<span>${esc(eventName)}</span></div></div>`;
+    return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"${cat}${metric}>${body}<div class="db-hint">${ico('arrow-right')}<span>${esc(eventName)}</span></div></div>`;
   }).join('');
 }
 function wireStatLinks(panel){
@@ -566,6 +569,51 @@ function wireStatLinks(panel){
     });
   });
 }
+// ── Detail-panel chart ──
+// One sparkline that can draw any stat with history. The default is Might; hovering a stat tile
+// switches it to that stat and leaving the tile grid restores the default.
+function chartSeries(r,metric){return getStatSeriesForKey(r.name,histKey(),metric,HIST_MAX_PER_PLAYER)}
+// The default metric only wins if it actually has a line to draw — a player seen once under the
+// old history format has no stat values yet, so fall back to the first metric that does (usually
+// position or score, which have been recorded all along). Returns null when nothing is chartable.
+function defaultChartMetric(r){
+  if(chartSeries(r,DEFAULT_CHART_METRIC).length>=2)return DEFAULT_CHART_METRIC;
+  return Object.keys(CHART_METRICS).find(m=>chartSeries(r,m).length>=2)||null;
+}
+function chartValue(metric,v){return metric==='rank'?'#'+fmtN(v):fmtN(v)}
+function statChartHtml(r,metric){
+  const m=CHART_METRICS[metric]||CHART_METRICS[DEFAULT_CHART_METRIC];
+  const series=chartSeries(r,metric);
+  const label=esc(L(m.l));
+  let head=`<span>${ico('activity')}${label}</span>`;
+  if(series.length>=2){
+    const first=series[0].v,last=series[series.length-1].v;
+    const delta=last-first;
+    // "Better" is a bigger number for most stats but a smaller one for position/rank.
+    const dir=delta===0?'':((m.lower?-delta:delta)>0?' up':' down');
+    head=`<span>${ico('activity')}${label} · ${L('{n} pkt',{n:series.length})}</span>`
+      +`<span class="spk-delta${dir}">${esc(chartValue(metric,first))} → ${esc(chartValue(metric,last))}</span>`;
+  }
+  return`<div class="spk-lbl">${head}</div>${renderSparklineSVG(series,{lower:!!m.lower})}`;
+}
+// Hovering a stat tile charts that stat; leaving the grid restores the panel's default metric.
+function wireStatChart(panel,r){
+  const box=panel.querySelector('.spk-wrap[data-chart]');
+  if(!box)return;
+  const grid=panel.querySelector('.ds');
+  const tiles=[...panel.querySelectorAll('.db[data-metric]')];
+  const mark=metric=>tiles.forEach(t=>t.classList.toggle('charted',t.dataset.metric===metric));
+  const show=metric=>{
+    if(!CHART_METRICS[metric]||box.dataset.cur===metric)return;
+    box.dataset.cur=metric;
+    box.innerHTML=statChartHtml(r,metric);
+    mark(metric);
+  };
+  mark(box.dataset.cur); // the default metric's tile starts out marked
+  tiles.forEach(tile=>tile.addEventListener('mouseenter',()=>show(tile.dataset.metric)));
+  if(grid)grid.addEventListener('mouseleave',()=>show(box.dataset.chart));
+}
+
 // Index of the honorPoints category covering a player level, so the "Poziom" tile lands on the
 // right bracket. Categories are level_placeholder entries like '1-19' … '70' (normalizeCats()
 // reverses them, so the index can't be assumed). Returns null when the ranking isn't level-based.
@@ -601,31 +649,31 @@ function renderDetailContent(rank){
   // link to it. Synthetic boards (playerGlory/Attack/Defense/Loot) cover the fields the game
   // publishes no leaderboard for — see SYNTHETIC_PLAYER_EVENTS.
   const nobility='dialog_BeggingKnights_nobilityPoints';
-  if(r.honor!=null)stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn});
-  if(r.might!=null)stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player',search:pn});
-  if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:'playerGlory',mode:'player',search:pn});
-  if(r.legendLevel!=null&&r.legendLevel>0)stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
-  else if(r.level!=null&&r.level>=70)stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
-  else if(r.level!=null&&r.level>0)stats.push({v:'Lv '+r.level,l:'Poziom',link:'honorPoints',mode:'player',search:pn,cat:levelCatIdx(r.level)});
-  if(r.avp!=null)stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:'playerAttack',mode:'player',search:pn});
-  if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:'playerDefense',mode:'player',search:pn});
-  if(r.rpt!=null)stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:'playerLoot',mode:'player',search:pn});
-  if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga',link:nobility,mode:'player',search:pn});
-  if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:nobility,mode:'player',search:pn});
-  if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:nobility,mode:'player',search:pn});
+  // `metric` is the history field the tile charts on hover — see CHART_METRICS / wireStatChart.
+  stats.push({v:'#'+fmtN(r.rank),l:'Pozycja',link:S.eventKey,mode:'player',search:pn,metric:'rank'});
+  if(r.honor!=null)stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn,metric:'honor'});
+  if(r.might!=null)stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player',search:pn,metric:'might'});
+  if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:'playerGlory',mode:'player',search:pn,metric:'glory'});
+  if(r.legendLevel!=null&&r.legendLevel>0)stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn,metric:'legendLevel'});
+  else if(r.level!=null&&r.level>=70)stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn,metric:'level'});
+  else if(r.level!=null&&r.level>0)stats.push({v:'Lv '+r.level,l:'Poziom',link:'honorPoints',mode:'player',search:pn,cat:levelCatIdx(r.level),metric:'level'});
+  if(r.avp!=null)stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:'playerAttack',mode:'player',search:pn,metric:'avp'});
+  if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:'playerDefense',mode:'player',search:pn,metric:'hf'});
+  if(r.rpt!=null)stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:'playerLoot',mode:'player',search:pn,metric:'rpt'});
+  if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga',link:nobility,mode:'player',search:pn,metric:'rank2'});
+  if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:nobility,mode:'player',search:pn,metric:'pre'});
+  if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:nobility,mode:'player',search:pn,metric:'suf'});
   // No search term: the score tile opens the current ranking at its top, so it isn't a no-op
   // click that just reloads the same view around this player.
-  if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:S.eventKey,mode:'player'});
+  if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:S.eventKey,mode:'player',metric:'score'});
   if(r.al)stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
-  if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:'allianceHonor',mode:'alliance',search:r.al||''});
+  if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:'allianceHonor',mode:'alliance',search:r.al||'',metric:'members'});
   const statHtml=statTilesHtml(stats);
-  // Mini-sparkline of historical rank (current ranking only)
-  const series=getRankSeriesForKey(r.name,histKey(),12);
-  const spkHtml=series.length>=2?`
-    <div class="spk-wrap dsec">
-      <div class="spk-lbl"><span>${ico('activity')}${L('Historia pozycji ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${r.rank}</span></div>
-      ${renderSparklineSVG(series)}
-    </div>`:'';
+  // Mini-sparkline (current ranking only). Hovering a stat tile swaps the charted metric;
+  // it falls back to the default one when the pointer leaves the grid — see wireStatChart().
+  const chartMetric=defaultChartMetric(r);
+  const spkHtml=chartMetric?`
+    <div class="spk-wrap dsec" data-chart="${esc(chartMetric)}" data-cur="${esc(chartMetric)}">${statChartHtml(r,chartMetric)}</div>`:'';
   const favObj=S.favs.find(f=>f.name===r.name&&f.game===game&&f.server===S.server);
   const noteHtml=favObj&&favObj.note?`<div class="dnote">${ico('note')}<span>${esc(favObj.note)}</span></div>`:'';
   const dc=crestImg(r.emblem,88,'dcrest');
@@ -639,6 +687,7 @@ function renderDetailContent(rank){
     ${noteHtml}
     ${spkHtml}`;
   wireStatLinks(panel);
+  wireStatChart(panel,r);
   $(`dfav_${rank}`)?.addEventListener('click',e=>{
     e.stopPropagation();toggleFav(r.name,game,S.server,null);
     const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('on',now)}
@@ -646,15 +695,19 @@ function renderDetailContent(rank){
   $(`dpng_${rank}`)?.addEventListener('click',e=>{e.stopPropagation();exportPlayerCard(r)});
 }
 
-function renderSparklineSVG(series,w=240,h=40){
-  if(series.length<2)return`<div class="spk-empty">${L('Za mało danych historycznych')}</div>`;
-  const ranks=series.map(s=>s.rk);
-  const min=Math.min(...ranks),max=Math.max(...ranks);
+// `points` is [{v}] oldest→newest. `lower` flips the vertical mapping for metrics where a smaller
+// number is better (position, in-alliance rank), so a rising line always means "improving".
+function renderSparklineSVG(series,{lower=false,w=240,h=40}={}){
+  // The placeholder takes the chart's height so swapping metrics never resizes the panel.
+  if(series.length<2)return`<div class="spk-empty" style="height:${h}px">${L('Za mało danych historycznych')}</div>`;
+  const vals=series.map(s=>s.v);
+  const min=Math.min(...vals),max=Math.max(...vals);
   const range=max-min||1;
   const pad=3;
   const points=series.map((s,i)=>{
     const x=pad+(i/(series.length-1))*(w-pad*2);
-    const y=pad+((s.rk-min)/range)*(h-pad*2);
+    const norm=lower?(s.v-min)/range:(max-s.v)/range;
+    const y=pad+norm*(h-pad*2);
     return[x.toFixed(1),y.toFixed(1)];
   });
   const last=points[points.length-1];

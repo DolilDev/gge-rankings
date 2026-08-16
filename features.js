@@ -235,9 +235,11 @@ async function loadFavRanks(fav,card,spkId){
   if(spkEl){
     const series=getBestRankSeries(fav.name,fav.server,12);
     if(series.length>=2){
+      // Position history: smaller rank is better, so the line rises as the player climbs.
+      const points=series.map(s=>({t:s.t,v:s.rk}));
       spkEl.innerHTML=`<div class="spk-wrap">
         <div class="spk-lbl"><span>${ico('activity')}${L('Historia ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${series[series.length-1].rk}</span></div>
-        ${renderSparklineSVG(series,260,32)}
+        ${renderSparklineSVG(points,{lower:true,w:260,h:32})}
       </div>`;
     }
   }

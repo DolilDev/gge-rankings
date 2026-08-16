@@ -153,6 +153,16 @@ function getPrevRank(name,key=histKey()){
   if(!arr||!arr.length)return null;
   return arr[arr.length-1][1];
 }
+// Only the numeric stats that are actually present, under their short storage keys — entries are
+// written on every refresh, so anything stored here multiplies across the whole history.
+function snapshotStats(r){
+  const out={};
+  for(const field in HIST_FIELDS){
+    const v=r[field];
+    if(typeof v==='number'&&Number.isFinite(v))out[HIST_FIELDS[field]]=v;
+  }
+  return out;
+}
 function captureSnapshot(rows){
   if(!rows.length||!S.eventKey)return;
   const k=histKey();
@@ -161,19 +171,30 @@ function captureSnapshot(rows){
   rows.forEach(r=>{
     const arr=HIST[k][r.name]=HIST[k][r.name]||[];
     const last=arr[arr.length-1];
+    // Entries are [time, rank, score, stats]; entries written before stats existed are 3 long
+    // and readers must tolerate that (a stat series simply skips them).
+    const entry=[now,r.rank,r.score,snapshotStats(r)];
     if(last&&(now-last[0])<HIST_DEDUPE_MS){
-      arr[arr.length-1]=[now,r.rank,r.score];
+      arr[arr.length-1]=entry;
     }else{
-      arr.push([now,r.rank,r.score]);
+      arr.push(entry);
       if(arr.length>HIST_MAX_PER_PLAYER)arr.shift();
     }
   });
   saveHistory();
 }
-function getRankSeriesForKey(playerName,key,maxLen=12){
+// History of one stat as [{t,v}], oldest first. `field` is 'rank', 'score' or a HIST_FIELDS key.
+// Snapshots missing that stat are dropped, so the series is always drawable as-is.
+function getStatSeriesForKey(playerName,key,field,maxLen=12){
   const arr=HIST?.[key]?.[playerName];
   if(!arr)return[];
-  return arr.slice(-maxLen).map(([t,rk,sc])=>({t,rk,sc}));
+  const short=HIST_FIELDS[field];
+  const out=[];
+  arr.slice(-maxLen).forEach(([t,rk,sc,stats])=>{
+    const v=field==='rank'?rk:field==='score'?sc:(stats?stats[short]:undefined);
+    if(typeof v==='number'&&Number.isFinite(v))out.push({t,v});
+  });
+  return out;
 }
 function getBestRankSeries(playerName,server,maxLen=12){
   const keys=Object.keys(HIST||{}).filter(k=>k.startsWith(server+'_'));

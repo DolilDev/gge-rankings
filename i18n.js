@@ -143,7 +143,7 @@ const EN={
   'Wynik rankingu':'Ranking score',
   'Brak szczegółowych danych':'No detailed data',
   'Otwórz ranking: {x}':'Open ranking: {x}',
-  'Historia pozycji ({n} pkt)':'Position history ({n} pts)',
+  '{n} pkt':'{n} pts',
   'Historia ({n} pkt)':'History ({n} pts)',
   'Za mało danych historycznych':'Not enough history',
   'Obserwuj':'Watch',
