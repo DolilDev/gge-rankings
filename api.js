@@ -71,6 +71,54 @@ async function ggtAllianceMembers(name,code){
   return{name:det.alliance_name||name,players:det.players};
 }
 
+// ── gge-tracker history (backfill for the detail-panel chart) ──
+// Resolve a player name to gge-tracker's id. Returns null when the server isn't tracked, the
+// player is unknown, or the API is unreachable — every caller treats that as "no backfill".
+async function ggtPlayerId(name,code){
+  const srv=ggtServer(code);
+  if(!srv||!name)return null;
+  const d=await ggtGet(`players/${encodeURIComponent(name)}`,srv);
+  return d&&!d.error&&d.player_id?String(d.player_id):null;
+}
+// Evenly thin a series down to `max` points, always keeping the first and last so the endpoints
+// (and the dates printed under the chart) stay exact.
+function downsampleSeries(points,max){
+  if(points.length<=max)return points;
+  const out=[];
+  const step=(points.length-1)/(max-1);
+  for(let i=0;i<max;i++)out.push(points[Math.round(i*step)]);
+  return out;
+}
+// One gge-tracker series as [{t,v}], oldest first, downsampled for the sparkline.
+// `series` is a gge-tracker event name (see GGT_METRIC_HISTORY / GGT_EVENT_HISTORY).
+async function ggtHistory(name,code,series){
+  const srv=ggtServer(code);
+  if(!srv||!series)return[];
+  const cacheKey=`ggthist:${srv}:${name}:${series}`;
+  const hit=cGet(cacheKey);if(hit)return hit;
+  const id=await ggtPlayerId(name,code);
+  if(!id)return[];
+  const d=await ggtGet(`statistics/player/${encodeURIComponent(id)}/${series}/${GGT_HISTORY_DAYS}`,srv);
+  const raw=d&&!d.error?d.points?.[series]:null;
+  if(!Array.isArray(raw))return[];
+  const points=[];
+  raw.forEach(p=>{
+    const t=Date.parse(p?.date),v=Number(p?.point);
+    if(Number.isFinite(t)&&Number.isFinite(v))points.push({t,v});
+  });
+  points.sort((a,b)=>a.t-b.t);
+  const out=downsampleSeries(points,GGT_HISTORY_POINTS);
+  cSet(cacheKey,out,GGT_HISTORY_TTL);
+  return out;
+}
+// Merge locally collected snapshots on top of the backfill: gge-tracker lags a little, so keep
+// only the local points newer than its last one and the line stays continuous to right now.
+function mergeHistory(backfill,local){
+  if(!backfill.length)return local;
+  const cutoff=backfill[backfill.length-1].t;
+  return backfill.concat(local.filter(p=>p.t>cutoff));
+}
+
 // ── Events ──
 function evname(k){return S.texts[k]||L(EV_LABELS[k]||k.replace(/_/g,' '))}
 function catname(c){

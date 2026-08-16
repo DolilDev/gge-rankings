@@ -254,7 +254,7 @@ function openCompareModal(){
   const isAl=S.compare[0].type==='alliance';
   const stats=isAl
     ?[['rank','Pozycja','asc'],['score','Wynik','desc'],['members','Członkowie','desc']]
-    :[['rank','Pozycja','asc'],['score','Wynik','desc'],['honor','Honor','desc'],['might','Moc','desc'],['glory','Chwała','desc'],['legendLevel','Lv legendarny','desc'],['level','Poziom','desc'],['avp','Atak','desc'],['hf','Obrona','desc'],['rpt','Rabunek','desc']];
+    :[['rank','Pozycja','asc'],['score','Wynik','desc'],['honor','Honor','desc'],['might','Moc','desc'],['glory','Chwała','desc'],['legendLevel','Lv legendarny','desc'],['level','Poziom','desc'],['avp','Atak','desc'],['hf','Najw. chwała','desc'],['rpt','Rabunek','desc']];
 
   body.innerHTML=`<div class="cmp-grid">${
     S.compare.map((c,idx)=>{
@@ -443,7 +443,7 @@ async function renderAllianceDetail(r,panel){
       if(totalMp>0)stats.push({v:fmtN(Math.round(totalMp/sorted.length)),l:'Śr. moc',link:'allianceMight',mode:'alliance',search:an});
       if(totalAvp>0)stats.push({v:fmtN(totalAvp),l:'Punkty ataku',link:'playerAttack',mode:'player'});
       if(totalRpt>0)stats.push({v:fmtN(totalRpt),l:'Punkty rabunku',link:'playerLoot',mode:'player'});
-      if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Punkty obrony',link:'playerDefense',mode:'player'});
+      if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Najwyższa chwała',link:'playerHighestFame',mode:'player'});
     }
     // Description lives in its own full-width section below the tiles — inside .ds it would
     // stretch the stat tiles sharing its grid row to its (tall) height.
@@ -596,13 +596,24 @@ function chartSeries(r,metric){return getStatSeriesForKey(r.name,histKey(),metri
 // position or score, which have been recorded all along). Returns null when nothing is chartable.
 function defaultChartMetric(r){
   if(chartSeries(r,DEFAULT_CHART_METRIC).length>=2)return DEFAULT_CHART_METRIC;
-  return Object.keys(CHART_METRICS).find(m=>chartSeries(r,m).length>=2)||null;
+  const local=Object.keys(CHART_METRICS).find(m=>chartSeries(r,m).length>=2);
+  if(local)return local;
+  // Nothing collected locally yet, but gge-tracker may still hold a year of it — show the chart
+  // anyway so the backfill has somewhere to land, instead of hiding it on a first visit.
+  return(ggtSeriesFor(DEFAULT_CHART_METRIC)&&ggtServer(srvInfo(S.server)?.code))?DEFAULT_CHART_METRIC:null;
 }
 function chartValue(metric,v){return metric==='rank'?'#'+fmtN(v):fmtN(v)}
-function statChartHtml(r,metric){
+// The gge-tracker series backing this metric, if any: most metrics have none, and "Wynik
+// rankingu" depends on which board is open. Alliance rows are never backfilled.
+function ggtSeriesFor(metric){
+  if(S.allianceMode)return null;
+  if(GGT_METRIC_HISTORY[metric])return GGT_METRIC_HISTORY[metric];
+  return metric==='score'?(GGT_EVENT_HISTORY[S.eventKey]||null):null;
+}
+function statChartHtml(r,metric,{series,src}={}){
   const m=CHART_METRICS[metric]||CHART_METRICS[DEFAULT_CHART_METRIC];
-  const series=chartSeries(r,metric);
-  const label=esc(L(m.l));
+  series=series||chartSeries(r,metric);
+  const label=esc(L(m.l))+(src?`<i class="spk-src" title="${esc(L('Historia uzupełniona z gge-tracker'))}">${esc(src)}</i>`:'');
   let head=`<span>${ico('activity')}${label}</span>`;
   if(series.length>=2){
     const first=series[0].v,last=series[series.length-1].v;
@@ -616,6 +627,17 @@ function statChartHtml(r,metric){
     ${renderSparklineSVG(series,{lower:!!m.lower,fmt:v=>chartValue(metric,v)})}
     ${spkAxisHtml(series)}`;
 }
+// Extend the chart with gge-tracker's history for this metric. Runs after the local chart is
+// already on screen, so the panel never waits on the network, and drops its result if the pointer
+// has moved to another tile or the panel has closed meanwhile. Any failure leaves the local chart.
+async function backfillChart(box,r,metric){
+  const series=ggtSeriesFor(metric);
+  if(!series)return;
+  let remote=[];
+  try{remote=await ggtHistory(r.name,srvInfo(S.server)?.code,series)}catch(e){console.warn('backfillChart:',e.message);return}
+  if(!remote.length||!box.isConnected||box.dataset.cur!==metric)return;
+  box.innerHTML=statChartHtml(r,metric,{series:mergeHistory(remote,chartSeries(r,metric)),src:'gge-tracker'});
+}
 // Hovering a stat tile charts that stat; leaving the grid restores the panel's default metric.
 function wireStatChart(panel,r){
   const box=panel.querySelector('.spk-wrap[data-chart]');
@@ -628,8 +650,10 @@ function wireStatChart(panel,r){
     box.dataset.cur=metric;
     box.innerHTML=statChartHtml(r,metric);
     mark(metric);
+    backfillChart(box,r,metric);
   };
   mark(box.dataset.cur); // the default metric's tile starts out marked
+  backfillChart(box,r,box.dataset.cur);
   tiles.forEach(tile=>tile.addEventListener('mouseenter',()=>show(tile.dataset.metric)));
   if(grid)grid.addEventListener('mouseleave',()=>show(box.dataset.chart));
 }
@@ -678,7 +702,7 @@ function renderDetailContent(rank){
   else if(r.level!=null&&r.level>=70)stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn,metric:'level'});
   else if(r.level!=null&&r.level>0)stats.push({v:'Lv '+r.level,l:'Poziom',link:'honorPoints',mode:'player',search:pn,cat:levelCatIdx(r.level),metric:'level'});
   if(r.avp!=null)stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:'playerAttack',mode:'player',search:pn,metric:'avp'});
-  if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:'playerDefense',mode:'player',search:pn,metric:'hf'});
+  if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Najwyższa chwała',link:'playerHighestFame',mode:'player',search:pn,metric:'hf'});
   if(r.rpt!=null)stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:'playerLoot',mode:'player',search:pn,metric:'rpt'});
   if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga',link:nobility,mode:'player',search:pn,metric:'rank2'});
   if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:nobility,mode:'player',search:pn,metric:'pre'});

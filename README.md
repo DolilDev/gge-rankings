@@ -17,7 +17,7 @@ At the top of the page, choose a server from the list — servers are grouped (G
 From the **Ranking** dropdown, choose the leaderboard you want, e.g.:
 - **Honor** — player honor ranking
 - **Might** — player might ranking
-- **Glory**, **Attack points**, **Defense points**, **Loot points** — GGE publishes no server-side board for these,
+- **Glory**, **Attack points**, **Highest fame**, **Loot points** — GGE publishes no server-side board for these,
   so they are assembled client-side: each pools the server's top ~2000 players and re-sorts them by that stat
   (a banner notes this). They exist so every number in the player detail panel has a ranking to open. GGE only.
 - **League** — league ranking
@@ -73,15 +73,21 @@ Click a **column header** (`#`, `Player`, `Alliance`, `Score`) to sort:
 
 Expanding a player row shows:
 - Honor, Might, Glory, Level (legendary/regular)
-- Attack, defense and loot points
+- Attack points, **highest fame** and loot points
 - A **stat-history chart** (sparkline) — when data from previous refreshes is available. It defaults to **Might**,
   and **hovering any stat tile switches the chart to that stat** (the tile is highlighted while it's charted);
   moving the pointer off the tile grid restores the default. Every snapshot stores all stats, so honor, glory,
-  attack/defense/loot, titles, score and position each have their own line. The line always rises when things
+  attack/highest fame/loot, titles, score and position each have their own line. The line always rises when things
   improve — including position, where a smaller number is better. Stats with fewer than two data points show
   "not enough history" instead. History collected before this existed still charts position and score.
   The dates of the first and last point are printed under the line, and hovering any point shows its own
   timestamp and value as a tooltip. The same date labels appear on the sparkline in the Favorites cards.
+- **Backfill from gge-tracker.** Where gge-tracker has a series for the charted metric, the chart is filled in
+  with **up to a year** of real history (marked `gge-tracker` next to the label), so it isn't empty on a first
+  visit. That covers **Might**, and **Ranking score** while a board gge-tracker tracks is open (Plunder/nobility
+  and the event boards). Honor, fame, attack, loot points, level and **position** have no series there and stay
+  dependent on locally collected snapshots. Untracked worlds (NET/Sieć) and any API failure leave the local chart
+  untouched. Locally collected points newer than the backfill are appended, so the line runs up to right now.
 - Clickable stats → **every** stat tile opens the ranking that ranks it: Honor, Might, Glory, Legendary level,
   Attack / Defense / Loot points, and — for Rank and the two Title tiles — the Plunder (nobility) board that
   awards them. The Level tile lands on the matching level bracket of the Honor ranking, and the Ranking score
@@ -95,8 +101,8 @@ Watched players are marked by the filled star in their row and a faint row tint.
 ### Alliance details
 
 Expanding an alliance row shows:
-- Aggregate stats: might, glory points, whether the alliance is open, member count, average might, and total attack / defense / loot points.
-  These are clickable too — the alliance-wide numbers open the alliance boards, and the attack / defense / loot sums open the matching player ranking
+- Aggregate stats: might, glory points, whether the alliance is open, member count, average might, and total attack / highest fame / loot points.
+  These are clickable too — the alliance-wide numbers open the alliance boards, and the attack / highest fame / loot sums open the matching player ranking
 - The alliance **description** (when set), in its own full-width block
 - A member list (name · level · might) — click a member to look them up
 - A **Show members** button that loads the full member list with stats (where the server is supported). Each member shows current **Might**, **Loot**, **Glory** and **Honor**, plus a dimmer **All-time** line with their peak (record) values for the same stats. The **alliance leader** is highlighted with a crown badge and an accent rail, members under **protection** (peace mode) show a shield badge with the expiry date, and every member carries their **in-alliance rank** badge. The list has **clickable sortable headers** — sort by **Might**, **Loot**, **Glory**, **Honor**, **Level**, **Rank** or **Protection** (click a header again to flip the direction). Click a member to search for them.

@@ -148,10 +148,10 @@ test('synthetic player rankings are injected after Might so every stat has a boa
   vm.runInContext(`${source('config.js')}\n${source('api.js')}\ninjectSyntheticEvents();`,context);
   const player=context.S.events.player;
   assert.deepEqual(Object.keys(player),
-    ['honorPoints','playerMight','playerGlory','playerAttack','playerDefense','playerLoot',
+    ['honorPoints','playerMight','playerGlory','playerAttack','playerHighestFame','playerLoot',
      'dialog_BeggingKnights_nobilityPoints','legendLevel']);
   assert.deepEqual(
-    ['playerGlory','playerAttack','playerDefense','playerLoot'].map(key=>player[key].synthetic),
+    ['playerGlory','playerAttack','playerHighestFame','playerLoot'].map(key=>player[key].synthetic),
     ['glory','avp','hf','rpt']);
   // The base board supplies the pool every synthetic ranking is sorted from.
   assert.equal(player.playerAttack.id,2);
@@ -222,12 +222,13 @@ function historyContext(){
     localStorage:storage(),
     document:{getElementById:()=>null,documentElement:{}},
     location:{hash:''},history:{replaceState(){}},
-    URLSearchParams,console,setTimeout,clearTimeout
+    URLSearchParams,console,setTimeout,clearTimeout,
+    curLocale:()=> 'pl-PL'
   };
   vm.createContext(context);
   vm.runInContext(`${source('config.js')}\n${source('state.js')}\nloadHistory();S.eventKey='honorPoints';`
     +`\nglobalThis.testApi={S,histKey,captureSnapshot,getStatSeriesForKey,getPrevRank,`
-    +`getRankSeriesForEvent,bestHistEvent,histKeyEvent,`
+    +`getRankSeriesForEvent,bestHistEvent,histKeyEvent,fmtHistTime,`
     +`seed:entries=>{HIST[histKey()]={Player:entries}},`
     +`seedKey:(k,entries)=>{HIST[k]={Player:entries}}};`,context);
   return context.testApi;
@@ -313,4 +314,69 @@ test('alliance history never becomes the default player chart',()=>{
   seedKey('EmpireEx_5_allianceHonor_a_0',[[1,1,9],[2,2,8],[3,3,7],[4,4,6]]);
   seedKey('EmpireEx_5_honorPoints_p_0',[[1,7,10],[2,9,12]]);
   assert.equal(bestHistEvent('Player','EmpireEx_5'),'honorPoints');
+});
+
+function ggtApi(fetchStub){
+  const context={console,setTimeout,clearTimeout,window:{},fetchStub,
+    S:{server:'EmpireEx_5',allianceMode:false}};
+  vm.createContext(context);
+  vm.runInContext(`${source('config.js')}\n${source('api.js')}`
+    +`\nfetch=globalThis.fetchStub;timeout=p=>p;`
+    +`\nglobalThis.testApi={ggtHistory,ggtPlayerId,downsampleSeries,mergeHistory};`,context);
+  return context.testApi;
+}
+const jsonResponse=body=>({ok:true,json:async()=>body});
+
+test('gge-tracker history is normalized, sorted and thinned down for the sparkline',async()=>{
+  const calls=[];
+  const points=Array.from({length:500},(_,i)=>({date:new Date(1e12+i*3600e3).toISOString(),point:String(i)}));
+  const {ggtHistory}=ggtApi(async url=>{
+    calls.push(String(url));
+    if(String(url).includes('/players/'))return jsonResponse({player_id:'2219570065'});
+    // Deliberately out of order, plus an unusable row, to exercise the normalizer.
+    return jsonResponse({points:{player_might_history:[...points].reverse().concat([{date:'nope',point:'x'}])}});
+  });
+  const series=await ggtHistory('Caesarius','PL1','player_might_history');
+  assert.equal(series.length,40);
+  assert.equal(series[0].v,0);            // endpoints are preserved exactly …
+  assert.equal(series[39].v,499);
+  assert.ok(series.every((p,i)=>i===0||p.t>series[i-1].t)); // … and the series ends up ascending
+  // Name is resolved to an id first, then the series is fetched for that id.
+  assert.ok(calls[0].includes('/players/Caesarius'));
+  assert.ok(calls[1].includes('/statistics/player/2219570065/player_might_history/365'));
+});
+
+test('an untracked server or an unknown player yields no backfill',async()=>{
+  const {ggtHistory}=ggtApi(async()=>jsonResponse({error:'not found'}));
+  // NET*/Sieć worlds are not tracked at all — no request should even be attempted.
+  assert.deepEqual(Array.from(await ggtHistory('Someone','NET1','player_might_history')),[]);
+  assert.deepEqual(Array.from(await ggtHistory('Ghost','PL1','player_might_history')),[]);
+});
+
+test('a failing gge-tracker call leaves the chart on local history',async()=>{
+  const {ggtHistory}=ggtApi(async()=>{throw new Error('offline')});
+  assert.deepEqual(Array.from(await ggtHistory('Caesarius','PL1','player_might_history')),[]);
+});
+
+test('local snapshots newer than the backfill are appended, older ones dropped',()=>{
+  const {mergeHistory}=ggtApi(async()=>jsonResponse({}));
+  const backfill=[{t:100,v:1},{t:200,v:2}];
+  const local=[{t:150,v:99},{t:200,v:2},{t:300,v:3}];
+  // Only t=300 is newer than the backfill's last point, so the line continues without doubling up.
+  assert.deepEqual(Array.from(mergeHistory(backfill,local),p=>p.t),[100,200,300]);
+  // With nothing to backfill the local series is used unchanged.
+  assert.deepEqual(Array.from(mergeHistory([],local),p=>p.t),[150,200,300]);
+});
+
+test('chart timestamps show the year only when it is not the current one',()=>{
+  const {S,fmtHistTime}=historyContext();
+  S.lang='pl';
+  const now=new Date();
+  const thisYear=fmtHistTime(new Date(now.getFullYear(),7,16,14,15).getTime());
+  const lastYear=fmtHistTime(new Date(now.getFullYear()-1,7,16,13,16).getTime());
+  // A backfilled year-long series must not print both of its ends as the same date.
+  assert.ok(!/\d{4}/.test(thisYear),thisYear);
+  assert.ok(/\d{4}/.test(lastYear),lastYear);
+  assert.notEqual(thisYear.slice(0,5),'');
+  assert.equal(fmtHistTime('nonsense'),'');
 });

@@ -618,6 +618,8 @@ body.compact .sv{font-size:var(--t-sm)}
   font-size:9.5px;color:var(--c-muted);font-variant-numeric:tabular-nums;
 }
 .spk-hit{fill:transparent}
+/* Marks a chart whose older half was backfilled from gge-tracker. */
+.spk-src{font-style:normal;font-weight:600;color:var(--acc);opacity:.75;margin-left:5px;letter-spacing:0}
 .spk-delta.up{color:var(--pos)}
 .spk-delta.down{color:var(--neg)}
 

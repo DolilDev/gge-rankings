@@ -33,11 +33,37 @@ const CHART_METRICS = {
   might:{l:'Moc'}, honor:{l:'Honor'}, glory:{l:'Punkty chwały'},
   score:{l:'Wynik rankingu'}, rank:{l:'Pozycja',lower:true},
   legendLevel:{l:'Poziom legendarny'}, level:{l:'Poziom'},
-  avp:{l:'Punkty ataku'}, hf:{l:'Punkty obrony'}, rpt:{l:'Punkty rabunku'},
+  avp:{l:'Punkty ataku'}, hf:{l:'Najwyższa chwała'}, rpt:{l:'Punkty rabunku'},
   rank2:{l:'Ranga',lower:true}, pre:{l:'Tytuł (prefix)'}, suf:{l:'Tytuł (suffix)'},
   members:{l:'Członkowie'},
 };
 const DEFAULT_CHART_METRIC = 'might';
+
+// ── Backfill from gge-tracker ──
+// The app's own history only starts when you first open a ranking. gge-tracker keeps up to a year
+// of point history per player, so charts for the metrics below can be filled in from it.
+// Only these exist there — honor, fame, attack, loot points, level and *position* have no series,
+// and stay dependent on locally collected snapshots.
+const GGT_HISTORY_DAYS = 365;
+const GGT_HISTORY_POINTS = 40;      // downsampled target: a 240px sparkline can't show 8000 points
+const GGT_HISTORY_TTL = 10 * 60 * 1000;
+// Detail-panel chart metric (CHART_METRICS key) → gge-tracker series.
+const GGT_METRIC_HISTORY = {
+  might:'player_might_history',
+};
+// Ranking key → gge-tracker series, used for the "Wynik rankingu" metric while that board is open.
+// Verified against live data: nobility/loot. The event series are matched by name because those
+// boards were inactive (empty lists) when this was written, so they could not be checked against
+// live scores — the two Berimond ones are the pair most worth re-checking during an event.
+const GGT_EVENT_HISTORY = {
+  dialog_BeggingKnights_nobilityPoints:'player_loot_history',
+  event_title_72:'player_event_nomad_history',
+  event_title_80:'player_event_samurai_history',
+  event_title_71:'player_event_war_realms_history',
+  dialog_redAlienInvasion_message_header:'player_event_bloodcrow_history',
+  event_title_3:'player_event_berimond_kingdom_history',
+  event_title_85:'player_event_berimond_invasion_history',
+};
 // Favourite cards chart a position-in-ranking history rather than a stat, so their default is the
 // Might *ranking* — the counterpart of DEFAULT_CHART_METRIC over there.
 const DEFAULT_FAV_CHART_EVENT = 'playerMight';
@@ -99,7 +125,7 @@ const ALL_SERVERS = [
 
 const EV_LABELS = {
   honorPoints:'Honor', playerMight:'Moc', playerGlory:'Chwała', legendLevel:'Poziom legendy',
-  playerAttack:'Punkty ataku', playerDefense:'Punkty obrony', playerLoot:'Punkty rabunku',
+  playerAttack:'Punkty ataku', playerHighestFame:'Najwyższa chwała', playerLoot:'Punkty rabunku',
   allianceHonor:'Honor sojuszu', allianceMight:'Siła sojuszu',
   dominionPoints:'Dominium', cargo_points:'Karawan',
   event_title_71:'Turniej 71', event_title_72:'Turniej 72',
@@ -129,6 +155,6 @@ const REQUIRED_GGE_PLAYER_EVENTS = {
 const SYNTHETIC_PLAYER_EVENTS = [
   {key:'playerGlory',   field:'glory'},
   {key:'playerAttack',  field:'avp'},
-  {key:'playerDefense', field:'hf'},
+  {key:'playerHighestFame', field:'hf'},
   {key:'playerLoot',    field:'rpt'},
 ];
