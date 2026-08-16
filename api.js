@@ -145,6 +145,13 @@ function mergeHistory(backfill,local){
   return backfill.concat(local.filter(p=>p.t>cutoff));
 }
 
+// The alliance payload nests everything under content.A, the member list included — there is no
+// content.M, and reading members from there made every alliance look like it had none.
+function allianceInfo(content){
+  const al=(content&&content.A)||content||{};
+  return{al,members:Array.isArray(al.M)?al.M:[]};
+}
+
 // ── Events ──
 function evname(k){return S.texts[k]||L(EV_LABELS[k]||k.replace(/_/g,' '))}
 function catname(c){

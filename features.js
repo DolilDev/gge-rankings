@@ -169,7 +169,7 @@ function renderFavPage(){
     const label=si?`${si.flag} ${si.name}`:fav.server;
     const cid='fr_'+fav.name.replace(/\W/g,'_');
     const spkId='spk_'+fav.name.replace(/\W/g,'_')+'_'+fav.server;
-    card.innerHTML=`<div class="fch"><div><div class="fcn">${ico('user')}<span>${esc(fav.name)}</span></div><div class="fcm">${esc(label)}</div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="${L('Usuń')}">${ico('x')}</button></div>
+    card.innerHTML=`<div class="fch"><div><div class="fcn">${ico('user')}<span>${esc(fav.name)}</span></div><div class="fcm">${esc(label)}<span class="fcal h"></span></div></div><button class="fcd" data-n="${esc(fav.name)}" data-g="${fav.game}" data-s="${fav.server}" aria-label="${L('Usuń')}">${ico('x')}</button></div>
       <div class="frr" id="${cid}"><div class="fr"><span class="fl">${L('Pobieranie...')}</span></div></div>
       <input type="text" class="fnote" maxlength="500" placeholder="${L('Notatka (np. wróg / sojusznik / cel)')}" value="${esc(fav.note||'')}" aria-label="${L('Notatka (np. wróg / sojusznik / cel)')}">
       <div id="${spkId}"></div>`;
@@ -198,8 +198,7 @@ async function loadFavAlStats(fav,card,cid){
     const d=await ggeGet(url);
     if(!el.isConnected)return;
     if(!d||d.return_code!==0){el.innerHTML=`<div class="fr"><span class="fl" style="color:var(--c-muted)">${L('Brak danych')}</span></div>`;return}
-    const al=d.content.A||d.content;
-    const members=Array.isArray(d.content.M)?d.content.M:[];
+    const {al,members}=allianceInfo(d.content);
     const rows=[];
     if(al.MP!=null)rows.push({l:'Moc',v:fmtN(al.MP)});
     if(al.CF!=null)rows.push({l:'Punkty chwały',v:fmtN(al.CF)});
@@ -218,6 +217,17 @@ function favFetchSlot(task){
   if(!_favFetchSlot)_favFetchSlot=limiter(FAV_FETCH_CONC);
   return _favFetchSlot(task);
 }
+// Show the watched player's alliance next to their server, as a chip that opens the alliance
+// boards on that player's own server. Hidden when they have none (or none of the boards knew it).
+function showFavAlliance(card,fav,name){
+  const el=card.querySelector('.fcal');
+  if(!el)return;
+  if(!name){el.classList.add('h');el.textContent='';return}
+  el.classList.remove('h');
+  el.innerHTML=`<button class="fcal-b" title="${esc(L('Otwórz ranking: {x}',{x:evname('allianceHonor')}))}">${ico('shield')}<span>${esc(name)}</span></button>`;
+  el.querySelector('.fcal-b').addEventListener('click',()=>
+    gotoRanking({server:fav.server,event:'allianceHonor',alliance:true,search:name}));
+}
 async function loadFavRanks(fav,card,spkId){
   const cid='fr_'+fav.name.replace(/\W/g,'_');const el=card.querySelector('#'+CSS.escape(cid));if(!el)return;
   const catalog=await getEventCatalog(fav.game);
@@ -233,11 +243,14 @@ async function loadFavRanks(fav,card,spkId){
       if(d?.return_code!=0||!d.content?.L?.length)return null;
       const f=d.content.L.find(p=>Array.isArray(p)&&(p[2]?.N||'').toLowerCase()===fav.name.toLowerCase());
       const rank=f?Number(f[0]):NaN,score=f?Number(f[1]):NaN;
-      return f&&Number.isFinite(rank)?{key,rank,score:Number.isFinite(score)?score:null}:null;
+      // The board rows carry the player's alliance, so the card gets it for free.
+      const al=typeof f?.[2]?.AN==='string'&&f[2].AN?f[2].AN:null;
+      return f&&Number.isFinite(rank)?{key,rank,score:Number.isFinite(score)?score:null,al}:null;
     }catch{return null}
   })));
   const res=found.filter(Boolean);
   if(!el.isConnected)return;
+  showFavAlliance(card,fav,res.find(x=>x.al)?.al||null);
   // Each row is the player's standing in one ranking: clicking opens that ranking on that
   // server with the player looked up, hovering charts their position history there.
   el.innerHTML=res.length?res.map(r=>

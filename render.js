@@ -423,8 +423,7 @@ async function renderAllianceDetail(r,panel){
     const url=`${GGE_API}/${S.server}/ain/%22AID%22:${r.allianceId}`;
     const d=await timeout(ggeGet(url),8000);
     if(!d||d.return_code!==0){allianceFallbackPanel(panel,r,L('Brak danych'));return}
-    const al=d.content.A||d.content;
-    const members=Array.isArray(d.content.M)?d.content.M:[];
+    const {al,members}=allianceInfo(d.content);
     const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
     // Alliance-wide numbers link to the alliance boards; the attack/defense/loot sums have no
     // alliance leaderboard, so they open the matching player ranking instead.

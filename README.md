@@ -120,6 +120,9 @@ You can also **watch an alliance** straight from its detail panel (Watch / Watch
 Each watched player's card lists their standing in every ranking they appear in, and those rows work like the
 detail panel's stat tiles:
 
+Each card also shows the player's **alliance** next to their server, as a chip that opens the alliance boards
+on that player's own server.
+
 Cards load all their rankings concurrently through a shared request budget, so a page full of favourites
 stays fast without flooding the API.
 

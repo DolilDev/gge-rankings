@@ -416,3 +416,17 @@ test('the request limiter caps concurrency, preserves order and survives failure
   assert.equal(results[4],'boom 4');     // a rejection frees its slot instead of stalling the queue
   assert.equal(active,0);
 });
+
+test('alliance members are read from content.A, which is where the API puts them',()=>{
+  const {allianceInfo}=scriptApi('api.js',['allianceInfo'],{S:{}});
+  const payload={A:{N:'ARGOS',MP:4477892680,CF:1664546685043,M:[{N:'a'},{N:'b'},{N:'c'}]}};
+  const {al,members}=allianceInfo(payload);
+  assert.equal(al.N,'ARGOS');
+  assert.equal(members.length,3);
+  // content.M does not exist in the real payload; trusting it left every alliance looking empty.
+  assert.equal(allianceInfo({M:[{N:'a'}],A:{N:'X'}}).members.length,0);
+  // Missing or malformed payloads degrade to "no members" rather than throwing.
+  assert.deepEqual(Array.from(allianceInfo({A:{N:'X'}}).members),[]);
+  assert.deepEqual(Array.from(allianceInfo(null).members),[]);
+  assert.deepEqual(Array.from(allianceInfo({A:{M:'nope'}}).members),[]);
+});

@@ -571,7 +571,19 @@ body.compact .sv{font-size:var(--t-sm)}
 .fcn{display:flex;align-items:center;gap:7px;font-weight:600;font-size:var(--t-md);color:var(--bright);min-width:0}
 .fcn>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fcn .ic{color:var(--c-muted)}
-.fcm{font-size:var(--t-tiny);color:var(--c-muted);margin-top:3px}
+.fcm{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:var(--t-tiny);color:var(--c-muted);margin-top:3px}
+/* Watched player's alliance, next to their server. Opens the alliance boards.
+   `.h` is scoped per component in this sheet, so the chip needs its own hidden rule. */
+.fcal.h{display:none}
+.fcal-b{
+  display:inline-flex;align-items:center;gap:4px;max-width:180px;
+  padding:1px 6px;border:1px solid var(--c-border);border-radius:999px;
+  background:var(--canvas);color:var(--c-muted);font:inherit;cursor:pointer;
+  transition:border-color .13s,background .13s,color .13s;
+}
+.fcal-b span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fcal-b .ic{width:11px;height:11px;flex:none}
+.fcal-b:hover{border-color:var(--acc-bd);background:var(--acc-soft);color:var(--acc)}
 .fcd{background:none;border:none;cursor:pointer;color:var(--c-muted);padding:2px;line-height:0;transition:color .13s}
 .fcd:hover{color:var(--neg)}
 .frr{display:flex;flex-direction:column;gap:2px}
