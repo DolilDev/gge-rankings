@@ -96,6 +96,16 @@ async function ggtPlayerId(name,code){
   const p=await ggtPlayer(name,code);
   return p?String(p.player_id):null;
 }
+// gge-tracker's ranking/progression record: current loot and fame plus the positions those hold
+// on the server. Null when the world isn't tracked, the player is unknown or the API is down.
+async function ggtPlayerRanking(name,code){
+  const srv=ggtServer(code);
+  if(!srv)return null;
+  const id=await ggtPlayerId(name,code);
+  if(!id)return null;
+  const d=await ggtGet(`statistics/ranking/player/${encodeURIComponent(id)}`,srv);
+  return d&&!d.error?d:null;
+}
 // Evenly thin a series down to `max` points, always keeping the first and last so the endpoints
 // (and the dates printed under the chart) stay exact.
 function downsampleSeries(points,max){

@@ -371,18 +371,21 @@ function _fit(ctx,text,maxW){
   while(t.length>1&&ctx.measureText(t+'…').width>maxW)t=t.slice(0,-1);
   return t+'…';
 }
-// Loot points aren't part of a ranking row unless the plunder board is the one open, so they come
-// from gge-tracker otherwise. Null when that server isn't tracked, the player is unknown or the
-// API is slow/down — the card then simply leaves the tile out.
-async function lootPointsFor(r){
-  if(S.eventKey===NOBILITY_EVENT&&r.score!=null)return r.score;
-  try{
-    const p=await timeout(ggtPlayer(r.name,srvInfo(S.server)?.code),3000);
-    const v=p?Number(p.loot_current):NaN;
-    return Number.isFinite(v)?v:null;
-  }catch{return null}
+// Two of the card's numbers aren't in a ranking row: plunder points (unless that board is the one
+// open) and the player's place in the glory ranking. Both come from one gge-tracker record. Each
+// is null when the world isn't tracked, the player is unknown or the API is slow/down, and the
+// card then leaves that tile out.
+async function cardExtras(r){
+  let rec=null;
+  try{rec=await timeout(ggtPlayerRanking(r.name,srvInfo(S.server)?.code),3500)}catch{}
+  const num=v=>{const n=Number(v);return Number.isFinite(n)&&n>0?n:null};
+  const onPlunderBoard=S.eventKey===NOBILITY_EVENT&&r.score!=null;
+  return{
+    loot:onPlunderBoard?r.score:num(rec?.loot_current),
+    fameRank:num(rec?.player_current_fame_rank)
+  };
 }
-function drawPlayerCard(r,loot){
+function drawPlayerCard(r,extras={}){
   const FONT=`-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif`;
   const dark=S.theme!=='light';
   const C=dark
@@ -409,10 +412,11 @@ function drawPlayerCard(r,loot){
   ctx.fillText('#'+r.rank,W-24,100);ctx.textAlign='left';
   ctx.strokeStyle=C.border;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(24,140);ctx.lineTo(W-24,140);ctx.stroke();
   const stats=[];
-  if(r.honor!=null)stats.push(['Honor',fmtN(r.honor)]);
   if(r.might!=null)stats.push([L('Moc'),fmtN(r.might)]);
-  if(loot!=null)stats.push([evname(NOBILITY_EVENT),fmtN(loot)]);
+  if(r.honor!=null)stats.push(['Honor',fmtN(r.honor)]);
+  if(extras.loot!=null)stats.push([evname(NOBILITY_EVENT),fmtN(extras.loot)]);
   if(r.glory!=null)stats.push([L('Punkty chwały'),fmtN(r.glory)]);
+  if(extras.fameRank!=null)stats.push([L('Ranking chwały'),'#'+fmtN(extras.fameRank)]);
   if(r.al)stats.push([L('Sojusz'),r.al]);
   const cells=stats.slice(0,6),cols=3,gap=12,gx=24,gy=160,bw=(W-gx*2-gap*(cols-1))/cols,bh=78;
   cells.forEach((st,i)=>{
@@ -435,8 +439,8 @@ function exportPlayerCard(r){
   const fname=`gge_${safe}_${new Date().toISOString().slice(0,10)}.png`;
   // Pass the blob-producing promise straight to ClipboardItem so Safari/Firefox keep the user
   // gesture — which is also what lets the loot lookup happen without losing the right to copy.
-  const blobPromise=lootPointsFor(r)
-    .then(loot=>drawPlayerCard(r,loot))
+  const blobPromise=cardExtras(r)
+    .then(extras=>drawPlayerCard(r,extras))
     .then(cv=>cv?new Promise(res=>cv.toBlob(res,'image/png')):null);
   const download=()=>blobPromise.then(b=>{
     if(!b){toast(L('Brak danych do eksportu'),'error');return false}

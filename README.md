@@ -96,9 +96,10 @@ Expanding a player row shows:
   awards them. The Level tile lands on the matching level bracket of the Honor ranking, and the Ranking score
   tile opens the current ranking at its top. A tile stays plain when its ranking doesn't exist for that
   game/server, so it never becomes a dead link.
-- **Copy card** — copies a nicely formatted PNG card to the clipboard, showing honor, might, plunder points,
-  glory and alliance. Plunder points come from the row when that board is open, and from gge-tracker otherwise;
-  on an untracked world that one tile is simply left out (great for pasting into Discord). If the browser doesn't support image clipboard access, the card is downloaded instead.
+- **Copy card** — copies a nicely formatted PNG card to the clipboard, showing might, honor, plunder points,
+  glory, the player's place in the glory ranking, and their alliance. Plunder points and the glory position come
+  from gge-tracker (plunder from the row itself when that board is open); on an untracked world, or if that API
+  is slow or down, those tiles are simply left out (great for pasting into Discord). If the browser doesn't support image clipboard access, the card is downloaded instead.
 - Your note about the player (if watched and a note exists)
 
 Watched players are marked by the filled star in their row and a faint row tint.

@@ -132,6 +132,7 @@ const EN={
   'Rabunek':'Loot',
   // Detail panel
   'Punkty chwały':'Glory points',
+  'Ranking chwały':'Glory ranking',
   'Poziom legendarny':'Legendary level',
   'Punkty ataku':'Attack points',
   'Najwyższa chwała':'Highest fame',
