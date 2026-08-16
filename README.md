@@ -103,6 +103,17 @@ Expanding an alliance row shows:
 
 You can also **watch an alliance** straight from its detail panel (Watch / Watching).
 
+### Favorites cards
+
+Each watched player's card lists their standing in every ranking they appear in, and those rows work like the
+detail panel's stat tiles:
+
+- **Click a row** to open that ranking — on that favourite's own server, switching server (and game catalogue)
+  if it differs from the one you're viewing — with the player looked up.
+- **Hover a row** to chart their position history in that ranking. The chart defaults to the **Might** ranking
+  and returns to it when the pointer leaves the list; the currently charted row is highlighted. Dates of the
+  first and last point are printed under the line, and each point has its own tooltip.
+
 ---
 
 ## ⭐ Watching players and alliances

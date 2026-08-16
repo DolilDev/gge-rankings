@@ -38,6 +38,9 @@ const CHART_METRICS = {
   members:{l:'Członkowie'},
 };
 const DEFAULT_CHART_METRIC = 'might';
+// Favourite cards chart a position-in-ranking history rather than a stat, so their default is the
+// Might *ranking* — the counterpart of DEFAULT_CHART_METRIC over there.
+const DEFAULT_FAV_CHART_EVENT = 'playerMight';
 const HIST_DEDUPE_MS = 60 * 1000;
 const HIST_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 

@@ -203,10 +203,34 @@ function getStatSeriesForKey(playerName,key,field,maxLen=12){
   });
   return out;
 }
-function getBestRankSeries(playerName,server,maxLen=12){
-  const keys=Object.keys(HIST||{}).filter(k=>k.startsWith(server+'_'));
-  let bestKey=null,bestLen=0;
-  keys.forEach(k=>{const arr=HIST[k][playerName];if(arr&&arr.length>bestLen){bestKey=k;bestLen=arr.length}});
-  if(!bestKey)return[];
-  return HIST[bestKey][playerName].slice(-maxLen).map(([t,rk,sc])=>({t,rk,sc,k:bestKey}));
+// Split a histKey back into its parts. Both server ids ("EmpireEx_5") and ranking keys
+// ("event_title_71") contain underscores, so the server is stripped by length and the trailing
+// `_p_<cat>` / `_a_<cat>` by shape rather than by splitting on '_'.
+function histKeyEvent(key,server){
+  if(!key.startsWith(server+'_'))return null;
+  const m=key.slice(server.length+1).match(/^(.+)_(p|a)_(\d+)$/);
+  return m?{event:m[1],alliance:m[2]==='a',cat:+m[3]}:null;
+}
+// Position history of one player in one ranking as [{t,v}], oldest first. A ranking can be split
+// across level categories, so the category with the most snapshots wins.
+function getRankSeriesForEvent(playerName,server,event,maxLen=12){
+  let best=null,bestLen=0;
+  Object.keys(HIST||{}).forEach(k=>{
+    if(!k.startsWith(`${server}_${event}_p_`))return;
+    const arr=HIST[k][playerName];
+    if(arr&&arr.length>bestLen){best=arr;bestLen=arr.length}
+  });
+  return best?best.slice(-maxLen).map(([t,rk])=>({t,v:rk})):[];
+}
+// The player ranking this player has the most history in — the fallback default for the
+// favourites chart when the preferred ranking has nothing to draw yet.
+function bestHistEvent(playerName,server){
+  let bestEvent=null,bestLen=0;
+  Object.keys(HIST||{}).forEach(k=>{
+    const parts=histKeyEvent(k,server);
+    if(!parts||parts.alliance)return;
+    const arr=HIST[k][playerName];
+    if(arr&&arr.length>bestLen){bestEvent=parts.event;bestLen=arr.length}
+  });
+  return bestLen>=2?bestEvent:null;
 }

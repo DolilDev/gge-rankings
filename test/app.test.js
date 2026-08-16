@@ -227,7 +227,9 @@ function historyContext(){
   vm.createContext(context);
   vm.runInContext(`${source('config.js')}\n${source('state.js')}\nloadHistory();S.eventKey='honorPoints';`
     +`\nglobalThis.testApi={S,histKey,captureSnapshot,getStatSeriesForKey,getPrevRank,`
-    +`seed:entries=>{HIST[histKey()]={Player:entries}}};`,context);
+    +`getRankSeriesForEvent,bestHistEvent,histKeyEvent,`
+    +`seed:entries=>{HIST[histKey()]={Player:entries}},`
+    +`seedKey:(k,entries)=>{HIST[k]={Player:entries}}};`,context);
   return context.testApi;
 }
 
@@ -281,4 +283,34 @@ test('the chart labels when its data is from, and keeps the row when there is no
   assert.deepEqual(Array.from(svg.matchAll(/<title>([^<]+)<\/title>/g),m=>m[1]),
     ['t1000 · #10','t2000 · #20','t3000 · #30']);
   assert.equal((svg.match(/spk-hit/g)||[]).length,3);
+});
+
+test('a ranking history key survives underscores in both the server id and the ranking key',()=>{
+  const {histKeyEvent}=historyContext();
+  assert.deepEqual({...histKeyEvent('EmpireEx_5_event_title_71_p_3','EmpireEx_5')},
+    {event:'event_title_71',alliance:false,cat:3});
+  assert.deepEqual({...histKeyEvent('EmpireEx_5_allianceHonor_a_0','EmpireEx_5')},
+    {event:'allianceHonor',alliance:true,cat:0});
+  assert.equal(histKeyEvent('EmpireEx_5_honorPoints_p_0','EmpireEx_7'),null);
+});
+
+test('a favourite card charts the position history of one ranking, best category first',()=>{
+  const {getRankSeriesForEvent,bestHistEvent,seedKey}=historyContext();
+  seedKey('EmpireEx_5_playerMight_p_0',[[1,50,900]]);
+  seedKey('EmpireEx_5_playerMight_p_2',[[1,44,900],[2,41,950],[3,38,990]]);
+  seedKey('EmpireEx_5_honorPoints_p_0',[[1,7,10],[2,9,12]]);
+  // A ranking split across level brackets charts the bracket with the most snapshots.
+  assert.deepEqual(Array.from(getRankSeriesForEvent('Player','EmpireEx_5','playerMight'),p=>p.v),[44,41,38]);
+  assert.deepEqual(Array.from(getRankSeriesForEvent('Player','EmpireEx_5','honorPoints'),p=>p.v),[7,9]);
+  assert.deepEqual(Array.from(getRankSeriesForEvent('Player','EmpireEx_5','playerGlory')),[]);
+  // Other servers never leak into the series.
+  assert.deepEqual(Array.from(getRankSeriesForEvent('Player','EmpireEx_7','playerMight')),[]);
+  assert.equal(bestHistEvent('Player','EmpireEx_5'),'playerMight');
+});
+
+test('alliance history never becomes the default player chart',()=>{
+  const {bestHistEvent,seedKey}=historyContext();
+  seedKey('EmpireEx_5_allianceHonor_a_0',[[1,1,9],[2,2,8],[3,3,7],[4,4,6]]);
+  seedKey('EmpireEx_5_honorPoints_p_0',[[1,7,10],[2,9,12]]);
+  assert.equal(bestHistEvent('Player','EmpireEx_5'),'honorPoints');
 });

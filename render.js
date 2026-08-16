@@ -546,26 +546,44 @@ function statTilesHtml(stats){
     return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"${cat}${metric}>${body}<div class="db-hint">${ico('arrow-right')}<span>${esc(eventName)}</span></div></div>`;
   }).join('');
 }
+// Single entry point for every "take me to this ranking" affordance (detail-panel stat tiles,
+// favourite-card rows), so they all land in a consistent state. Handles the server/game switch,
+// the players↔alliances toggle and the optional name lookup; an empty `search` opens the top.
+async function gotoRanking({server=S.server,event,cat=0,alliance=false,search=''}={}){
+  if(typeof setPage==='function'&&S.page!=='ranking')setPage('ranking');
+  if(server!==S.server){
+    const prevGame=srvGame(S.server);
+    S.server=server;
+    mainDrop.setActive(server);
+    // A different game has a different catalogue, so the ranking must be re-resolved there.
+    if(srvGame(server)!==prevGame){S.eventKey='';S.events={};await loadEvents()}
+    S.compare=[];updateCompareBar(); // comparisons are per server
+  }
+  if(alliance!==S.allianceMode){
+    S.allianceMode=alliance;
+    const pair=S.events.player_to_alliance?.find(p=>p[+!alliance]===S.eventKey);
+    if(pair)S.eventKey=pair[+alliance];
+    updateTypeSeg();
+  }
+  if(event&&evList()[event])S.eventKey=event;
+  // Set the category before rebuilding the sidebar — buildEventSel() renders the cat bar from
+  // S.catIdx, so assigning it afterwards would leave the wrong chip highlighted.
+  S.catIdx=cat;
+  validateEv();buildEventSel();
+  S.curPage=1;clearExpanded();
+  $('searchInput').value=search;
+  await loadRanking(search||'1');
+}
 function wireStatLinks(panel){
   panel.querySelectorAll('.db[data-link]').forEach(el=>{
     el.addEventListener('click',async e=>{
       e.stopPropagation();
-      const linkKey=el.dataset.link,searchVal=el.dataset.search;
-      const isAl=el.dataset.mode==='alliance';
-      if(isAl!==S.allianceMode){
-        S.allianceMode=isAl;
-        const pair=S.events.player_to_alliance?.find(p=>p[+!isAl]===S.eventKey);
-        if(pair)S.eventKey=pair[+isAl];
-        updateTypeSeg();
-      }
-      if(evList()[linkKey])S.eventKey=linkKey;
-      // Set the category before rebuilding the sidebar — buildEventSel() renders the cat bar
-      // from S.catIdx, so assigning it afterwards would leave the wrong chip highlighted.
-      S.catIdx=el.dataset.cat!=null?+el.dataset.cat:0;
-      validateEv();buildEventSel();
-      S.curPage=1;clearExpanded();
-      if(searchVal){$('searchInput').value=searchVal;await loadRanking(searchVal)}
-      else{$('searchInput').value='';await loadRanking('1')}
+      await gotoRanking({
+        event:el.dataset.link,
+        alliance:el.dataset.mode==='alliance',
+        cat:el.dataset.cat!=null?+el.dataset.cat:0,
+        search:el.dataset.search||''
+      });
     });
   });
 }

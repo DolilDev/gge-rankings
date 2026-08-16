@@ -228,22 +228,61 @@ async function loadFavRanks(fav,card,spkId){
     }catch{}
   }
   if(!el.isConnected)return;
-  el.innerHTML=res.length?res.map(r=>`<div class="fr"><span class="fl">${esc(evname(r.key))}</span><span class="fp2${r.rank<=3?' g':''}">#${r.rank}</span><span class="fs">${esc(fmtN(r.score))}</span></div>`).join('')
+  // Each row is the player's standing in one ranking: clicking opens that ranking on that
+  // server with the player looked up, hovering charts their position history there.
+  el.innerHTML=res.length?res.map(r=>
+      `<button class="fr fr-link" data-ev="${esc(r.key)}" title="${esc(L('Otwórz ranking: {x}',{x:evname(r.key)}))}"><span class="fl">${esc(evname(r.key))}</span><span class="fp2${r.rank<=3?' g':''}">#${r.rank}</span><span class="fs">${esc(fmtN(r.score))}</span></button>`).join('')
     :`<div class="fr"><span class="fl" style="color:var(--c-muted)">${L('Nie znaleziono')}</span></div>`;
-  // Sparkline (best key for this player)
+  el.querySelectorAll('.fr-link').forEach(row=>{
+    row.addEventListener('click',()=>gotoRanking({server:fav.server,event:row.dataset.ev,search:fav.name}));
+  });
   const spkEl=card.querySelector('#'+CSS.escape(spkId));
-  if(spkEl){
-    const series=getBestRankSeries(fav.name,fav.server,12);
-    if(series.length>=2){
-      // Position history: smaller rank is better, so the line rises as the player climbs.
-      const points=series.map(s=>({t:s.t,v:s.rk}));
-      spkEl.innerHTML=`<div class="spk-wrap">
-        <div class="spk-lbl"><span>${ico('activity')}${L('Historia ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${series[series.length-1].rk}</span></div>
-        ${renderSparklineSVG(points,{lower:true,w:260,h:32,fmt:v=>'#'+fmtN(v)})}
-        ${spkAxisHtml(points)}
-      </div>`;
-    }
+  if(spkEl)renderFavChart(spkEl,fav,el,res);
+}
+
+// Position history of one favourite in one ranking. Mirrors the detail panel's chart: the
+// default is Might, hovering a ranking row switches to it, leaving the list restores the default.
+function favChartHtml(fav,eventKey){
+  const series=getRankSeriesForEvent(fav.name,fav.server,eventKey,HIST_MAX_PER_PLAYER);
+  const label=esc(evname(eventKey));
+  let head=`<span>${ico('activity')}${label}</span>`;
+  if(series.length>=2){
+    const first=series[0].v,last=series[series.length-1].v;
+    // Position: a smaller number is better, so climbing counts as up.
+    const dir=first===last?'':(last<first?' up':' down');
+    head=`<span>${ico('activity')}${label} · ${L('{n} pkt',{n:series.length})}</span>`
+      +`<span class="spk-delta${dir}">#${esc(fmtN(first))} → #${esc(fmtN(last))}</span>`;
   }
+  return`<div class="spk-lbl">${head}</div>
+    ${renderSparklineSVG(series,{lower:true,w:260,h:32,fmt:v=>'#'+fmtN(v)})}
+    ${spkAxisHtml(series)}`;
+}
+// Prefer Might, then any listed ranking with a line to draw, then whatever the player has the
+// most history in (which may be a ranking they have since dropped out of). Null → no chart.
+function favDefaultChartEvent(fav,res){
+  const hasData=k=>getRankSeriesForEvent(fav.name,fav.server,k,HIST_MAX_PER_PLAYER).length>=2;
+  if(hasData(DEFAULT_FAV_CHART_EVENT))return DEFAULT_FAV_CHART_EVENT;
+  return res.map(r=>r.key).find(hasData)||bestHistEvent(fav.name,fav.server);
+}
+function renderFavChart(spkEl,fav,rowsEl,res){
+  const def=favDefaultChartEvent(fav,res);
+  if(!def){spkEl.innerHTML='';return}
+  spkEl.innerHTML=`<div class="spk-wrap" data-chart="${esc(def)}" data-cur="${esc(def)}">${favChartHtml(fav,def)}</div>`;
+  const box=spkEl.querySelector('.spk-wrap');
+  const rows=[...rowsEl.querySelectorAll('.fr-link')];
+  const mark=ev=>rows.forEach(r=>r.classList.toggle('charted',r.dataset.ev===ev));
+  const show=ev=>{
+    if(!ev||box.dataset.cur===ev)return;
+    box.dataset.cur=ev;
+    box.innerHTML=favChartHtml(fav,ev);
+    mark(ev);
+  };
+  mark(def);
+  rows.forEach(row=>{
+    row.addEventListener('mouseenter',()=>show(row.dataset.ev));
+    row.addEventListener('focus',()=>show(row.dataset.ev));
+  });
+  rowsEl.addEventListener('mouseleave',()=>show(box.dataset.chart));
 }
 
 // ── Export ──
