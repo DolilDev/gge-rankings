@@ -690,7 +690,6 @@ async function backfillChart(box,r,metric){
 function wireStatChart(panel,r){
   const box=panel.querySelector('.spk-wrap[data-chart]');
   if(!box)return;
-  const grid=panel.querySelector('.ds');
   const tiles=[...panel.querySelectorAll('.db[data-metric]')];
   const mark=metric=>tiles.forEach(t=>t.classList.toggle('charted',t.dataset.metric===metric));
   const show=metric=>{
@@ -706,7 +705,10 @@ function wireStatChart(panel,r){
   wireChartHover(box,chartSeries(r,cur),v=>chartValue(cur,v)); // the markup rendered with the panel
   backfillChart(box,r,cur);
   tiles.forEach(tile=>tile.addEventListener('mouseenter',()=>show(tile.dataset.metric)));
-  if(grid)grid.addEventListener('mouseleave',()=>show(box.dataset.chart));
+  // Restore the default only when the pointer leaves the whole panel. Watching the tile grid
+  // instead would reset the metric the moment you moved down onto the chart you just picked,
+  // making the hovered stat impossible to actually read.
+  panel.addEventListener('mouseleave',()=>show(box.dataset.chart));
 }
 
 // Index of the honorPoints category covering a player level, so the "Poziom" tile lands on the

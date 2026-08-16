@@ -295,7 +295,9 @@ function renderFavChart(spkEl,fav,rowsEl,res){
     row.addEventListener('mouseenter',()=>show(row.dataset.ev));
     row.addEventListener('focus',()=>show(row.dataset.ev));
   });
-  rowsEl.addEventListener('mouseleave',()=>show(box.dataset.chart));
+  // Leaving the card, not just the row list — otherwise moving down onto the chart would reset
+  // the metric before the hovered ranking could be read. See wireStatChart().
+  (rowsEl.closest('.fc')||rowsEl).addEventListener('mouseleave',()=>show(box.dataset.chart));
 }
 
 // ── Export ──

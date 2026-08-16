@@ -76,7 +76,7 @@ Expanding a player row shows:
 - Attack points, **highest fame** and loot points
 - A **stat-history chart** (sparkline) — when data from previous refreshes is available. It defaults to **Might**,
   and **hovering any stat tile switches the chart to that stat** (the tile is highlighted while it's charted);
-  moving the pointer off the tile grid restores the default. Every snapshot stores all stats, so honor, glory,
+  moving the pointer out of the panel restores the default, so a picked stat stays put while you read its chart. Every snapshot stores all stats, so honor, glory,
   attack/highest fame/loot, titles, score and position each have their own line. The line always rises when things
   improve — including position, where a smaller number is better. Stats with fewer than two data points show
   "not enough history" instead. History collected before this existed still charts position and score.
@@ -122,7 +122,7 @@ stays fast without flooding the API.
 - **Click a row** to open that ranking — on that favourite's own server, switching server (and game catalogue)
   if it differs from the one you're viewing — with the player looked up.
 - **Hover a row** to chart their position history in that ranking. The chart defaults to the **Might** ranking
-  and returns to it when the pointer leaves the list; the currently charted row is highlighted. Dates of the
+  and returns to it when the pointer leaves the card; the currently charted row is highlighted. Dates of the
   first and last point are printed under the line, and each point has its own tooltip.
 
 ---
