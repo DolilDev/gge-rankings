@@ -174,10 +174,10 @@ function tileApi(events){
     console,setTimeout,clearTimeout,window:{},
     S:{events,eventKey:'honorPoints',allianceMode:false},
     L:s=>s,esc:v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'),
-    evname:k=>k,ico:()=> ''
+    evname:k=>k,ico:()=> '',fmtN:v=>String(v),fmtHistTime:t=>'t'+t
   };
   vm.createContext(context);
-  vm.runInContext(`${source('render.js')}\nglobalThis.testApi={statTilesHtml,levelCatIdx,renderSparklineSVG};`,context);
+  vm.runInContext(`${source('render.js')}\nglobalThis.testApi={statTilesHtml,levelCatIdx,renderSparklineSVG,spkAxisHtml};`,context);
   return context.testApi;
 }
 
@@ -258,7 +258,8 @@ test('history entries written before stats existed still chart rank and score',(
 
 test('the chart puts the better value on top for both stat and position metrics',()=>{
   const {renderSparklineSVG}=tileApi({player:{},alliance:{}});
-  const y=svg=>[...svg.matchAll(/(\d+\.\d),(\d+\.\d)/g)].map(m=>+m[2]);
+  // Read the y of each vertex straight off the polyline, not the tooltip hit circles.
+  const y=svg=>svg.match(/points="([^"]+)"/)[1].split(' ').map(p=>+p.split(',')[1]);
   // Might grows 10 → 30: a bigger number is better, so the line must end higher (smaller y).
   const rising=y(renderSparklineSVG([{v:10},{v:20},{v:30}]));
   assert.ok(rising[0]>rising[2],`expected ${rising[0]} > ${rising[2]}`);
@@ -266,4 +267,18 @@ test('the chart puts the better value on top for both stat and position metrics'
   const climbing=y(renderSparklineSVG([{v:30},{v:20},{v:10}],{lower:true}));
   assert.deepEqual(climbing,rising);
   assert.match(renderSparklineSVG([{v:1}]),/spk-empty/);
+});
+
+test('the chart labels when its data is from, and keeps the row when there is none',()=>{
+  const {renderSparklineSVG,spkAxisHtml}=tileApi({player:{},alliance:{}});
+  const series=[{t:1000,v:10},{t:2000,v:20},{t:3000,v:30}];
+  // Endpoints of the series stand in for an x axis …
+  assert.equal(spkAxisHtml(series),'<div class="spk-ax"><span>t1000</span><span>t3000</span></div>');
+  // … and the row is still emitted when there is nothing to chart, so the panel keeps its height.
+  assert.equal(spkAxisHtml([{t:1000,v:10}]),'<div class="spk-ax"><span></span><span></span></div>');
+  // Every point carries its own timestamp and value as a native tooltip.
+  const svg=renderSparklineSVG(series,{fmt:v=>'#'+v});
+  assert.deepEqual(Array.from(svg.matchAll(/<title>([^<]+)<\/title>/g),m=>m[1]),
+    ['t1000 · #10','t2000 · #20','t3000 · #30']);
+  assert.equal((svg.match(/spk-hit/g)||[]).length,3);
 });

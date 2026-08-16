@@ -594,7 +594,9 @@ function statChartHtml(r,metric){
     head=`<span>${ico('activity')}${label} · ${L('{n} pkt',{n:series.length})}</span>`
       +`<span class="spk-delta${dir}">${esc(chartValue(metric,first))} → ${esc(chartValue(metric,last))}</span>`;
   }
-  return`<div class="spk-lbl">${head}</div>${renderSparklineSVG(series,{lower:!!m.lower})}`;
+  return`<div class="spk-lbl">${head}</div>
+    ${renderSparklineSVG(series,{lower:!!m.lower,fmt:v=>chartValue(metric,v)})}
+    ${spkAxisHtml(series)}`;
 }
 // Hovering a stat tile charts that stat; leaving the grid restores the panel's default metric.
 function wireStatChart(panel,r){
@@ -697,7 +699,15 @@ function renderDetailContent(rank){
 
 // `points` is [{v}] oldest→newest. `lower` flips the vertical mapping for metrics where a smaller
 // number is better (position, in-alliance rank), so a rising line always means "improving".
-function renderSparklineSVG(series,{lower=false,w=240,h=40}={}){
+// When did the charted data come from? The line has no axis, so the endpoints are labelled
+// below it and every point carries a native tooltip with its own timestamp and value.
+// The row is emitted even with nothing to show, so an empty chart keeps the same height.
+function spkAxisHtml(series){
+  const a=series.length>=2?fmtHistTime(series[0].t):'';
+  const b=series.length>=2?fmtHistTime(series[series.length-1].t):'';
+  return`<div class="spk-ax"><span>${esc(a)}</span><span>${esc(b)}</span></div>`;
+}
+function renderSparklineSVG(series,{lower=false,w=240,h=40,fmt=fmtN}={}){
   // The placeholder takes the chart's height so swapping metrics never resizes the panel.
   if(series.length<2)return`<div class="spk-empty" style="height:${h}px">${L('Za mało danych historycznych')}</div>`;
   const vals=series.map(s=>s.v);
@@ -712,9 +722,15 @@ function renderSparklineSVG(series,{lower=false,w=240,h=40}={}){
   });
   const last=points[points.length-1];
   const polyPts=points.map(p=>p.join(',')).join(' ');
+  // Invisible, generously sized hit targets — each one's <title> is the browser's own tooltip,
+  // so a point's date and value are readable without any JS or extra markup around the chart.
+  const hits=points.map((p,i)=>
+    `<circle class="spk-hit" cx="${p[0]}" cy="${p[1]}" r="5"><title>${esc(fmtHistTime(series[i].t))} · ${esc(fmt(series[i].v))}</title></circle>`
+  ).join('');
   return`<svg class="spk" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:${h}px">
     <polyline class="spk-line" points="${polyPts}"/>
     <circle class="spk-dot" cx="${last[0]}" cy="${last[1]}" r="2.5"/>
+    ${hits}
   </svg>`;
 }
 

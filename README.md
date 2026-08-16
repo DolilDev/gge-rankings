@@ -80,6 +80,8 @@ Expanding a player row shows:
   attack/defense/loot, titles, score and position each have their own line. The line always rises when things
   improve — including position, where a smaller number is better. Stats with fewer than two data points show
   "not enough history" instead. History collected before this existed still charts position and score.
+  The dates of the first and last point are printed under the line, and hovering any point shows its own
+  timestamp and value as a tooltip. The same date labels appear on the sparkline in the Favorites cards.
 - Clickable stats → **every** stat tile opens the ranking that ranks it: Honor, Might, Glory, Legendary level,
   Attack / Defense / Loot points, and — for Rank and the two Title tiles — the Plunder (nobility) board that
   awards them. The Level tile lands on the matching level bracket of the Honor ranking, and the Ranking score

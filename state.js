@@ -65,6 +65,13 @@ function ico(name,cls){return `<svg class="ic${cls?' '+cls:''}" aria-hidden="tru
 function scrollViewTop(){const v=$("view");if(v)v.scrollTo({top:0,behavior:"smooth"});else window.scrollTo({top:0,behavior:"smooth"})}
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function fmtN(n){if(n===null||n===undefined)return'—';const x=+n;return isNaN(x)?String(n):x.toLocaleString(curLocale())}
+// Timestamp of a history point. Day+month+time is enough to tell snapshots apart — history is
+// pruned at HIST_MAX_AGE_MS (14 days), so the year never adds information.
+function fmtHistTime(t){
+  const d=new Date(t);
+  if(isNaN(d.getTime()))return'';
+  return d.toLocaleString(curLocale(),{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
 function isFav(n,g,s){return S.favs.some(f=>f.name===n&&f.game===g&&f.server===s)}
 function saveFavs(){localStorage.setItem('gge_favs_v7',JSON.stringify(S.favs))}
 let _tt;

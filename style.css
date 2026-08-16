@@ -605,6 +605,14 @@ body.compact .sv{font-size:var(--t-sm)}
   font-size:var(--t-micro);color:var(--c-muted);
   display:flex;align-items:center;justify-content:center;
 }
+/* Timestamps of the first and last charted point — the chart's stand-in for an x axis.
+   Kept at a fixed height so an empty chart occupies exactly the same space. */
+.spk-ax{
+  display:flex;justify-content:space-between;gap:8px;margin-top:3px;
+  height:12px;line-height:12px;
+  font-size:9.5px;color:var(--c-muted);font-variant-numeric:tabular-nums;
+}
+.spk-hit{fill:transparent}
 .spk-delta.up{color:var(--pos)}
 .spk-delta.down{color:var(--neg)}
 

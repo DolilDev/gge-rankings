@@ -239,7 +239,8 @@ async function loadFavRanks(fav,card,spkId){
       const points=series.map(s=>({t:s.t,v:s.rk}));
       spkEl.innerHTML=`<div class="spk-wrap">
         <div class="spk-lbl"><span>${ico('activity')}${L('Historia ({n} pkt)',{n:series.length})}</span><span>#${series[0].rk} → #${series[series.length-1].rk}</span></div>
-        ${renderSparklineSVG(points,{lower:true,w:260,h:32})}
+        ${renderSparklineSVG(points,{lower:true,w:260,h:32,fmt:v=>'#'+fmtN(v)})}
+        ${spkAxisHtml(points)}
       </div>`;
     }
   }
