@@ -177,7 +177,7 @@ function tileApi(events){
     evname:k=>k,ico:()=> '',fmtN:v=>String(v),fmtHistTime:t=>'t'+t
   };
   vm.createContext(context);
-  vm.runInContext(`${source('render.js')}\nglobalThis.testApi={statTilesHtml,levelCatIdx,renderSparklineSVG,spkAxisHtml};`,context);
+  vm.runInContext(`${source('render.js')}\nglobalThis.testApi={statTilesHtml,levelCatIdx,renderSparklineSVG,spkAxisHtml,nearestChartIndex};`,context);
   return context.testApi;
 }
 
@@ -279,11 +279,27 @@ test('the chart labels when its data is from, and keeps the row when there is no
   assert.equal(spkAxisHtml(series),'<div class="spk-ax"><span>t1000</span><span>t3000</span></div>');
   // … and the row is still emitted when there is nothing to chart, so the panel keeps its height.
   assert.equal(spkAxisHtml([{t:1000,v:10}]),'<div class="spk-ax"><span></span><span></span></div>');
-  // Every point carries its own timestamp and value as a native tooltip.
+  // The chart ships the hover readout's parts, parked hidden until the pointer arrives.
   const svg=renderSparklineSVG(series,{fmt:v=>'#'+v});
-  assert.deepEqual(Array.from(svg.matchAll(/<title>([^<]+)<\/title>/g),m=>m[1]),
-    ['t1000 · #10','t2000 · #20','t3000 · #30']);
-  assert.equal((svg.match(/spk-hit/g)||[]).length,3);
+  assert.match(svg,/class="spk-guide"/);
+  assert.match(svg,/class="spk-cursor"/);
+  assert.match(svg,/class="spk-tip h"/);
+});
+
+test('the hover readout snaps to the nearest snapshot and clamps at both ends',()=>{
+  const {nearestChartIndex}=tileApi({player:{},alliance:{}});
+  // Five points rendered across x = 3..237 (renderSparklineSVG's 3px padding).
+  const at=vx=>nearestChartIndex(vx,3,237,5);
+  assert.equal(at(3),0);
+  assert.equal(at(237),4);
+  assert.equal(at(120),2);
+  assert.equal(at(115),2);          // nearest, not the one to the left
+  assert.equal(at(150),3);
+  // Past either edge the readout sticks to the end point instead of disappearing.
+  assert.equal(at(-40),0);
+  assert.equal(at(400),4);
+  // A one-point series has nothing to snap between.
+  assert.equal(nearestChartIndex(120,3,3,1),0);
 });
 
 test('a ranking history key survives underscores in both the server id and the ranking key',()=>{

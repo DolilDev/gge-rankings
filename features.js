@@ -252,8 +252,10 @@ async function loadFavRanks(fav,card,spkId){
 
 // Position history of one favourite in one ranking. Mirrors the detail panel's chart: the
 // default is Might, hovering a ranking row switches to it, leaving the list restores the default.
+const favChartSeries=(fav,eventKey)=>getRankSeriesForEvent(fav.name,fav.server,eventKey,HIST_MAX_PER_PLAYER);
+const favChartValue=v=>'#'+fmtN(v);
 function favChartHtml(fav,eventKey){
-  const series=getRankSeriesForEvent(fav.name,fav.server,eventKey,HIST_MAX_PER_PLAYER);
+  const series=favChartSeries(fav,eventKey);
   const label=esc(evname(eventKey));
   let head=`<span>${ico('activity')}${label}</span>`;
   if(series.length>=2){
@@ -264,13 +266,13 @@ function favChartHtml(fav,eventKey){
       +`<span class="spk-delta${dir}">#${esc(fmtN(first))} → #${esc(fmtN(last))}</span>`;
   }
   return`<div class="spk-lbl">${head}</div>
-    ${renderSparklineSVG(series,{lower:true,w:260,h:32,fmt:v=>'#'+fmtN(v)})}
+    ${renderSparklineSVG(series,{lower:true,w:260,h:32,fmt:favChartValue})}
     ${spkAxisHtml(series)}`;
 }
 // Prefer Might, then any listed ranking with a line to draw, then whatever the player has the
 // most history in (which may be a ranking they have since dropped out of). Null → no chart.
 function favDefaultChartEvent(fav,res){
-  const hasData=k=>getRankSeriesForEvent(fav.name,fav.server,k,HIST_MAX_PER_PLAYER).length>=2;
+  const hasData=k=>favChartSeries(fav,k).length>=2;
   if(hasData(DEFAULT_FAV_CHART_EVENT))return DEFAULT_FAV_CHART_EVENT;
   return res.map(r=>r.key).find(hasData)||bestHistEvent(fav.name,fav.server);
 }
@@ -279,12 +281,13 @@ function renderFavChart(spkEl,fav,rowsEl,res){
   if(!def){spkEl.innerHTML='';return}
   spkEl.innerHTML=`<div class="spk-wrap" data-chart="${esc(def)}" data-cur="${esc(def)}">${favChartHtml(fav,def)}</div>`;
   const box=spkEl.querySelector('.spk-wrap');
+  wireChartHover(box,favChartSeries(fav,def),favChartValue);
   const rows=[...rowsEl.querySelectorAll('.fr-link')];
   const mark=ev=>rows.forEach(r=>r.classList.toggle('charted',r.dataset.ev===ev));
   const show=ev=>{
     if(!ev||box.dataset.cur===ev)return;
     box.dataset.cur=ev;
-    box.innerHTML=favChartHtml(fav,ev);
+    paintChart(box,favChartHtml(fav,ev),favChartSeries(fav,ev),favChartValue);
     mark(ev);
   };
   mark(def);

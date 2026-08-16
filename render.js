@@ -587,6 +587,53 @@ function wireStatLinks(panel){
     });
   });
 }
+// Reading a chart: moving the pointer anywhere over it snaps to the nearest snapshot and shows
+// that point's date and value. Must be re-run after every (re)paint, because the markup is
+// replaced wholesale when the metric changes or the backfill lands — hence paintChart().
+// Geometry is read back off the rendered polyline instead of re-deriving renderSparklineSVG's
+// padding, so the two can't drift apart.
+// Which snapshot is the pointer nearest? `vx` and the two x's are all in viewBox units, so the
+// caller doesn't have to care how wide the chart was stretched. Clamped, so the readout keeps
+// working over the padding at either end.
+function nearestChartIndex(vx,firstX,lastX,count){
+  if(count<2)return 0;
+  const span=(lastX-firstX)||1;
+  const i=Math.round((vx-firstX)/span*(count-1));
+  return Math.max(0,Math.min(count-1,i));
+}
+function wireChartHover(box,series,fmt=fmtN){
+  const svg=box.querySelector('.spk'),tip=box.querySelector('.spk-tip');
+  const guide=box.querySelector('.spk-guide'),cursor=box.querySelector('.spk-cursor');
+  const line=box.querySelector('.spk-line');
+  if(!svg||!tip||!guide||!cursor||!line||series.length<2)return;
+  const coords=line.getAttribute('points').split(' ').map(p=>p.split(',').map(Number));
+  const xs=coords.map(c=>c[0]),ys=coords.map(c=>c[1]);
+  const vbW=svg.viewBox.baseVal.width;
+  const hide=()=>{
+    tip.classList.add('h');box.classList.remove('reading');
+    guide.style.visibility='';cursor.style.visibility='';
+  };
+  svg.addEventListener('pointermove',e=>{
+    const rect=svg.getBoundingClientRect();
+    if(!rect.width)return;
+    const vx=(e.clientX-rect.left)/rect.width*vbW;
+    const i=nearestChartIndex(vx,xs[0],xs[xs.length-1],series.length);
+    guide.setAttribute('x1',xs[i]);guide.setAttribute('x2',xs[i]);
+    cursor.setAttribute('cx',xs[i]);cursor.setAttribute('cy',ys[i]);
+    guide.style.visibility='visible';cursor.style.visibility='visible';
+    tip.innerHTML=`<b>${esc(fmt(series[i].v))}</b><i>${esc(fmtHistTime(series[i].t))}</i>`;
+    tip.classList.remove('h');box.classList.add('reading');
+    // Anchor over the point, then keep the box inside the chart's own width.
+    const px=xs[i]/vbW*rect.width;
+    const half=tip.offsetWidth/2;
+    tip.style.left=Math.round(Math.max(half,Math.min(rect.width-half,px)))+'px';
+  });
+  svg.addEventListener('pointerleave',hide);
+  svg.addEventListener('pointercancel',hide);
+}
+// Swap a chart's contents and re-attach the hover readout in one step.
+function paintChart(box,html,series,fmt){box.innerHTML=html;wireChartHover(box,series,fmt)}
+
 // ── Detail-panel chart ──
 // One sparkline that can draw any stat with history. The default is Might; hovering a stat tile
 // switches it to that stat and leaving the tile grid restores the default.
@@ -636,7 +683,8 @@ async function backfillChart(box,r,metric){
   let remote=[];
   try{remote=await ggtHistory(r.name,srvInfo(S.server)?.code,series)}catch(e){console.warn('backfillChart:',e.message);return}
   if(!remote.length||!box.isConnected||box.dataset.cur!==metric)return;
-  box.innerHTML=statChartHtml(r,metric,{series:mergeHistory(remote,chartSeries(r,metric)),src:'gge-tracker'});
+  const merged=mergeHistory(remote,chartSeries(r,metric));
+  paintChart(box,statChartHtml(r,metric,{series:merged,src:'gge-tracker'}),merged,v=>chartValue(metric,v));
 }
 // Hovering a stat tile charts that stat; leaving the grid restores the panel's default metric.
 function wireStatChart(panel,r){
@@ -648,12 +696,15 @@ function wireStatChart(panel,r){
   const show=metric=>{
     if(!CHART_METRICS[metric]||box.dataset.cur===metric)return;
     box.dataset.cur=metric;
-    box.innerHTML=statChartHtml(r,metric);
+    const series=chartSeries(r,metric);
+    paintChart(box,statChartHtml(r,metric,{series}),series,v=>chartValue(metric,v));
     mark(metric);
     backfillChart(box,r,metric);
   };
   mark(box.dataset.cur); // the default metric's tile starts out marked
-  backfillChart(box,r,box.dataset.cur);
+  const cur=box.dataset.cur;
+  wireChartHover(box,chartSeries(r,cur),v=>chartValue(cur,v)); // the markup rendered with the panel
+  backfillChart(box,r,cur);
   tiles.forEach(tile=>tile.addEventListener('mouseenter',()=>show(tile.dataset.metric)));
   if(grid)grid.addEventListener('mouseleave',()=>show(box.dataset.chart));
 }
@@ -764,16 +815,15 @@ function renderSparklineSVG(series,{lower=false,w=240,h=40,fmt=fmtN}={}){
   });
   const last=points[points.length-1];
   const polyPts=points.map(p=>p.join(',')).join(' ');
-  // Invisible, generously sized hit targets — each one's <title> is the browser's own tooltip,
-  // so a point's date and value are readable without any JS or extra markup around the chart.
-  const hits=points.map((p,i)=>
-    `<circle class="spk-hit" cx="${p[0]}" cy="${p[1]}" r="5"><title>${esc(fmtHistTime(series[i].t))} · ${esc(fmt(series[i].v))}</title></circle>`
-  ).join('');
+  // Guide line and cursor dot are parked off-screen until the pointer enters — wireChartHover()
+  // moves them to the snapshot nearest the cursor and fills the readout above them.
   return`<svg class="spk" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="height:${h}px">
+    <line class="spk-guide" x1="0" y1="0" x2="0" y2="${h}" vector-effect="non-scaling-stroke"/>
     <polyline class="spk-line" points="${polyPts}"/>
     <circle class="spk-dot" cx="${last[0]}" cy="${last[1]}" r="2.5"/>
-    ${hits}
-  </svg>`;
+    <circle class="spk-cursor" cx="0" cy="0" r="2.8"/>
+  </svg>
+  <div class="spk-tip h"></div>`;
 }
 
 function renderPg(){

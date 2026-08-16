@@ -81,7 +81,9 @@ Expanding a player row shows:
   improve — including position, where a smaller number is better. Stats with fewer than two data points show
   "not enough history" instead. History collected before this existed still charts position and score.
   The dates of the first and last point are printed under the line, and hovering any point shows its own
-  timestamp and value as a tooltip. The same date labels appear on the sparkline in the Favorites cards.
+  timestamp and value as a readout: moving the pointer anywhere across the chart snaps a guide line and dot to
+  the nearest snapshot and shows that point's value and date above it (the header's summary steps aside while
+  you read, and comes back on leave). The same date labels and readout apply to the Favorites cards' charts.
 - **Backfill from gge-tracker.** Where gge-tracker has a series for the charted metric, the chart is filled in
   with **up to a year** of real history (marked `gge-tracker` next to the label), so it isn't empty on a first
   visit. That covers **Might**, and **Ranking score** while a board gge-tracker tracks is open (Plunder/nobility

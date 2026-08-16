@@ -595,7 +595,7 @@ body.compact .sv{font-size:var(--t-sm)}
 .dnote .ic{color:var(--c-muted)}
 
 /* Sparkline */
-.spk-wrap{margin-top:12px;padding-top:10px;border-top:1px solid var(--c-border2)}
+.spk-wrap{position:relative;margin-top:12px;padding-top:10px;border-top:1px solid var(--c-border2)}
 .spk-lbl{
   display:flex;justify-content:space-between;align-items:center;gap:8px;
   font-size:9.5px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;
@@ -617,7 +617,26 @@ body.compact .sv{font-size:var(--t-sm)}
   height:12px;line-height:12px;
   font-size:9.5px;color:var(--c-muted);font-variant-numeric:tabular-nums;
 }
-.spk-hit{fill:transparent}
+/* Hover readout: a guide line and dot snap to the nearest snapshot, and the box above them
+   names its date and value. Both start hidden and are revealed by wireChartHover(). */
+.spk-guide{stroke:var(--c-border2);stroke-width:1;visibility:hidden}
+.spk-cursor{fill:var(--acc);stroke:var(--panel);stroke-width:1;visibility:hidden}
+.spk-tip{
+  position:absolute;left:0;bottom:calc(100% - 26px);z-index:3;pointer-events:none;
+  transform:translateX(-50%);
+  padding:4px 7px;border-radius:var(--r1);white-space:nowrap;
+  background:var(--panel);border:1px solid var(--acc-bd);
+  box-shadow:0 4px 14px rgba(0,0,0,.38);
+}
+.spk-tip.h{display:none}
+/* While a point is being read the box sits over the header, whose summary it supersedes. */
+.spk-wrap.reading .spk-lbl{opacity:0}
+.spk-lbl{transition:opacity .1s}
+.spk-tip b{display:block;font-size:11px;font-weight:600;color:var(--bright);
+  font-family:var(--mono);font-variant-numeric:tabular-nums;line-height:1.3}
+.spk-tip i{font-style:normal;font-size:9.5px;color:var(--c-muted)}
+/* The chart itself must catch the pointer for the readout to track it. */
+.spk{cursor:crosshair}
 /* Marks a chart whose older half was backfilled from gge-tracker. */
 .spk-src{font-style:normal;font-weight:600;color:var(--acc);opacity:.75;margin-left:5px;letter-spacing:0}
 .spk-delta.up{color:var(--pos)}
