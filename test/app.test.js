@@ -380,3 +380,23 @@ test('chart timestamps show the year only when it is not the current one',()=>{
   assert.notEqual(thisYear.slice(0,5),'');
   assert.equal(fmtHistTime('nonsense'),'');
 });
+
+test('the request limiter caps concurrency, preserves order and survives failures',async()=>{
+  const {limiter}=scriptApi('api.js',['limiter']);
+  const gate=limiter(3);
+  let active=0,peak=0;
+  const task=(id,fail)=>gate(async()=>{
+    active++;peak=Math.max(peak,active);
+    await new Promise(r=>setTimeout(r,5));
+    active--;
+    if(fail)throw new Error('boom '+id);
+    return id;
+  });
+  const results=await Promise.all(
+    Array.from({length:12},(_,i)=>task(i,i===4).catch(e=>e.message)));
+  assert.ok(peak<=3,`peak concurrency was ${peak}`);
+  assert.equal(results[0],0);
+  assert.equal(results[11],11);          // Promise.all order is independent of finish order
+  assert.equal(results[4],'boom 4');     // a rejection frees its slot instead of stalling the queue
+  assert.equal(active,0);
+});

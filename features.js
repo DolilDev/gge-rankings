@@ -210,23 +210,33 @@ async function loadFavAlStats(fav,card,cid){
   }
 }
 
+// All favourite cards share one request budget, so opening the page with many of them stays
+// bounded no matter how many cards are on screen. Built on first use rather than at load time,
+// so this file doesn't depend on api.js/config.js having been evaluated already.
+let _favFetchSlot=null;
+function favFetchSlot(task){
+  if(!_favFetchSlot)_favFetchSlot=limiter(FAV_FETCH_CONC);
+  return _favFetchSlot(task);
+}
 async function loadFavRanks(fav,card,spkId){
   const cid='fr_'+fav.name.replace(/\W/g,'_');const el=card.querySelector('#'+CSS.escape(cid));if(!el)return;
   const catalog=await getEventCatalog(fav.game);
   if(!el.isConnected)return;
-  const evs=catalog?.player||(fav.game===srvGame(S.server)?S.events?.player:null)||{};const res=[];
-  for(const[key,ev]of Object.entries(evs)){
-    if(!ev.id)continue;
+  const evs=catalog?.player||(fav.game===srvGame(S.server)?S.events?.player:null)||{};
+  // One lookup per ranking board (~25 of them). Awaiting them one by one took ~11.5s per card;
+  // through the shared budget they overlap and finish in about a second, and Promise.all keeps
+  // the catalogue's order so the rows still read the same.
+  const boards=Object.entries(evs).filter(([,ev])=>ev.id);
+  const found=await Promise.all(boards.map(([key,ev])=>favFetchSlot(async()=>{
     try{
-      const url=ggeUrl(fav.server,ev.id,fav.name,'');
-      const d=await ggeGet(url);
-      if(d?.return_code==0&&d.content?.L?.length){
-        const f=d.content.L.find(p=>Array.isArray(p)&&(p[2]?.N||'').toLowerCase()===fav.name.toLowerCase());
-        const rank=f?Number(f[0]):NaN,score=f?Number(f[1]):NaN;
-        if(f&&Number.isFinite(rank))res.push({key,rank,score:Number.isFinite(score)?score:null});
-      }
-    }catch{}
-  }
+      const d=await ggeGet(ggeUrl(fav.server,ev.id,fav.name,''));
+      if(d?.return_code!=0||!d.content?.L?.length)return null;
+      const f=d.content.L.find(p=>Array.isArray(p)&&(p[2]?.N||'').toLowerCase()===fav.name.toLowerCase());
+      const rank=f?Number(f[0]):NaN,score=f?Number(f[1]):NaN;
+      return f&&Number.isFinite(rank)?{key,rank,score:Number.isFinite(score)?score:null}:null;
+    }catch{return null}
+  })));
+  const res=found.filter(Boolean);
   if(!el.isConnected)return;
   // Each row is the player's standing in one ranking: clicking opens that ranking on that
   // server with the player looked up, hovering charts their position history there.

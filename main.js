@@ -178,8 +178,15 @@ async function init(){
   if(h.q)$('searchInput').value=h.q;
 
   updFavCnt();updateTypeSeg();showSpin();setSt('spin',L('Ładowanie...'));
-  try{setSt('spin',L('Tłumaczenia...'));await timeout(loadTexts(),4500).catch(()=>{})}catch{}
-  try{setSt('spin',L('Eventy...'));await timeout(loadEvents(),6000).catch(()=>{})}catch{}
+  // Translations and the ranking catalogue don't depend on each other, so they load together
+  // instead of one timeout budget after the other. Ranking names come from the translations, so
+  // the sidebar is rebuilt once both have settled in case the texts landed last.
+  setSt('spin',L('Tłumaczenia i eventy...'));
+  await Promise.all([
+    timeout(loadTexts(),4500).catch(()=>{}),
+    timeout(loadEvents(),6000).catch(()=>{})
+  ]);
+  buildEventSel();
   updateTypeSeg();
   initDone=true;
   setSt('spin',L('Pobieranie rankingu...'));

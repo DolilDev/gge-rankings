@@ -19,6 +19,18 @@ async function fetchRetry(url,retries=2){
     }
   }
 }
+// Runs at most `max` of the given tasks at a time, queueing the rest. Screens that need many
+// independent lookups can fire them all at once and still not flood the API.
+function limiter(max){
+  let active=0;const queue=[];
+  const next=()=>{
+    if(active>=max||!queue.length)return;
+    active++;
+    const {task,resolve,reject}=queue.shift();
+    Promise.resolve().then(task).then(resolve,reject).finally(()=>{active--;next()});
+  };
+  return task=>new Promise((resolve,reject)=>{queue.push({task,resolve,reject});next()});
+}
 async function ggeGet(url,fresh=false){
   const hit=fresh?null:cGet(url);if(hit)return hit;
   try{
