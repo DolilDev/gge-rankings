@@ -91,9 +91,9 @@ function curEv(){return evList()[S.eventKey]||{}}
 function curCat(){const c=curEv().categories;if(!c?.length)return{};return c[Math.min(S.catIdx,c.length-1)]||{}}
 function curLT(){return curCat().eventid??curEv().id}
 function isGlobal(){return!!curEv().global}
-// Synthetic ranking: there is no server-side "player glory" board, so we build one client-side
-// by pooling the top players from a broad base board (nobility) and re-sorting by the chosen
-// field. curEv().synthetic holds that field name (e.g. 'glory').
+// Synthetic ranking: the game publishes no server-side board for glory/attack/defense/loot, so we
+// build one client-side by pooling the top players from a broad base board (nobility) and
+// re-sorting by the chosen field. curEv().synthetic holds that field name (e.g. 'glory', 'avp').
 function synthActive(){return!S.allianceMode&&!!curEv().synthetic}
 function synthField(){return curEv().synthetic||null}
 
@@ -192,17 +192,22 @@ function injectRequiredGgeEvents(){
     if(!p[key])p[key]=JSON.parse(JSON.stringify(event));
   }
 }
-// Add the client-side "Chwała" (glory) player ranking right after Might. It reuses the nobility
-// board (a single, level-agnostic list of every player, each row carrying CF/glory) as its pool
-// source. GGE only — E4K isn't guaranteed to expose that board.
+// Add the client-side player rankings (SYNTHETIC_PLAYER_EVENTS — glory, attack, defense, loot)
+// right after Might. They reuse the nobility board (a single, level-agnostic list of every player,
+// each row carrying CF/AVP/HF/RPT) as their pool source, so the detail-panel stat tiles for those
+// fields have a ranking to link to. GGE only — E4K isn't guaranteed to expose that board.
 function injectSyntheticEvents(){
   const p=S.events.player;
-  if(srvGame(S.server)!=='gge'||!p||p.playerGlory)return;
+  if(srvGame(S.server)!=='gge'||!p)return;
   const baseLT=p.dialog_BeggingKnights_nobilityPoints?.id??2;
-  const glory={id:baseLT,synthetic:'glory'};
+  // A real catalogue entry always wins, so only fill in the ones the game doesn't publish.
+  const missing=SYNTHETIC_PLAYER_EVENTS.filter(e=>!p[e.key]);
+  if(!missing.length)return;
   const rebuilt={};
-  for(const k of Object.keys(p)){rebuilt[k]=p[k];if(k==='playerMight')rebuilt.playerGlory=glory}
-  if(!rebuilt.playerGlory)rebuilt.playerGlory=glory; // no Might key → just append
+  const addMissing=()=>missing.forEach(e=>{rebuilt[e.key]={id:baseLT,synthetic:e.field}});
+  let placed=false;
+  for(const k of Object.keys(p)){rebuilt[k]=p[k];if(k==='playerMight'){addMissing();placed=true}}
+  if(!placed)addMissing(); // no Might key → just append
   S.events.player=rebuilt;
 }
 function validateEv(){
@@ -323,7 +328,7 @@ async function rowsWithTrackedFavorites(rows,fresh=false){
   return[...byName.values()];
 }
 
-// Build & render the synthetic glory ranking: pull the base-board pool, sort by the chosen field,
+// Build & render a synthetic ranking: pull the base-board pool, sort by the chosen field,
 // re-rank 1..N and paginate locally (the table/pager treat it like the filter path).
 async function loadSynth(fresh=false){
   const rid=++S.reqId;

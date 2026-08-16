@@ -75,6 +75,7 @@ const ALL_SERVERS = [
 
 const EV_LABELS = {
   honorPoints:'Honor', playerMight:'Moc', playerGlory:'Chwała', legendLevel:'Poziom legendy',
+  playerAttack:'Punkty ataku', playerDefense:'Punkty obrony', playerLoot:'Punkty rabunku',
   allianceHonor:'Honor sojuszu', allianceMight:'Siła sojuszu',
   dominionPoints:'Dominium', cargo_points:'Karawan',
   event_title_71:'Turniej 71', event_title_72:'Turniej 72',
@@ -96,3 +97,14 @@ const EV_LABELS = {
 const REQUIRED_GGE_PLAYER_EVENTS = {
   event_title_131:{id:85,categories:[{id:1,name:'dialog_ci_filter01_all'}]},
 };
+
+// Client-side ("synthetic") player rankings. GGE publishes no leaderboard for these fields, but
+// every row of the nobility board carries them, so we pool that board and re-sort by the field.
+// `key` is the ranking id used in the sidebar/hash, `field` a parsed row property (see parseRows).
+// Order here is the order they appear in the sidebar, right after Might.
+const SYNTHETIC_PLAYER_EVENTS = [
+  {key:'playerGlory',   field:'glory'},
+  {key:'playerAttack',  field:'avp'},
+  {key:'playerDefense', field:'hf'},
+  {key:'playerLoot',    field:'rpt'},
+];

@@ -135,3 +135,84 @@ test('HTML asset version matches the service worker cache version',()=>{
   assert.ok(assetVersions.length>0);
   assert.deepEqual([...new Set(assetVersions)],[version]);
 });
+
+test('synthetic player rankings are injected after Might so every stat has a board to link to',()=>{
+  const context={
+    console,setTimeout,clearTimeout,window:{},
+    S:{server:'EmpireEx_5',events:{player:{
+      honorPoints:{id:5},playerMight:{id:6},dialog_BeggingKnights_nobilityPoints:{id:2},legendLevel:{id:7}
+    }}},
+    srvGame:()=> 'gge'
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source('config.js')}\n${source('api.js')}\ninjectSyntheticEvents();`,context);
+  const player=context.S.events.player;
+  assert.deepEqual(Object.keys(player),
+    ['honorPoints','playerMight','playerGlory','playerAttack','playerDefense','playerLoot',
+     'dialog_BeggingKnights_nobilityPoints','legendLevel']);
+  assert.deepEqual(
+    ['playerGlory','playerAttack','playerDefense','playerLoot'].map(key=>player[key].synthetic),
+    ['glory','avp','hf','rpt']);
+  // The base board supplies the pool every synthetic ranking is sorted from.
+  assert.equal(player.playerAttack.id,2);
+});
+
+test('a real catalogue entry is never replaced by a synthetic one',()=>{
+  const context={
+    console,setTimeout,clearTimeout,window:{},
+    S:{server:'EmpireEx_5',events:{player:{playerMight:{id:6},playerAttack:{id:99,categories:[{id:1}]}}}},
+    srvGame:()=> 'gge'
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source('config.js')}\n${source('api.js')}\ninjectSyntheticEvents();`,context);
+  assert.equal(context.S.events.player.playerAttack.id,99);
+  assert.equal(context.S.events.player.playerAttack.synthetic,undefined);
+});
+
+function tileApi(events){
+  const context={
+    console,setTimeout,clearTimeout,window:{},
+    S:{events,eventKey:'honorPoints',allianceMode:false},
+    L:s=>s,esc:v=>String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'),
+    evname:k=>k,ico:()=> ''
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source('render.js')}\nglobalThis.testApi={statTilesHtml,levelCatIdx};`,context);
+  return context.testApi;
+}
+
+test('stat tiles only link to rankings the current catalogue actually has',()=>{
+  const {statTilesHtml}=tileApi({player:{honorPoints:{id:5}},alliance:{allianceHonor:{id:10}}});
+  const html=statTilesHtml([
+    {v:'3478',l:'Honor',link:'honorPoints',mode:'player',search:'Deyss_'},
+    {v:'90440',l:'Punkty ataku',link:'playerAttack',mode:'player',search:'Deyss_'},
+    {v:'Czerwony Smok',l:'Sojusz',link:'allianceHonor',mode:'alliance',search:'Czerwony Smok'},
+    {v:'0',l:'Ranga'}
+  ]);
+  assert.equal((html.match(/data-link=/g)||[]).length,2);
+  assert.ok(html.includes('data-link="honorPoints" data-mode="player" data-search="Deyss_"'));
+  assert.ok(html.includes('data-link="allianceHonor" data-mode="alliance"'));
+  // Missing board (playerAttack) and a link-less stat both fall back to a plain tile.
+  assert.equal((html.match(/db-plain/g)||[]).length,2);
+  assert.ok(!html.includes('playerAttack'));
+});
+
+test('stat tile values from the API are escaped',()=>{
+  const {statTilesHtml}=tileApi({player:{honorPoints:{id:5}},alliance:{}});
+  const html=statTilesHtml([{v:'<img src=x onerror=1>',l:'Honor',link:'honorPoints',mode:'player',search:'"><b>'}]);
+  assert.ok(!html.includes('<img'));
+  assert.ok(html.includes('data-search="&quot;&gt;&lt;b&gt;"'));
+});
+
+test('the level tile targets the honor bracket containing that level',()=>{
+  const {levelCatIdx}=tileApi({player:{honorPoints:{categories:[
+    {id:1,name:'level_placeholder',value:'1-19'},
+    {id:2,name:'level_placeholder',value:'20-29'},
+    {id:6,name:'level_placeholder',value:'70'}
+  ]}},alliance:{}});
+  assert.equal(levelCatIdx(5),0);
+  assert.equal(levelCatIdx(25),1);
+  assert.equal(levelCatIdx(90),2);
+  assert.equal(levelCatIdx(null),null);
+  assert.equal(levelCatIdx(45),null);
+});

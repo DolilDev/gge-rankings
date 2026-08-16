@@ -117,8 +117,8 @@ function renderTable(){
     if(sortCol===col)cls+=' sort-'+sortDir;
     return cls.trim();
   };
-  // Glory lives in its own ranking (the "Chwała" entry in the sidebar) and in the player
-  // detail panel, so it is no longer shown as a permanent extra column in the table.
+  // Glory lives in its own ranking (the "Chwała" entry in the sidebar, like the other synthetic
+  // boards) and in the player detail panel, so it is not a permanent extra column in the table.
   // Every column carries a width: with table-layout:fixed the percentages keep the name
   // and alliance columns in a fixed ratio, so nothing drifts apart on a wide screen.
   const ncols=6;
@@ -128,7 +128,7 @@ function renderTable(){
     <th style="width:30px"></th>
     <th class="${sortable('name')}" data-sort="name" style="width:${isAl?'52%':'46%'}">${isAl?L('Sojusz'):L('Gracz')}</th>
     <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'14%':'20%'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
-    <th class="${sortable('score','r')}" data-sort="score" style="width:170px">${synth?L('Chwała'):L('Wynik')}</th>
+    <th class="${sortable('score','r')}" data-sort="score" style="width:170px">${synth?esc(evname(S.eventKey)):L('Wynik')}</th>
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
@@ -166,7 +166,10 @@ function renderTable(){
   // Alliance aggregates banner — shown when filtering players by a single alliance
   let banner='';
   if(synth&&full.length){
-    banner=`<div class="al-summary">${ico('trophy')} ${L('Ranking chwały złożony z {n} najlepszych graczy serwera (brak rankingu chwały w grze).',{n:fmtN(full.length)})}</div>`;
+    // Count the pool, not the visible rows: a name search narrows S.synthRows down to the
+    // matches, but the ranking was still assembled from every player pulled from the base board.
+    const poolN=(S.pool||[]).length||full.length;
+    banner=`<div class="al-summary">${ico('trophy')} ${L('Ranking „{r}” złożony z {n} najlepszych graczy serwera (gra nie udostępnia takiego rankingu).',{r:esc(evname(S.eventKey)),n:fmtN(poolN)})}</div>`;
   }
   if(filt&&S.filter.alName&&!S.allianceMode&&full.length){
     const sum=full.reduce((s,x)=>s+(x.score||0),0);
@@ -423,21 +426,24 @@ async function renderAllianceDetail(r,panel){
     const al=d.content.A||d.content;
     const members=Array.isArray(d.content.M)?d.content.M:[];
     const sorted=[...members].sort((a,b)=>(b.MP??b.H??0)-(a.MP??a.H??0));
+    // Alliance-wide numbers link to the alliance boards; the attack/defense/loot sums have no
+    // alliance leaderboard, so they open the matching player ranking instead.
+    const an=r.name;
     const stats=[];
-    if(al.MP!=null)stats.push({v:fmtN(al.MP),l:'Moc'});
-    if(al.CF!=null)stats.push({v:fmtN(al.CF),l:'Punkty chwały'});
+    if(al.MP!=null)stats.push({v:fmtN(al.MP),l:'Moc',link:'allianceMight',mode:'alliance',search:an});
+    if(al.CF!=null)stats.push({v:fmtN(al.CF),l:'Punkty chwały',link:'playerGlory',mode:'player'});
     if(al.IS!=null)stats.push({v:al.IS?L('Tak'):L('Nie'),l:'Otwarty'});
     const memberCount=sorted.length||(al.M&&Array.isArray(al.M)?al.M.length:0)||(al.MC??al.NM??0);
-    stats.push({v:fmtN(memberCount),l:'Członkowie'});
+    stats.push({v:fmtN(memberCount),l:'Członkowie',link:'allianceHonor',mode:'alliance',search:an});
     if(sorted.length){
       const totalAvp=sorted.reduce((s,m)=>s+(m.AVP??0),0);
       const totalRpt=sorted.reduce((s,m)=>s+(m.RPT??0),0);
       const totalHf=sorted.reduce((s,m)=>s+(m.HF??0),0);
       const totalMp=sorted.reduce((s,m)=>s+(m.MP??0),0);
-      if(totalMp>0)stats.push({v:fmtN(Math.round(totalMp/sorted.length)),l:'Śr. moc'});
-      if(totalAvp>0)stats.push({v:fmtN(totalAvp),l:'Punkty ataku'});
-      if(totalRpt>0)stats.push({v:fmtN(totalRpt),l:'Punkty rabunku'});
-      if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Punkty obrony'});
+      if(totalMp>0)stats.push({v:fmtN(Math.round(totalMp/sorted.length)),l:'Śr. moc',link:'allianceMight',mode:'alliance',search:an});
+      if(totalAvp>0)stats.push({v:fmtN(totalAvp),l:'Punkty ataku',link:'playerAttack',mode:'player'});
+      if(totalRpt>0)stats.push({v:fmtN(totalRpt),l:'Punkty rabunku',link:'playerLoot',mode:'player'});
+      if(totalHf>0)stats.push({v:fmtN(totalHf),l:'Punkty obrony',link:'playerDefense',mode:'player'});
     }
     // Description lives in its own full-width section below the tiles — inside .ds it would
     // stretch the stat tiles sharing its grid row to its (tall) height.
@@ -450,9 +456,7 @@ async function renderAllianceDetail(r,panel){
         <div class="dsec-body">${descHtml}</div>
       </div>`;
     }
-    const statHtml=stats.map(st=>
-      `<div class="db db-plain"><div class="db-v">${esc(String(st.v))}</div><div class="db-l">${L(st.l)}</div></div>`
-    ).join('');
+    const statHtml=statTilesHtml(stats);
     let membersHtml='';
     if(sorted.length){
       membersHtml=`<div class="dsec">
@@ -484,6 +488,7 @@ async function renderAllianceDetail(r,panel){
       toggleFavAl(r.name,S.server,r.allianceId,$(`dfaval_${r.rank}`));
     });
     wireGgtMembers(r.rank,r.name);
+    wireStatLinks(panel);
     panel.querySelectorAll('[data-search-player]').forEach(el=>{
       el.addEventListener('click',async e=>{
         e.stopPropagation();
@@ -515,6 +520,68 @@ function toggleDetail(rank){
   renderDetailContent(rank);
 }
 
+// ── Stat tiles (player & alliance detail panels) ──
+// Every tile may point at the ranking that ranks that stat, so each number in the panel is a way
+// into the matching leaderboard. A tile descriptor is {v,l,link,mode,search,cat}:
+//   link   — ranking key ('honorPoints', 'playerAttack', …)
+//   mode   — 'player' (default) or 'alliance'; switching flips the players/alliances toggle
+//   search — name to look up in the target ranking; empty → jump to that ranking's top
+//   cat    — optional category index within the target ranking (e.g. the level bracket)
+// The catalogue differs per game/server, so links are validated against the live event list:
+// a stat whose ranking is missing renders as a plain, non-clickable tile instead of a dead link.
+function statLinkOk(st){
+  if(!st||!st.link)return false;
+  const list=S.events[st.mode==='alliance'?'alliance':'player']||{};
+  return st.link in list;
+}
+function statTilesHtml(stats){
+  return stats.map(st=>{
+    const val=String(st.v);
+    if(!statLinkOk(st))return`<div class="db db-plain"><div class="db-v">${esc(val)}</div><div class="db-l">${esc(L(st.l))}</div></div>`;
+    const eventName=evname(st.link);
+    const cat=st.cat!=null?` data-cat="${esc(String(st.cat))}"`:'';
+    return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"${cat}><div class="db-v">${esc(val)}</div><div class="db-l">${esc(L(st.l))}</div><div class="db-hint">${ico('arrow-right')}<span>${esc(eventName)}</span></div></div>`;
+  }).join('');
+}
+function wireStatLinks(panel){
+  panel.querySelectorAll('.db[data-link]').forEach(el=>{
+    el.addEventListener('click',async e=>{
+      e.stopPropagation();
+      const linkKey=el.dataset.link,searchVal=el.dataset.search;
+      const isAl=el.dataset.mode==='alliance';
+      if(isAl!==S.allianceMode){
+        S.allianceMode=isAl;
+        const pair=S.events.player_to_alliance?.find(p=>p[+!isAl]===S.eventKey);
+        if(pair)S.eventKey=pair[+isAl];
+        updateTypeSeg();
+      }
+      if(evList()[linkKey])S.eventKey=linkKey;
+      // Set the category before rebuilding the sidebar — buildEventSel() renders the cat bar
+      // from S.catIdx, so assigning it afterwards would leave the wrong chip highlighted.
+      S.catIdx=el.dataset.cat!=null?+el.dataset.cat:0;
+      validateEv();buildEventSel();
+      S.curPage=1;clearExpanded();
+      if(searchVal){$('searchInput').value=searchVal;await loadRanking(searchVal)}
+      else{$('searchInput').value='';await loadRanking('1')}
+    });
+  });
+}
+// Index of the honorPoints category covering a player level, so the "Poziom" tile lands on the
+// right bracket. Categories are level_placeholder entries like '1-19' … '70' (normalizeCats()
+// reverses them, so the index can't be assumed). Returns null when the ranking isn't level-based.
+function levelCatIdx(level){
+  const cats=(S.events.player||{}).honorPoints?.categories;
+  if(!cats?.length||level==null)return null;
+  const idx=cats.findIndex(c=>{
+    if(c.name!=='level_placeholder')return false;
+    const v=String(c.value??'');
+    const m=v.match(/^(\d+)\s*-\s*(\d+)$/);
+    if(m)return level>=+m[1]&&level<=+m[2];
+    const n=+v;return Number.isFinite(n)&&n>0&&level>=n;
+  });
+  return idx>=0?idx:null;
+}
+
 // Fill the detail panel for a row (split out of toggleDetail so it can be re-run
 // after a re-render to restore the open panel without re-toggling state).
 function renderDetailContent(rank){
@@ -530,28 +597,28 @@ function renderDetailContent(rank){
   panel.className='dp';
   const stats=[];
   const pn=r.name;
+  // Nobility board: titles (PRE/SUF) and the noble rank (R) are awarded there, so those tiles
+  // link to it. Synthetic boards (playerGlory/Attack/Defense/Loot) cover the fields the game
+  // publishes no leaderboard for — see SYNTHETIC_PLAYER_EVENTS.
+  const nobility='dialog_BeggingKnights_nobilityPoints';
   if(r.honor!=null)stats.push({v:fmtN(r.honor),l:'Honor',link:'honorPoints',mode:'player',search:pn});
   if(r.might!=null)stats.push({v:fmtN(r.might),l:'Moc',link:'playerMight',mode:'player',search:pn});
-  if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały'});
+  if(r.glory!=null)stats.push({v:fmtN(r.glory),l:'Punkty chwały',link:'playerGlory',mode:'player',search:pn});
   if(r.legendLevel!=null&&r.legendLevel>0)stats.push({v:'✦ '+r.legendLevel,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
   else if(r.level!=null&&r.level>=70)stats.push({v:'✦ '+r.level,l:'Poziom legendarny',link:'legendLevel',mode:'player',search:pn});
-  else if(r.level!=null&&r.level>0)stats.push({v:'Lv '+r.level,l:'Poziom'});
-  if(r.avp!=null)stats.push({v:fmtN(r.avp),l:'Punkty ataku'});
-  if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Punkty obrony'});
-  if(r.rpt!=null)stats.push({v:fmtN(r.rpt),l:'Punkty rabunku'});
-  if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga'});
-  if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)'});
-  if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)'});
-  if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu'});
+  else if(r.level!=null&&r.level>0)stats.push({v:'Lv '+r.level,l:'Poziom',link:'honorPoints',mode:'player',search:pn,cat:levelCatIdx(r.level)});
+  if(r.avp!=null)stats.push({v:fmtN(r.avp),l:'Punkty ataku',link:'playerAttack',mode:'player',search:pn});
+  if(r.hf!=null)stats.push({v:fmtN(r.hf),l:'Punkty obrony',link:'playerDefense',mode:'player',search:pn});
+  if(r.rpt!=null)stats.push({v:fmtN(r.rpt),l:'Punkty rabunku',link:'playerLoot',mode:'player',search:pn});
+  if(r.rank2!=null)stats.push({v:fmtN(r.rank2),l:'Ranga',link:nobility,mode:'player',search:pn});
+  if(r.pre!=null&&r.pre>0)stats.push({v:String(r.pre),l:'Tytuł (prefix)',link:nobility,mode:'player',search:pn});
+  if(r.suf!=null&&r.suf>0)stats.push({v:String(r.suf),l:'Tytuł (suffix)',link:nobility,mode:'player',search:pn});
+  // No search term: the score tile opens the current ranking at its top, so it isn't a no-op
+  // click that just reloads the same view around this player.
+  if(r.score!=null)stats.push({v:fmtN(r.score),l:'Wynik rankingu',link:S.eventKey,mode:'player'});
   if(r.al)stats.push({v:r.al,l:'Sojusz',link:'allianceHonor',mode:'alliance',search:r.al});
-  if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie'});
-  const statHtml=stats.map(st=>{
-    if(st.link){
-      const eventName=evname(st.link);
-      return`<div class="db" title="${esc(L('Otwórz ranking: {x}',{x:eventName}))}" data-link="${esc(st.link)}" data-mode="${esc(st.mode||'player')}" data-search="${esc(st.search||'')}"><div class="db-v">${esc(st.v)}</div><div class="db-l">${esc(L(st.l))}</div><div class="db-hint">${ico('arrow-right')}<span>${esc(eventName)}</span></div></div>`;
-    }
-    return`<div class="db db-plain"><div class="db-v">${esc(st.v)}</div><div class="db-l">${esc(L(st.l))}</div></div>`;
-  }).join('');
+  if(r.members!=null)stats.push({v:fmtN(r.members),l:'Członkowie',link:'allianceHonor',mode:'alliance',search:r.al||''});
+  const statHtml=statTilesHtml(stats);
   // Mini-sparkline of historical rank (current ranking only)
   const series=getRankSeriesForKey(r.name,histKey(),12);
   const spkHtml=series.length>=2?`
@@ -571,22 +638,7 @@ function renderDetailContent(rank){
     </div>
     ${noteHtml}
     ${spkHtml}`;
-  panel.querySelectorAll('.db[data-link]').forEach(el=>{
-    el.addEventListener('click',async()=>{
-      const linkKey=el.dataset.link,linkMode=el.dataset.mode,searchVal=el.dataset.search;
-      const isAl=linkMode==='alliance';
-      if(isAl!==S.allianceMode){
-        S.allianceMode=isAl;
-        const pair=S.events.player_to_alliance?.find(e=>e[+!isAl]===S.eventKey);
-        if(pair)S.eventKey=pair[+isAl];
-        updateTypeSeg();buildEventSel();
-      }
-      if(evList()[linkKey]){S.eventKey=linkKey;buildEventSel();}
-      S.catIdx=0;S.curPage=1;clearExpanded();
-      if(searchVal){$('searchInput').value=searchVal;await loadRanking(searchVal)}
-      else{$('searchInput').value='';await loadRanking('1')}
-    });
-  });
+  wireStatLinks(panel);
   $(`dfav_${rank}`)?.addEventListener('click',e=>{
     e.stopPropagation();toggleFav(r.name,game,S.server,null);
     const btn=$(`dfav_${rank}`);if(btn){const now=isFav(r.name,game,S.server);btn.innerHTML=ico('star')+`<span>${now?L('Obserwowany'):L('Obserwuj')}</span>`;btn.classList.toggle('on',now)}

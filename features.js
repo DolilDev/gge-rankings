@@ -79,11 +79,15 @@ async function ensurePool(fresh=false){
   return S._poolPromise;
 }
 function renderSynthStatus(){
-  const n=(S.synthRows||[]).length;
+  const n=(S.synthRows||[]).length,poolN=(S.pool||[]).length;
   const totalPgs=Math.max(1,Math.ceil(n/S.pageSize));
   $('sTotal').textContent=fmtN(n);
   $('sPage').textContent=`${Math.min(S.curPage,totalPgs)} / ${totalPgs}`;
-  setSt('live',L('Chwała: top {n} graczy · {t}',{n:fmtN(n),t:new Date().toLocaleTimeString(curLocale())}));
+  const r=evname(S.eventKey),t=new Date().toLocaleTimeString(curLocale());
+  // A name search leaves only the matches in S.synthRows, so "top n" would misreport the ranking.
+  setSt('live',S.lastSearch
+    ?L('{r}: {n} z {pool} graczy · {t}',{r,n:fmtN(n),pool:fmtN(poolN),t})
+    :L('{r}: top {n} graczy · {t}',{r,n:fmtN(n),t}));
 }
 function applyFiltered(){S.filtered=applySort(applyFilter(S.pool||[]))}
 function renderFilteredStatus(){

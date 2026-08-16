@@ -17,7 +17,9 @@ At the top of the page, choose a server from the list — servers are grouped (G
 From the **Ranking** dropdown, choose the leaderboard you want, e.g.:
 - **Honor** — player honor ranking
 - **Might** — player might ranking
-- **Glory** — player glory/fame ranking. GGE has no server-side glory board, so this one is assembled client-side: it pools the server's top ~2000 players and sorts them by glory (a banner notes this). GGE only.
+- **Glory**, **Attack points**, **Defense points**, **Loot points** — GGE publishes no server-side board for these,
+  so they are assembled client-side: each pools the server's top ~2000 players and re-sorts them by that stat
+  (a banner notes this). They exist so every number in the player detail panel has a ranking to open. GGE only.
 - **League** — league ranking
 - **Achievement points**, plus many seasonal events
 
@@ -73,7 +75,11 @@ Expanding a player row shows:
 - Honor, Might, Glory, Level (legendary/regular)
 - Attack, defense and loot points
 - A **position-history chart** (sparkline) — when data from previous refreshes is available
-- Clickable stats → jump to the matching ranking
+- Clickable stats → **every** stat tile opens the ranking that ranks it: Honor, Might, Glory, Legendary level,
+  Attack / Defense / Loot points, and — for Rank and the two Title tiles — the Plunder (nobility) board that
+  awards them. The Level tile lands on the matching level bracket of the Honor ranking, and the Ranking score
+  tile opens the current ranking at its top. A tile stays plain when its ranking doesn't exist for that
+  game/server, so it never becomes a dead link.
 - **Copy card** — copies a nicely formatted PNG card with the player's stats to the clipboard (great for pasting into Discord). If the browser doesn't support image clipboard access, the card is downloaded instead.
 - Your note about the player (if watched and a note exists)
 
@@ -82,7 +88,8 @@ Watched players are marked by the filled star in their row and a faint row tint.
 ### Alliance details
 
 Expanding an alliance row shows:
-- Aggregate stats: might, glory points, whether the alliance is open, member count, average might, and total attack / defense / loot points
+- Aggregate stats: might, glory points, whether the alliance is open, member count, average might, and total attack / defense / loot points.
+  These are clickable too — the alliance-wide numbers open the alliance boards, and the attack / defense / loot sums open the matching player ranking
 - The alliance **description** (when set), in its own full-width block
 - A member list (name · level · might) — click a member to look them up
 - A **Show members** button that loads the full member list with stats (where the server is supported). Each member shows current **Might**, **Loot**, **Glory** and **Honor**, plus a dimmer **All-time** line with their peak (record) values for the same stats. The **alliance leader** is highlighted with a crown badge and an accent rail, members under **protection** (peace mode) show a shield badge with the expiry date, and every member carries their **in-alliance rank** badge. The list has **clickable sortable headers** — sort by **Might**, **Loot**, **Glory**, **Honor**, **Level**, **Rank** or **Protection** (click a header again to flip the direction). Click a member to search for them.
