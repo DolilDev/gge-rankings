@@ -291,13 +291,18 @@ function renderFavChart(spkEl,fav,rowsEl,res){
     mark(ev);
   };
   mark(def);
+  // Same dwell as the detail panel's tiles: passing over rows on the way to the chart must not
+  // hijack it — only resting on one does. Keyboard focus is deliberate, so it switches at once.
+  let pending=null;
+  const cancel=()=>{clearTimeout(pending);pending=null};
   rows.forEach(row=>{
-    row.addEventListener('mouseenter',()=>show(row.dataset.ev));
-    row.addEventListener('focus',()=>show(row.dataset.ev));
+    row.addEventListener('mouseenter',()=>{cancel();pending=setTimeout(()=>show(row.dataset.ev),HOVER_DWELL_MS)});
+    row.addEventListener('mouseleave',cancel);
+    row.addEventListener('focus',()=>{cancel();show(row.dataset.ev)});
   });
   // Leaving the card, not just the row list — otherwise moving down onto the chart would reset
   // the metric before the hovered ranking could be read. See wireStatChart().
-  (rowsEl.closest('.fc')||rowsEl).addEventListener('mouseleave',()=>show(box.dataset.chart));
+  (rowsEl.closest('.fc')||rowsEl).addEventListener('mouseleave',()=>{cancel();show(box.dataset.chart)});
 }
 
 // ── Export ──

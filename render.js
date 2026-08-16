@@ -704,11 +704,18 @@ function wireStatChart(panel,r){
   const cur=box.dataset.cur;
   wireChartHover(box,chartSeries(r,cur),v=>chartValue(cur,v)); // the markup rendered with the panel
   backfillChart(box,r,cur);
-  tiles.forEach(tile=>tile.addEventListener('mouseenter',()=>show(tile.dataset.metric)));
+  // A tile only takes over the chart once the pointer rests on it (HOVER_DWELL_MS), so sweeping
+  // across the grid on the way to the chart doesn't leave it on a tile you merely passed over.
+  let pending=null;
+  const cancel=()=>{clearTimeout(pending);pending=null};
+  tiles.forEach(tile=>{
+    tile.addEventListener('mouseenter',()=>{cancel();pending=setTimeout(()=>show(tile.dataset.metric),HOVER_DWELL_MS)});
+    tile.addEventListener('mouseleave',cancel);
+  });
   // Restore the default only when the pointer leaves the whole panel. Watching the tile grid
   // instead would reset the metric the moment you moved down onto the chart you just picked,
   // making the hovered stat impossible to actually read.
-  panel.addEventListener('mouseleave',()=>show(box.dataset.chart));
+  panel.addEventListener('mouseleave',()=>{cancel();show(box.dataset.chart)});
 }
 
 // Index of the honorPoints category covering a player level, so the "Poziom" tile lands on the

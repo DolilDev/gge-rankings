@@ -75,7 +75,8 @@ Expanding a player row shows:
 - Honor, Might, Glory, Level (legendary/regular)
 - Attack points, **highest fame** and loot points
 - A **stat-history chart** (sparkline) — when data from previous refreshes is available. It defaults to **Might**,
-  and **hovering any stat tile switches the chart to that stat** (the tile is highlighted while it's charted);
+  and **resting the pointer on any stat tile switches the chart to that stat** (the tile is highlighted while
+  it's charted). Merely sweeping across tiles on the way to the chart doesn't switch it — only a short dwell does;
   moving the pointer out of the panel restores the default, so a picked stat stays put while you read its chart. Every snapshot stores all stats, so honor, glory,
   attack/highest fame/loot, titles, score and position each have their own line. The line always rises when things
   improve — including position, where a smaller number is better. Stats with fewer than two data points show

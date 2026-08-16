@@ -43,6 +43,10 @@ const CHART_METRICS = {
   members:{l:'Członkowie'},
 };
 const DEFAULT_CHART_METRIC = 'might';
+// How long the pointer must rest on a tile/row before the chart switches to it. The tiles form a
+// grid, so reaching the chart means sweeping across their neighbours — without a dwell the chart
+// would end up showing whichever one the pointer happened to cross last.
+const HOVER_DWELL_MS = 160;
 
 // ── Backfill from gge-tracker ──
 // The app's own history only starts when you first open a ranking. gge-tracker keeps up to a year
