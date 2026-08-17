@@ -231,15 +231,38 @@ function parseRows(data){
 async function loadTexts(){
   try{const r=await timeout(fetch(TEXTS_URL(S.lang)),4000);if(r.ok){const d=await r.json();if(d)S.texts=d;}}catch{}
 }
+// A catalogue is only usable if it carries the player boards; anything else is treated as a miss.
+function isEventCatalog(d){return!!(d&&typeof d==='object'&&d.player&&typeof d.player==='object'&&Object.keys(d.player).length)}
+async function fetchEventCatalog(url){
+  try{
+    const r=await timeout(fetch(url),6000);
+    if(!r.ok)return null;
+    const data=await r.json();
+    return isEventCatalog(data)?data:null;
+  }catch{return null}
+}
+function readCachedCatalog(game){
+  try{
+    const raw=localStorage.getItem(EVENTS_CACHE_KEY(game));
+    if(!raw)return null;
+    const data=JSON.parse(raw);
+    return isEventCatalog(data)?data:null;
+  }catch{return null}
+}
+function writeCachedCatalog(game,catalog){
+  try{localStorage.setItem(EVENTS_CACHE_KEY(game),JSON.stringify(catalog))}catch{}
+}
+// Sources in order of freshness: upstream, its CORS mirror, the last catalogue that loaded here,
+// then the snapshot shipped with the app. Only a network hit refreshes the cache — the bundled
+// snapshot must not overwrite a newer one collected earlier.
 async function getEventCatalog(game){
   if(EVENT_CATALOGS.has(game))return EVENT_CATALOGS.get(game);
   const pending=(async()=>{
-    try{
-      const r=await timeout(fetch(EVENTS_URL(game)),6000);
-      if(!r.ok)return null;
-      const data=await r.json();
-      return data&&typeof data==='object'&&data.player&&typeof data.player==='object'?data:null;
-    }catch{return null}
+    for(const url of [EVENTS_URL(game),EVENTS_MIRROR_URL(game)]){
+      const remote=await fetchEventCatalog(url);
+      if(remote){writeCachedCatalog(game,remote);return remote}
+    }
+    return readCachedCatalog(game)||await fetchEventCatalog(EVENTS_LOCAL_URL(game));
   })();
   EVENT_CATALOGS.set(game,pending);
   const catalog=await pending;

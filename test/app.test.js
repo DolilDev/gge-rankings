@@ -157,6 +157,64 @@ test('synthetic player rankings are injected after Might so every stat has a boa
   assert.equal(player.playerAttack.id,2);
 });
 
+function catalogApi(responses,stored={}){
+  const requested=[];
+  const context={
+    console,setTimeout,clearTimeout,window:{},
+    localStorage:storage(stored),
+    timeout:promise=>promise,
+    fetch:async url=>{
+      requested.push(url);
+      const body=responses[url];
+      if(!body)return{ok:false,status:429,json:async()=>{throw new Error('no body')}};
+      return{ok:true,json:async()=>body};
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(`${source('config.js')}
+${source('api.js')}`,context);
+  return{context,requested};
+}
+const CATALOG=player=>({player,alliance:{allianceHonor:{id:10}}});
+
+test('a rate-limited catalogue host falls back to the mirror and is remembered',async()=>{
+  const mirror=CATALOG({honorPoints:{id:5},playerMight:{id:6},event_title_3:{id:20}});
+  const {context,requested}=catalogApi({[`https://cdn.jsdelivr.net/gh/danadum/ggs-assets@main/gge/events.json`]:mirror});
+  const catalog=await context.getEventCatalog('gge');
+  assert.deepEqual(Object.keys(catalog.player),['honorPoints','playerMight','event_title_3']);
+  assert.ok(requested[0].includes('raw.githubusercontent.com'));
+  // Remembered, so the next visit keeps the full list even if both hosts are down.
+  assert.equal(context.localStorage.getItem('gge_events_gge'),JSON.stringify(mirror));
+});
+
+test('with every host down the catalogue comes from the last good copy, then the bundled one',async()=>{
+  const cached=CATALOG({honorPoints:{id:5},event_title_97:{id:30}});
+  const remembered=await catalogApi({},{gge_events_gge:JSON.stringify(cached)}).context.getEventCatalog('gge');
+  assert.equal(JSON.stringify(remembered),JSON.stringify(cached));
+
+  const bundled=CATALOG(JSON.parse(source('gge_events.json')).player);
+  const {context}=catalogApi({'./gge_events.json':bundled});
+  const fallback=await context.getEventCatalog('gge');
+  assert.ok(Object.keys(fallback.player).length>20);
+});
+
+test('a truncated or unrelated catalogue is rejected instead of shrinking the ranking list',async()=>{
+  const {context}=catalogApi({
+    'https://raw.githubusercontent.com/danadum/ggs-assets/main/gge/events.json':{player:{}},
+    'https://cdn.jsdelivr.net/gh/danadum/ggs-assets@main/gge/events.json':{message:'Not Found'}
+  },{gge_events_gge:'{broken'});
+  assert.equal(await context.getEventCatalog('gge'),null);
+});
+
+test('the bundled catalogue snapshots cover both games',()=>{
+  for(const game of ['gge','e4k']){
+    const bundled=JSON.parse(source(`${game}_events.json`));
+    assert.ok(Object.keys(bundled.player).length>20,`${game} player boards`);
+    assert.ok(Object.keys(bundled.alliance).length>5,`${game} alliance boards`);
+    assert.ok(bundled.player.playerMight&&bundled.player.honorPoints);
+  }
+});
+
 test('a real catalogue entry is never replaced by a synthetic one',()=>{
   const context={
     console,setTimeout,clearTimeout,window:{},

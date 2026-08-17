@@ -11,6 +11,14 @@ const GGE_API = 'https://empire-api.fly.dev';
 // Server is selected via the `gge-server` request header (CORS-enabled, allows that header).
 const GGE_TRACKER_API = 'https://api.gge-tracker.com/api/v1';
 const EVENTS_URL = game => `https://raw.githubusercontent.com/danadum/ggs-assets/main/${game}/events.json`;
+// GitHub raw rate-limits by IP (429), and losing the catalogue drops the sidebar to the two
+// built-in rankings. jsDelivr mirrors the same repo with CORS, and `{game}_events.json` is a
+// snapshot bundled with the app (same-origin, so it is precached and works offline too).
+const EVENTS_MIRROR_URL = game => `https://cdn.jsdelivr.net/gh/danadum/ggs-assets@main/${game}/events.json`;
+const EVENTS_LOCAL_URL = game => `./${game}_events.json`;
+// Last catalogue that loaded from the network, per game — so one bad day upstream doesn't shrink
+// the ranking list on the next visit either. Refreshed on every successful remote load.
+const EVENTS_CACHE_KEY = game => `gge_events_${game}`;
 const TEXTS_URL = lang => `https://translations-api-test.public.ggs-ep.com/12/${lang}`;
 const API_PAGE = 10; // GGE highscore endpoint returns 10 entries per request; the UI page size is S.pageSize
 const FILTER_POOL_MAX = 2000;

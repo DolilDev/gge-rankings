@@ -31,7 +31,7 @@ Nie ma backendu ani procesu bundlowania. Dane rankingowe są pobierane w przegl�
 - `features.js` — filtrowanie, sortowanie, watchlista, historia, porównywanie, eksport i powiadomienia.
 - `main.js` — event wiring, skróty klawiaturowe, paginacja i `init()`; ładowany jako ostatni.
 - `sw.js` — service worker i cache offline. `VERSION` musi być zwiększony po zmianie assetów aplikacji.
-- `gge_events.json` — lokalne dane eventów/uzupełnienia katalogu.
+- `gge_events.json`, `e4k_events.json` — lokalne snapshoty katalogu rankingów, używane gdy zdalny katalog jest niedostępny (GitHub raw potrafi zwrócić 429).
 - `crest/` — assety i metadane herbów; nie usuwaj ich przy porządkowaniu.
 - `test/app.test.js` — testy Node dla funkcji stanu, API, eksportu i service workera.
 
@@ -48,7 +48,7 @@ Nie ma backendu ani procesu bundlowania. Dane rankingowe są pobierane w przegl�
 
 - `https://empire-api.fly.dev` — główne rankingi GGE/E4K.
 - `https://api.gge-tracker.com/api/v1` — opcjonalne listy członków sojuszy; serwer jest przekazywany w nagłówku `gge-server`. Nie każdy serwer jest obsługiwany.
-- GitHub raw — eventy.
+- GitHub raw (+ mirror jsDelivr) — katalog rankingów/eventów. Kolejność źródeł: raw → jsDelivr → kopia w localStorage → snapshot w repo.
 - API tłumaczeń Goodgame — teksty gry.
 
 Nie zakładaj, że którekolwiek API jest dostępne w testach lub lokalnym środowisku. Funkcje API powinny obsługiwać timeout, retry, pustą odpowiedź i błąd bez wywracania całego UI.
