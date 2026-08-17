@@ -33,6 +33,7 @@ Nie ma backendu ani procesu bundlowania. Dane rankingowe są pobierane w przegl�
 - `sw.js` — service worker i cache offline. `VERSION` musi być zwiększony po zmianie assetów aplikacji.
 - `gge_events.json`, `e4k_events.json` — lokalne snapshoty katalogu rankingów, używane gdy zdalny katalog jest niedostępny (GitHub raw potrafi zwrócić 429).
 - `crest/` — assety i metadane herbów; nie usuwaj ich przy porządkowaniu.
+- `icons/` — sprite z ikonami rankingów wypalony z klienta gry + `README.md` z proweniencją; mapowanie w `config.js` (`RANK_ICONS`).
 - `test/app.test.js` — testy Node dla funkcji stanu, API, eksportu i service workera.
 
 ## Przepływ działania

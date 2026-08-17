@@ -59,6 +59,61 @@ const HOVER_DWELL_MS = 160;
 // The plunder/nobility board — the source of loot points, titles and the noble rank.
 const NOBILITY_EVENT = 'dialog_BeggingKnights_nobilityPoints';
 
+// ── Ranking icons ──
+// Baked once from the official GGE client into icons/rankings.webp (see icons/README.md).
+// One sprite: RANK_ICON_COLS cells per row, an icon's index is its position in RANK_ICON_IDS.
+// The cell count is mirrored in style.css (.rico background-size) — keep the two in sync.
+const RANK_ICON_COLS = 8;
+const RANK_ICON_IDS = [
+  'achievements','honor','might','glory','attack','fame','loot','legend',
+  'gacha','dominion','cargo','alliance','ev0','ev3','ev15','ev60',
+  'ev62','ev71','ev71a','ev72','ev72a','ev80','ev80a','ev83',
+  'ev85','ev85a','ev97','ev103','ev103a','ev106','ev113','ev123',
+  'ev601',
+];
+// Ranking key → icon id. Event boards reuse the client's own eventIcon_<EVENTTYPE> art (the number
+// in an `event_title_N` key is that event type), the permanent boards the stat icon the game shows
+// next to that value. Gacha events share one icon because the client has no per-gacha board art.
+const RANK_ICONS = {
+  dialog_playerInfo_infoAchievements:'achievements',
+  dialog_BeggingKnights_nobilityPoints:'ev62',   // 62 = BEGGING_KNIGHTS
+  honorPoints:'honor', playerMight:'might',
+  playerGlory:'glory', playerAttack:'attack', playerHighestFame:'fame', playerLoot:'loot',
+  legendLevel:'legend',
+  allianceHonor:'honor', allianceMight:'might', dominionPoints:'dominion', cargo_points:'cargo',
+  event_title_3:'ev3',                           // Wojna o Berimond (FACTION)
+  event_title_60:'ev60',                         // Konkurs szlachectwa (POINT_EVENT)
+  event_title_71:'ev71',                         // Wojna Królestw (ALIEN_INVASION_ALLIANCE)
+  event_title_72:'ev72',                         // Inwazja nomadów
+  event_title_80:'ev80',                         // Inwazja samurajów
+  event_title_85:'ev85',                         // Inwazja Berimondu (FACTION_INVASION)
+  event_title_89:'ev15',                         // Koło Niewyobrażalnego Dostatku → the wheel art
+  event_title_97:'ev97',                         // Atak zmiennokształtnych
+  event_title_113:'ev113',                       // Za horyzontem (ALLIANCE_BATTLEGROUND)
+  event_title_601:'ev601',                       // Liga Królestwa
+  dialog_longPointsEvent_seasonalPoints:'ev83',  // 83 = LONGTERM_POINT_EVENT
+  dialog_redAlienInvasion_message_header:'ev103',// 103 = RED_ALIEN_INVASION_ALLIANCE
+  eventBuilding_DonationEvent:'ev123',           // 123 = DONATION
+  dialog_tempServer_scoring_header_might:'ev106',// 106 = TEMPSERVER
+  temp_server_name:'ev106',
+  dialog_title_gachadeco2x2:'gacha', event_title_127:'gacha', event_title_128:'gacha',
+  event_title_130:'gacha', event_title_131:'gacha', event_title_134:'gacha',
+};
+// Boards the client draws differently for alliances (eventIcon_<N>_alliance).
+const RANK_ICONS_AL = {
+  event_title_71:'ev71a', event_title_72:'ev72a', event_title_80:'ev80a',
+  event_title_85:'ev85a', dialog_redAlienInvasion_message_header:'ev103a',
+  allianceHonor:'alliance',
+};
+// Board with no icon of its own still gets the client's generic event marker.
+const RANK_ICON_FALLBACK = 'ev0';
+
+// ── Śmiertelna pułapka roślin ──
+// The deco-gacha board scores one point per 20 Soldier Biscuits fed to the plant, so the table can
+// show what a player actually spent rather than only the derived score.
+const BISCUIT_EVENT = 'dialog_title_gachadeco2x2';
+const BISCUITS_PER_POINT = 20;
+
 // ── Backfill from gge-tracker ──
 // The app's own history only starts when you first open a ranking. gge-tracker keeps up to a year
 // of point history per player, so charts for the metrics below can be filled in from it.

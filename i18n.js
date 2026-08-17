@@ -108,6 +108,8 @@ const EN={
   'Sojusz':'Alliance',
   'Gracz':'Player',
   'Wynik':'Score',
+  'Użyte ciastka':'Biscuits used',
+  '1 pkt wyniku = {n} ciastek':'1 score point = {n} biscuits',
   'Zaznacz do porównania':'Select to compare',
   'Usuń z ulubionych':'Remove from favorites',
   'Dodaj do ulubionych':'Add to favorites',

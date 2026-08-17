@@ -186,12 +186,26 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
 /* Ranking list — the app's primary navigation axis, so it gets real estate, not a <select>. */
 .ev-list{display:flex;flex-direction:column;gap:1px}
 .ev-i{
-  position:relative;display:block;width:100%;text-align:left;
-  padding:7px 10px;font-size:var(--t-base);color:var(--c-text);
+  position:relative;display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:6px 10px;font-size:var(--t-base);color:var(--c-text);
   background:none;border:none;border-radius:var(--r2);cursor:pointer;font-family:inherit;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  transition:background .12s,color .12s;
+  overflow:hidden;transition:background .12s,color .12s;
 }
+.ev-i .ev-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+
+/* Ranking icons — one sprite baked from the game client (icons/rankings.webp). --rc/--rr pick the
+   cell, so the column count below must match RANK_ICON_COLS in config.js. */
+.rico{
+  --ri:20px;
+  flex:0 0 auto;width:var(--ri);height:var(--ri);
+  background-image:url(icons/rankings.webp);
+  background-size:calc(var(--ri) * 8) auto;
+  background-position:calc(var(--rc) * var(--ri) * -1) calc(var(--rr) * var(--ri) * -1);
+  background-repeat:no-repeat;
+}
+.rico-t{--ri:24px}
+body.compact .ev-i{padding:5px 10px}
+body.compact .rico{--ri:18px}
 .ev-i:hover{background:var(--hover2)}
 .ev-i.on{background:var(--acc-bg);color:var(--acc);font-weight:600}
 .ev-i.on::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:2px;border-radius:2px;background:var(--acc)}
@@ -234,9 +248,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
   background:var(--surface);border-bottom:1px solid var(--c-border);
 }
 .view-title{
+  display:flex;align-items:center;gap:9px;
   font-size:var(--t-xl);font-weight:600;letter-spacing:-.015em;color:var(--bright);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+  white-space:nowrap;overflow:hidden;min-width:0;
 }
+.view-title span{overflow:hidden;text-overflow:ellipsis}
 .topbar-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
 .side-toggle{display:none}
 

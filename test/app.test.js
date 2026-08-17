@@ -206,6 +206,67 @@ test('a truncated or unrelated catalogue is rejected instead of shrinking the ra
   assert.equal(await context.getEventCatalog('gge'),null);
 });
 
+function renderApi(S,exports){
+  const context={console,setTimeout,clearTimeout,window:{},document:{getElementById:()=>null},S,
+    L:(t,v)=>String(t).replace(/\{(\w+)\}/g,(m,k)=>v&&k in v?v[k]:m),
+    esc:x=>String(x??''),fmtN:x=>String(x)};
+  vm.createContext(context);
+  vm.runInContext(`${source('config.js')}
+${source('render.js')}
+globalThis.testApi={${exports.join(',')}};`,context);
+  return context.testApi;
+}
+
+test('a ranking icon points at its sprite cell, alliance boards at their own art',()=>{
+  const {rankIcon}=renderApi({allianceMode:false},['rankIcon']);
+  const cell=html=>[...html.matchAll(/--r([cr]):(\d+)/g)].map(m=>+m[2]);
+  // Might is the third icon in the sheet → first row, third column.
+  assert.deepEqual(cell(rankIcon('playerMight')),[2,0]);
+  // The Nomad invasion has a separate alliance icon; the player one must not leak into it.
+  const player=cell(rankIcon('event_title_72',false)),alliance=cell(rankIcon('event_title_72',true));
+  assert.notDeepEqual(player,alliance);
+  // An alliance board without its own art keeps the shared icon.
+  assert.deepEqual(cell(rankIcon('event_title_113',true)),cell(rankIcon('event_title_113',false)));
+  // Unknown boards still get a marker rather than an empty gap.
+  assert.deepEqual(cell(rankIcon('event_title_9999')),cell(rankIcon('__nothing__')));
+});
+
+test('every mapped ranking icon exists in the sprite index',()=>{
+  const {RANK_ICONS,RANK_ICONS_AL,RANK_ICON_IDS,RANK_ICON_FALLBACK,RANK_ICON_COLS}=
+    renderApi({allianceMode:false},['RANK_ICONS','RANK_ICONS_AL','RANK_ICON_IDS','RANK_ICON_FALLBACK','RANK_ICON_COLS']);
+  const known=new Set(RANK_ICON_IDS);
+  for(const [key,id] of [...Object.entries(RANK_ICONS),...Object.entries(RANK_ICONS_AL)])
+    assert.ok(known.has(id),`${key} → ${id}`);
+  assert.ok(known.has(RANK_ICON_FALLBACK));
+  assert.equal(RANK_ICON_IDS.length,new Set(RANK_ICON_IDS).size,'duplicate icon id');
+  // The sprite exists and the sheet is laid out in the column count both config.js and style.css use.
+  assert.ok(fs.statSync(path.join(root,'icons','rankings.webp')).size>0);
+  assert.ok(source('style.css').includes(`background-size:calc(var(--ri) * ${RANK_ICON_COLS}) auto`));
+});
+
+test('every board of the bundled catalogue has an icon mapping',()=>{
+  const {RANK_ICONS}=renderApi({allianceMode:false},['RANK_ICONS']);
+  const catalogue=JSON.parse(source('gge_events.json'));
+  const missing=[...Object.keys(catalogue.player),...Object.keys(catalogue.alliance)]
+    .filter(k=>!(k in RANK_ICONS));
+  assert.deepEqual(missing,[]);
+});
+
+test('the biscuit column belongs to the plant-trap board and counts 20 per point',()=>{
+  const api=S=>renderApi(S,['biscuitCol','biscuitsUsed','BISCUIT_EVENT','BISCUITS_PER_POINT']);
+  const on=api({allianceMode:false,eventKey:'dialog_title_gachadeco2x2'});
+  assert.equal(on.BISCUIT_EVENT,'dialog_title_gachadeco2x2');
+  assert.equal(on.biscuitCol(),true);
+  assert.equal(on.biscuitsUsed({score:1337}),1337*20);
+  // A score of 0 is a real value, a missing one is not.
+  assert.equal(on.biscuitsUsed({score:0}),0);
+  assert.equal(on.biscuitsUsed({}),null);
+  assert.equal(on.biscuitsUsed(null),null);
+  // Not on other boards, and not on the alliance side of this one.
+  assert.equal(api({allianceMode:false,eventKey:'playerMight'}).biscuitCol(),false);
+  assert.equal(api({allianceMode:true,eventKey:'dialog_title_gachadeco2x2'}).biscuitCol(),false);
+});
+
 test('the bundled catalogue snapshots cover both games',()=>{
   for(const game of ['gge','e4k']){
     const bundled=JSON.parse(source(`${game}_events.json`));

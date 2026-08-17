@@ -80,6 +80,19 @@ function scoreChgIndicator(name,curScore){
   return`<span class="chg sd ${up?'up':'dn'}" title="Δ ${up?'+':'−'}${fmtN(Math.abs(d))}">Δ${up?'+':'−'}${fmtAbbr(d)}</span>`;
 }
 
+// Ranking icon (baked from the game client, see icons/README.md). Returns a sprite <span> whose
+// cell is picked with --rc/--rr; sizing lives in CSS so the same markup works in list and title.
+function rankIcon(key,alliance=S.allianceMode,cls=''){
+  const id=(alliance&&RANK_ICONS_AL[key])||RANK_ICONS[key]||RANK_ICON_FALLBACK;
+  const i=RANK_ICON_IDS.indexOf(id);
+  if(i<0)return'';
+  return`<span class="rico${cls?' '+cls:''}" style="--rc:${i%RANK_ICON_COLS};--rr:${Math.floor(i/RANK_ICON_COLS)}" aria-hidden="true"></span>`;
+}
+// Soldier Biscuits behind a score on the deco-gacha board (see BISCUITS_PER_POINT).
+function biscuitsUsed(r){return r&&r.score!=null?r.score*BISCUITS_PER_POINT:null}
+// That extra column only makes sense on the player board it was defined for.
+function biscuitCol(){return !S.allianceMode&&S.eventKey===BISCUIT_EVENT}
+
 // Coat of arms (player emblem). Returns an <img> with a same-origin data URL, or '' when the
 // pack isn't loaded yet / the row has no emblem. crest.js re-renders the table once the pack loads.
 function crestImg(emblem,size,cls){
@@ -121,14 +134,18 @@ function renderTable(){
   // boards) and in the player detail panel, so it is not a permanent extra column in the table.
   // Every column carries a width: with table-layout:fixed the percentages keep the name
   // and alliance columns in a fixed ratio, so nothing drifts apart on a wide screen.
-  const ncols=6;
+  // The biscuit column is derived from the score, so it needs no sort of its own — sorting by
+  // score orders it identically. It borrows its width from the name/alliance columns.
+  const bisc=biscuitCol();
+  const ncols=bisc?7:6;
   let h=`<div class="twrap${isAl?' al-mode':''}"><table><thead><tr>
     <th style="width:38px"></th>
     <th class="${sortable('rank')}" data-sort="rank" style="width:58px;text-align:center">#</th>
     <th style="width:30px"></th>
-    <th class="${sortable('name')}" data-sort="name" style="width:${isAl?'52%':'46%'}">${isAl?L('Sojusz'):L('Gracz')}</th>
-    <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'14%':'20%'}">${isAl?L('Członkowie'):L('Sojusz')}</th>
+    <th class="${sortable('name')}" data-sort="name" style="width:${isAl?'52%':(bisc?'34%':'46%')}">${isAl?L('Sojusz'):L('Gracz')}</th>
+    <th class="${sortable(isAl?'members':'al',isAl?'r':'')}" data-sort="${isAl?'members':'al'}" style="width:${isAl?'14%':(bisc?'16%':'20%')}">${isAl?L('Członkowie'):L('Sojusz')}</th>
     <th class="${sortable('score','r')}" data-sort="score" style="width:170px">${synth?esc(evname(S.eventKey)):L('Wynik')}</th>
+    ${bisc?`<th class="r" style="width:160px" title="${L('1 pkt wyniku = {n} ciastek',{n:BISCUITS_PER_POINT})}">${L('Użyte ciastka')}</th>`:''}
     </tr></thead><tbody>`;
 
   const game=srvGame(S.server);
@@ -157,6 +174,7 @@ function renderTable(){
       <td class="c-name">${nameContent}</td>
       ${alCell}
       <td class="r"><div class="sc"><span class="sv">${fmtN(r.score)}</span>${scd}</div></td>
+      ${bisc?`<td class="r c-bisc">${r.score!=null?fmtN(biscuitsUsed(r)):'—'}</td>`:''}
       </tr>
       <tr class="xr" data-for="${r.rank}" style="display:${exp?'':'none'}">
       <td colspan="${ncols}"><div class="dp" id="dp_${r.rank}"></div></td>
@@ -865,7 +883,7 @@ function buildEventSel(){
   if(!(S.eventKey in list))S.eventKey=keys[0];
   box.innerHTML=keys.map(k=>{
     const n=evname(k),on=k===S.eventKey;
-    return`<button class="ev-i${on?' on':''}" data-k="${esc(k)}" role="tab" aria-selected="${on}" title="${esc(n)}">${esc(n)}</button>`;
+    return`<button class="ev-i${on?' on':''}" data-k="${esc(k)}" role="tab" aria-selected="${on}" title="${esc(n)}">${rankIcon(k)}<span class="ev-n">${esc(n)}</span></button>`;
   }).join('');
   box.querySelectorAll('.ev-i').forEach(el=>el.addEventListener('click',()=>selectEvent(el.dataset.k)));
   updateViewTitle();buildCats();
@@ -879,7 +897,9 @@ async function selectEvent(k){
 }
 function updateViewTitle(){
   const el=$('viewTitle');if(!el)return;
-  el.textContent=S.page==='favorites'?L('Obserwowani gracze'):(evname(S.eventKey)||'GGE Rankings');
+  if(S.page==='favorites'){el.textContent=L('Obserwowani gracze');return}
+  const n=evname(S.eventKey)||'GGE Rankings';
+  el.innerHTML=(S.eventKey?rankIcon(S.eventKey,S.allianceMode,'rico-t'):'')+`<span>${esc(n)}</span>`;
 }
 function buildCats(){
   const cb=$('catBar'),sec=$('catSec');const cats=curEv().categories;

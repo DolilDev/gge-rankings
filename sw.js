@@ -2,7 +2,7 @@
 //  GGE Rankings — service worker (offline app shell + fast loads)
 //  Bump VERSION on every asset change (keep in sync with ?v= in index.html).
 // ══════════════════════════════════════════════════════════════
-const VERSION = '20260817-1';
+const VERSION = '20260817-2';
 const CACHE_PREFIX = 'gge-';
 const CACHE = CACHE_PREFIX + VERSION;
 
@@ -19,6 +19,7 @@ const PRECACHE = [
   './features.js?v=' + VERSION,
   './main.js?v=' + VERSION,
   './style.css?v=' + VERSION,
+  './icons/rankings.webp',
   './gge_events.json',
   './e4k_events.json',
   './manifest.json',

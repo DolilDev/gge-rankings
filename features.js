@@ -342,9 +342,11 @@ function exportData(fmt){
     const headers=S.allianceMode
       ?['rank','name','allianceId','members','score']
       :['rank','name','al','alTag','members','score','honor','might','glory','level','legendLevel','avp','hf','rpt'];
+    // The biscuit column is derived, so it ships with the export of the board that defines it.
+    if(biscuitCol())headers.push('biscuits');
     const csv=[headers.join(',')];
     rows.forEach(r=>{
-      const cells=headers.map(h=>csvCell(r[h]));
+      const cells=headers.map(h=>csvCell(h==='biscuits'?biscuitsUsed(r):r[h]));
       csv.push(cells.join(','));
     });
     downloadFile(`${baseName}.csv`,csv.join('\n'),'text/csv;charset=utf-8');
