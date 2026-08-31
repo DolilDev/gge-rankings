@@ -6,12 +6,20 @@ const CACHE=new Map();
 const EVENT_CATALOGS=new Map();
 function cGet(k){const e=CACHE.get(k);return(e&&Date.now()<e.x)?e.v:null}
 function cSet(k,v,ttl){CACHE.set(k,{v,x:Date.now()+ttl})}
+// empire-api answers 500 {"error":"Server not connected"} when its own socket to that game world
+// is down. That is not a transient hiccup, so retrying it three times per request only slows the
+// (up to 200-request) filter pool down; `apiErr` also lets load() name the real cause.
+let LAST_API_ERR=null;
+async function apiErr(r){
+  try{const d=await r.clone().json();return typeof d?.error==='string'?d.error:null}catch(e){return null}
+}
 async function fetchRetry(url,retries=2){
   for(let i=0;i<=retries;i++){
     try{
       const r=await fetch(url);
       if(r.ok)return r;
-      if(r.status>=500&&i<retries){await delay(400*(i+1));continue}
+      if(r.status>=500&&i<retries&&!(await apiErr(r)))
+        {await delay(400*(i+1));continue}
       return r;
     }catch(e){
       if(i===retries)throw e;
@@ -34,7 +42,8 @@ function limiter(max){
 async function ggeGet(url,fresh=false){
   const hit=fresh?null:cGet(url);if(hit)return hit;
   try{
-    const r=await fetchRetry(url);if(!r||!r.ok)return null;
+    const r=await fetchRetry(url);
+    if(!r||!r.ok){if(r)LAST_API_ERR=await apiErr(r);return null}
     const d=await r.json();cSet(url,d,60000);return d;
   }catch(e){console.warn('ggeGet failed:',e.message);return null}
 }
@@ -387,12 +396,17 @@ async function loadRanking(sv='1',fresh=false){
   setSt('spin',L(keep?'Odświeżanie...':'Pobieranie...'));
   if(keep)$('mainView').classList.add('stale');else showSpin();
   if(!S.server||!curLT()){S.loading=false;setSt('err',L('Wybierz serwer lub ranking'));showSt(ico('server'),L('Wybierz serwer z listy'),'');return}
+  LAST_API_ERR=null;
   const res=await fetchRankingPage(sv,fresh);
   if(rid!==S.reqId)return;
   S.loading=false;
   if(!res){
-    setSt('err',L('Błąd API'));
+    // A world whose empire-api socket is down fails for everyone on that server; saying
+    // "check your internet" there just sends the user chasing a problem they don't have.
+    const down=LAST_API_ERR==='Server not connected';
+    setSt('err',L(down?'Serwer odłączony':'Błąd API'));
     if(keep)$('mainView').classList.remove('stale'); // keep showing the previous data
+    else if(down)showSt(ico('server'),L('Ten serwer jest chwilowo odłączony od API'),L('To awaria po stronie empire-api, nie Twojego połączenia. Spróbuj później lub wybierz inny serwer.'));
     else showSt(ico('offline'),L('Błąd połączenia z API'),L('Sprawdź połączenie z internetem i spróbuj ponownie.'));
     return;
   }
