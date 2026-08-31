@@ -145,6 +145,17 @@ const DEFAULT_FAV_CHART_EVENT = 'playerMight';
 const HIST_DEDUPE_MS = 60 * 1000;
 const HIST_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
+// ── Ranking reset detection ──
+// Nothing upstream says when a board resets: the hgh payload carries no timestamps, empire-api's
+// command allowlist rejects everything but hgh/llsp, the events catalogue holds only ids and
+// categories, and gge-tracker tracks a different set of events entirely. So the app watches the
+// boards it loads: every run of an event board starts with the leader's score collapsing, or with
+// an empty board filling up. The gap between two such starts is the period, and because it is
+// inferred rather than published, the UI always marks the countdown as approximate.
+const RESET_DROP = 0.25;        // a new top under 25% of the previous one ⇒ a new run started
+const RESET_LOG_MAX = 8;        // run starts remembered per board
+const RESET_MIN_GAP_MS = 60 * 60 * 1000;  // ignore a second "start" within the hour (same run)
+
 // ── Servers ──
 const ALL_SERVERS = [
   {h:'EmpireEx',     game:'gge', flag:'🌍', code:'INT1',   name:'Internacjonalny 1'},

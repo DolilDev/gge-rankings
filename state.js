@@ -155,6 +155,109 @@ function pruneHistory(){
     if(Object.keys(HIST[k]).length===0)delete HIST[k];
   });
 }
+// ── Ranking reset log ──
+// Keyed by histKey(), so every server/ranking/category/mode combination is watched separately.
+// Per board: {t,s,n} = the last look (time, leader's score, row count) and r = the run starts
+// seen so far as [midpoint, windowWidth] pairs. See RESET_DROP in config.js for why this is
+// observed rather than read from an API.
+let BOARDS=null;
+function loadBoards(){try{BOARDS=JSON.parse(localStorage.getItem('gge_boards_v1')||'{}')}catch{BOARDS={}}}
+function saveBoards(){
+  // Tiny next to the history, but it shares the same quota, so a failure must never break a load.
+  try{localStorage.setItem('gge_boards_v1',JSON.stringify(BOARDS))}catch(e){}
+}
+// Record how a board looks now and log a run start when the leader's score has collapsed since
+// the last look, or an empty board has filled up. `top` is the score at rank 1; pass null when
+// that row isn't loaded. Returns true when a run start was recorded.
+function observeBoard(top,total,key=histKey()){
+  if(!BOARDS||!key)return false;
+  const n=Number.isFinite(total)?total:0;
+  const s=(typeof top==='number'&&Number.isFinite(top))?top:null;
+  // Without the leader there is no baseline to compare, so a page-5 or name-search view is not an
+  // observation at all. An empty board is one, though — that is how a run ends.
+  if(s===null&&n>0)return false;
+  const now=Date.now(),prev=BOARDS[key];
+  const r=prev?prev.r.slice():[];
+  let started=false;
+  if(prev){
+    const filled=prev.n===0&&n>0;
+    const collapsed=prev.s>0&&s!==null&&s<prev.s*RESET_DROP;
+    // The reset fell somewhere between the two looks: the midpoint is the best estimate and the
+    // width of that window is how precise it can honestly claim to be.
+    const last=r[r.length-1];
+    if((filled||collapsed)&&(!last||now-last[0]>=RESET_MIN_GAP_MS)){
+      r.push([Math.round((prev.t+now)/2),now-prev.t]);
+      while(r.length>RESET_LOG_MAX)r.shift();
+      started=true;
+    }
+  }
+  BOARDS[key]={t:now,s,n,r};saveBoards();
+  return started;
+}
+// One-time backfill. The per-player history already in localStorage records the leader's score at
+// every past refresh, so run starts from the last 14 days can be recovered from it instead of
+// waiting for the live detector to witness its first two resets. Returns how many boards it seeded.
+function seedBoardsFromHistory(){
+  if(!BOARDS||!HIST)return 0;
+  try{if(localStorage.getItem('gge_boards_seeded'))return 0}catch{return 0}
+  let seeded=0;
+  Object.keys(HIST).forEach(k=>{
+    if(BOARDS[k]?.r?.length)return;
+    // Snapshots store every visible row as [t,rank,score,stats], so rank 1 turns up once per
+    // refresh that included the top of the board — that is the leader series.
+    const lead=[];
+    Object.values(HIST[k]).forEach(arr=>arr.forEach(e=>{
+      if(e&&e[1]===1&&typeof e[2]==='number'&&Number.isFinite(e[2]))lead.push([e[0],e[2]]);
+    }));
+    if(lead.length<2)return;
+    lead.sort((a,b)=>a[0]-b[0]);
+    const r=[];
+    for(let i=1;i<lead.length;i++){
+      const [pt,ps]=lead[i-1],[t,sc]=lead[i],last=r[r.length-1];
+      if(ps>0&&sc<ps*RESET_DROP&&(!last||t-last[0]>=RESET_MIN_GAP_MS)){
+        r.push([Math.round((pt+t)/2),t-pt]);
+        while(r.length>RESET_LOG_MAX)r.shift();
+      }
+    }
+    if(!r.length)return;
+    const [lt,ls]=lead[lead.length-1],prev=BOARDS[k];
+    // A live observation is always the more recent truth; only its reset log was missing.
+    BOARDS[k]=(prev&&prev.t>=lt)?{...prev,r}:{t:lt,s:ls,n:prev?.n??1,r};
+    seeded++;
+  });
+  try{localStorage.setItem('gge_boards_seeded','1')}catch{}
+  if(seeded)saveBoards();
+  return seeded;
+}
+// Median gap between observed run starts — median rather than mean so one missed reset (which
+// shows up as a doubled gap) doesn't drag the estimate. Null with fewer than two starts.
+function boardPeriod(key=histKey()){
+  const r=BOARDS?.[key]?.r;
+  if(!r||r.length<2)return null;
+  const gaps=[];
+  for(let i=1;i<r.length;i++)gaps.push(r[i][0]-r[i-1][0]);
+  gaps.sort((a,b)=>a-b);
+  const m=gaps.length>>1;
+  return gaps.length%2?gaps[m]:Math.round((gaps[m-1]+gaps[m])/2);
+}
+// What the status bar needs about a board's cycle:
+//   {last,span,runs}             — a run start was seen, but no period can be derived yet
+//   {last,span,runs,period,next} — two or more, so the next reset can be estimated
+// Null when nothing has ever been observed, which is also the resting state of the permanent
+// boards (honor, might and friends never reset, so no run start is ever recorded for them).
+function boardReset(key=histKey()){
+  const r=BOARDS?.[key]?.r;
+  if(!r||!r.length)return null;
+  const [last,span]=r[r.length-1];
+  const period=boardPeriod(key);
+  if(!period)return{last,span,runs:r.length};
+  // A board left unopened for a while can be several runs past the one we last saw.
+  let next=last+period;
+  const now=Date.now();
+  while(next<=now)next+=period;
+  return{last,span,runs:r.length,period,next};
+}
+
 function histKey(server=S.server,event=S.eventKey,catIdx=S.catIdx,alliance=S.allianceMode){
   return `${server}_${event}_${alliance?'a':'p'}_${catIdx}`;
 }

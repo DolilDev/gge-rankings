@@ -895,6 +895,50 @@ async function selectEvent(k){
   S.eventKey=k;S.catIdx=0;S.curPage=1;S.compare=[];updateCompareBar();clearExpanded();
   buildEventSel();await reloadCtx();
 }
+// ── Reset countdown ──
+// "2 dni 4 godz." over a day out, a ticking "4:12:33" under it — a per-second countdown on a
+// multi-day estimate would imply a precision this data does not have.
+function fmtLeft(ms){
+  const sec=Math.max(0,Math.round(ms/1000));
+  const d=Math.floor(sec/86400),h=Math.floor(sec%86400/3600);
+  const days=d===1?L('1 dzień'):L('{n} dni',{n:d});
+  if(d>0)return h?`${days} ${L('{n} godz.',{n:h})}`:days;
+  const m=Math.floor(sec%3600/60),ss=sec%60,p=n=>String(n).padStart(2,'0');
+  return h>0?`${h}:${p(m)}:${p(ss)}`:`${m}:${p(ss)}`;
+}
+function fmtResetDate(t){
+  const d=new Date(t);
+  return d.toLocaleDateString(curLocale(),{day:'2-digit',month:'2-digit'})+', '+
+         d.toLocaleTimeString(curLocale(),{hour:'2-digit',minute:'2-digit'});
+}
+// {txt,tip} for the status-bar chip, or null when this board has nothing to show.
+function resetChip(){
+  if(S.page==='favorites'||!S.eventKey)return null;
+  const b=boardReset();
+  if(!b)return null;
+  // Half the observation window is how far the midpoint estimate can be off either way.
+  const prec=Math.round(b.span/2/3600000);
+  const seen=L('Gra nie udostępnia czasu resetu — aplikacja wykrywa go sama, obserwując tablicę.');
+  if(!b.period)return{
+    txt:L('reset: {d}',{d:fmtResetDate(b.last)}),
+    tip:`${L('Ostatni wykryty reset (±{h} godz.). Kolejny da się oszacować po następnym.',{h:prec})}
+${seen}`,
+  };
+  return{
+    txt:'~'+fmtLeft(b.next-Date.now()),
+    tip:`${L('Szacowane z {n} zaobserwowanych resetów, co ~{p} (±{h} godz.).',{n:b.runs,p:fmtLeft(b.period),h:prec})}
+${seen}`,
+  };
+}
+function renderReset(){
+  const wrap=$('sReset'),t=$('sResetT');if(!wrap||!t)return;
+  const c=resetChip();
+  if(!c){wrap.style.display='none';return}
+  wrap.style.display='';
+  if(t.textContent!==c.txt)t.textContent=c.txt;
+  if(wrap.title!==c.tip)wrap.title=c.tip;
+}
+
 function updateViewTitle(){
   const el=$('viewTitle');if(!el)return;
   if(S.page==='favorites'){el.textContent=L('Obserwowani gracze');return}

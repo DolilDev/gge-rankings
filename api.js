@@ -413,6 +413,11 @@ async function loadRanking(sv='1',fresh=false){
   const{rows,total}=res;
 
   S.rows=rows;S.totalRows=total;
+  // Watch this board for a reset. Only a view that actually contains rank 1 (or an empty board)
+  // counts as an observation, so a name search or a deep page is ignored inside observeBoard.
+  const lead=rows.find(r=>r&&r.rank===1);
+  observeBoard(lead?lead.score:null,total);
+  renderReset();
   if(!rows.length){setSt('live',L('Brak danych'));showSt(ico('inbox'),L('Brak danych dla tego rankingu'),L('Ten event może nie być aktywny na wybranym serwerze.'));return}
   const totalPgs=Math.max(1,Math.ceil(total/S.pageSize));
   $('sTotal').textContent=fmtN(total);$('sPage').textContent=`${S.curPage} / ${totalPgs}`;

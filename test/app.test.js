@@ -24,7 +24,7 @@ function stateContext(values={},hash=''){
     URLSearchParams,console,setTimeout,clearTimeout
   };
   vm.createContext(context);
-  vm.runInContext(`${source('config.js')}\n${source('state.js')}\nglobalThis.testApi={S,esc,readHash,pageForRank};`,context);
+  vm.runInContext(`${source('config.js')}\n${source('state.js')}\nglobalThis.testApi={S,esc,readHash,pageForRank,loadHistory,loadBoards,observeBoard,boardPeriod,boardReset,seedBoardsFromHistory,getBoards:()=>BOARDS};`,context);
   return context.testApi;
 }
 
@@ -548,4 +548,67 @@ test('alliance members are read from content.A, which is where the API puts them
   assert.deepEqual(Array.from(allianceInfo({A:{N:'X'}}).members),[]);
   assert.deepEqual(Array.from(allianceInfo(null).members),[]);
   assert.deepEqual(Array.from(allianceInfo({A:{M:'nope'}}).members),[]);
+});
+
+// ── Ranking reset detection ──
+const DAY=24*60*60*1000;
+const BKEY='EmpireEx_5_event_title_71_p_0';
+
+test('a collapsing leader score marks a new run, a view without rank 1 marks nothing',()=>{
+  const api=stateContext();
+  api.loadBoards();
+  // First look only establishes the baseline — there is nothing yet to compare against.
+  assert.equal(api.observeBoard(1000,50,BKEY),false);
+  assert.equal(api.observeBoard(800,50,BKEY),false);   // ordinary churn at the top
+  assert.equal(api.observeBoard(10,50,BKEY),true);     // board wiped ⇒ a new run started
+  assert.equal(api.getBoards()[BKEY].r.length,1);
+  // A deep page or a name search carries no rank 1, so it must not overwrite the baseline.
+  assert.equal(api.observeBoard(null,50,BKEY),false);
+  assert.equal(api.getBoards()[BKEY].s,10);
+});
+
+test('an empty board filling up counts as a run start',()=>{
+  const api=stateContext();
+  api.loadBoards();
+  assert.equal(api.observeBoard(null,0,BKEY),false);   // event over, board empty
+  assert.equal(api.observeBoard(5,40,BKEY),true);      // next run's board appeared
+});
+
+test('the next reset is estimated from the median gap and skipped past when overdue',()=>{
+  const now=Date.now();
+  // Four run starts with gaps of 1, 1 and 3 days: the 3-day one is a reset nobody was around to
+  // see, and the median has to shrug that off rather than average it in.
+  const r=[[now-8*DAY,3600000],[now-7*DAY,3600000],[now-6*DAY,3600000],[now-3*DAY,3600000]];
+  const api=stateContext({gge_boards_v1:JSON.stringify({[BKEY]:{t:now-3*DAY,s:5,n:40,r}})});
+  api.loadBoards();
+  assert.equal(api.boardPeriod(BKEY),DAY);
+  const b=api.boardReset(BKEY);
+  assert.equal(b.runs,4);
+  assert.equal(b.period,DAY);
+  assert.ok(b.next>now,'a three-day-old last run must roll forward past now');
+  assert.ok(b.next-now<=DAY);
+});
+
+test('one observed run start yields a last-reset date but no estimate',()=>{
+  const now=Date.now();
+  const api=stateContext({gge_boards_v1:JSON.stringify({[BKEY]:{t:now,s:5,n:40,r:[[now-DAY,7200000]]}})});
+  api.loadBoards();
+  const b=api.boardReset(BKEY);
+  assert.equal(b.last,now-DAY);
+  assert.equal(b.period,undefined);
+  assert.equal(b.next,undefined);
+  // Boards that never reset never record a run start, so they report nothing at all.
+  assert.equal(api.boardReset('EmpireEx_5_playerMight_p_0'),null);
+});
+
+test('past run starts are recovered from stored history exactly once',()=>{
+  const now=Date.now();
+  const hist={[BKEY]:{Alice:[[now-3*DAY,1,1000,{}],[now-2*DAY,1,20,{}]]}};
+  const api=stateContext({gge_hist_v1:JSON.stringify(hist)});
+  api.loadHistory();api.loadBoards();
+  assert.equal(api.seedBoardsFromHistory(),1);
+  const b=api.boardReset(BKEY);
+  assert.equal(b.runs,1);
+  assert.ok(b.last>now-3*DAY&&b.last<now-2*DAY,'the reset is placed between the two snapshots');
+  assert.equal(api.seedBoardsFromHistory(),0,'the backfill must not run a second time');
 });

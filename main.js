@@ -158,7 +158,7 @@ let initDone=false;
 setTimeout(()=>{if(!initDone){setSt('err',L('Przekroczono czas'));showSt(ico('clock'),L('Ładowanie trwało zbyt długo'),L('Odśwież stronę (F5).'))}},20000);
 
 async function init(){
-  loadHistory();
+  loadHistory();loadBoards();seedBoardsFromHistory();
   applyTheme(S.theme);
   const lb=$('langBtn');if(lb)lb.textContent=S.lang.toUpperCase();
   applyI18n();
@@ -193,6 +193,9 @@ async function init(){
   const initSv=h.q||(S.curPage>1?String((S.curPage-1)*S.pageSize+1):'1');
   await loadRanking(initSv);
   startAutoRef();
+  // The reset chip counts down on its own — loads are far too rare to keep it current, and it
+  // stays cheap because renderReset() only touches the DOM when the rendered text changes.
+  setInterval(renderReset,1000);
 }
 
 init();
