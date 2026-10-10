@@ -404,8 +404,8 @@ function drawPlayerCard(r,extras={}){
   const FONT=`-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif`;
   const dark=S.theme!=='light';
   const C=dark
-    ?{bg:'#0f1114',surface:'#15181d',border:'#282d36',bright:'#f2f5f9',muted:'#858d9a',acc:'#f0b03e'}
-    :{bg:'#ffffff',surface:'#f3f4f6',border:'#dfe2e8',bright:'#111620',muted:'#6c757f',acc:'#b45309'};
+    ?{bg:'#17191d',surface:'#1d2025',border:'#30343c',bright:'#e8ecf3',muted:'#9aa3b0',acc:'#8099bd'}
+    :{bg:'#ffffff',surface:'#f4f5f7',border:'#dadee4',bright:'#12161c',muted:'#626b77',acc:'#4b6589'};
   const W=640,H=360,scale=2;
   const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
   const ctx=cv.getContext('2d');if(!ctx){toast(L('Brak danych do eksportu'),'error');return}
